@@ -1,7 +1,11 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-multipart
 pydantic
 torch
 transformers
 pdfplumber
+python-pptx
+langchain-community
+langchain-core
+pypdf
