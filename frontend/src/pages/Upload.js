@@ -36,9 +36,6 @@ const styles = {
   fileName: { marginTop: 15, color: "#ccc", fontStyle: "italic" }
 };
 
-//  ADDED: backend base URL (Netlify env) + fallback
-const API_URL = process.env.REACT_APP_API_URL || "https://eidaah-backend.onrender.com";
-
 export default function Upload() {
   const navigate = useNavigate();
   const [fileName, setFileName] = useState("");
@@ -132,3 +129,4 @@ export default function Upload() {
     </div>
   );
 }
+
