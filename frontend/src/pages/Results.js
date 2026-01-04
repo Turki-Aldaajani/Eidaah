@@ -29,26 +29,8 @@ const staticTranslations = {
   },
 };
 
-const slideData = [
-  {
-    title: { ar: "مشاكل نموذج الشلال", en: "Waterfall model problems" },
-    text: { ar: "التقسيم غير المرن للمشروع إلى مراحل مميزة يجعل من الصعب الاستجابة لمتطلبات العملاء المتغيرة.", en: "Inflexible partitioning of the project into distinct stages makes it difficult to respond to changing customer requirements." },
-    explanation: { ar: "يتبع نموذج الشلال نهجًا خطيًا متسلسلًا حيث يجب إكمال كل مرحلة قبل أن تبدأ المرحلة التالية. هذه البنية الصلبة تخلق تحديات كبيرة في تطوير البرمجيات الحديثة.", en: "The waterfall model follows a sequential, linear approach where each phase must be completed before the next begins. This rigid structure creates significant challenges in modern software development." },
-    example: { ar: "لنتخيل مشروع تطبيق بنكي. بعد 6 أشهر من التطوير، يقدم المنظمون متطلبات امتثال جديدة. مع نموذج الشلال، يجب على الفريق إيقاف التقدم وإعادة البدء.", en: "Consider a banking application project. After 6 months of development, regulators introduce new compliance requirements. With the waterfall model, the team must halt progress and restart." },
-  },
-  {
-    title: { ar: "فوائد التطوير الرشيق (Agile)", en: "Agile Development Benefits" },
-    text: { ar: "تعزز منهجيات Agile التخطيط التكيفي، والتطوير التطوري، والتسليم المبكر، والتحسين المستمر.", en: "Agile methodologies promote adaptive planning, evolutionary development, early delivery, and continual improvement." },
-    explanation: { ar: "على عكس الشلال، فإن Agile تكراري. يجزئ المشروع إلى سباقات قصيرة يمكن إدارتها، مما يسمح بإعادة التقييم والتكيف بشكل متكرر.", en: "Unlike Waterfall, Agile is iterative. It breaks down the project into small, manageable sprints, allowing for frequent reassessment and adaptation." },
-    example: { ar: "باستخدام نفس سيناريو التطبيق البنكي، سيسمع فريق Agile بقواعد الامتثال الجديدة في نهاية سباق مدته أسبوعان ويمكنه على الفور تحديد الأولويات ودمج التغييرات في السباق التالي.", en: "Using the same banking app scenario, an Agile team would hear about the new compliance rules at the end of a two-week sprint and could immediately prioritize and incorporate the changes in the next sprint." },
-  },
-  {
-    title: { ar: "ما هو سكروم؟", en: "What is Scrum?" },
-    text: { ar: "سكروم هو إطار عمل يساعد الفرق على العمل معًا. ويشجع الفرق على التعلم من خلال التجارب، والتنظيم الذاتي أثناء العمل على مشكلة ما.", en: "Scrum is a framework that helps teams work together. It encourages teams to learn through experiences, self-organize while working on a problem." },
-    explanation: { ar: "سكروم هو أحد أكثر تطبيقات Agile شيوعًا. يستخدم أدوارًا وأحداثًا محددة لزيادة الكفاءة.", en: "Scrum is one of the most popular implementations of Agile. It uses specific roles and events to maximize efficiency." },
-    example: { ar: "فريق يقوم ببناء ميزة جديدة لموقع تجارة إلكترونية يستخدم اجتماع سكروم اليومي لمناقشة التقدم وتحديد العقبات.", en: "A team building a new feature for an e-commerce website uses a daily Scrum meeting to discuss progress and identify obstacles." },
-  },
-];
+const slides = JSON.parse(localStorage.getItem("slides"));
+
 
 const styles = {
   body: { backgroundColor: "#0a0f1c", color: "#E0E0E0", fontFamily: "'Cairo', sans-serif", margin: 0, padding: 40, minHeight: "100vh" },
@@ -161,3 +143,4 @@ return (
     </>
   );
 }
+
