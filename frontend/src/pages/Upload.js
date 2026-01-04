@@ -36,8 +36,6 @@ const styles = {
   fileName: { marginTop: 15, color: "#ccc", fontStyle: "italic" }
 };
 
-const API_URL = process.env.REACT_APP_API_URL || "https://eidaah-backend.onrender.com/";
-
 
 export default function Upload() {
   const navigate = useNavigate();
@@ -148,6 +146,7 @@ const handleFileChange = async (e) => {
     </div>
   );
 }
+
 
 
 
