@@ -51,40 +51,30 @@ export default function Upload() {
     localStorage.setItem("language", newLang);
   };
 
-const handleFileChange = async (e) => {
-  if (e.target.files.length === 0) return;
-
+ 
+  const handleFileChange = async (e) => {
   const file = e.target.files[0];
-  setFileName(file.name);
-  setProgress(10);
+  if (!file) return;
 
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    const response = await fetch(`${API_URL}/analyze`, {
+    const res = await fetch(`${API_URL}/api/upload_file`, {
       method: "POST",
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error("API request failed");
-    }
+    const data = await res.json();
 
-    const data = await response.json();
+    localStorage.setItem("slides", JSON.stringify(data));
 
-    // خزّن النتيجة عشان Results.js يقرأها
-    localStorage.setItem("analysisResult", JSON.stringify(data));
-
-    setProgress(100);
     navigate("/results");
-
-  } catch (error) {
-    console.error("Upload error:", error);
+  } catch (err) {
     alert("فشل تحليل الملف");
-    setProgress(0);
   }
 };
+
 
  return (
     <div style={styles.body}>
@@ -150,5 +140,6 @@ const handleFileChange = async (e) => {
     </div>
   );
 }
+
 
 
