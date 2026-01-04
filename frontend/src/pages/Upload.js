@@ -36,6 +36,9 @@ const styles = {
   fileName: { marginTop: 15, color: "#ccc", fontStyle: "italic" }
 };
 
+const API_URL = process.env.REACT_APP_API_URL || "https://eidaah-backend.onrender.com/";
+
+
 export default function Upload() {
   const navigate = useNavigate();
   const [fileName, setFileName] = useState("");
@@ -48,23 +51,41 @@ export default function Upload() {
     localStorage.setItem("language", newLang);
   };
 
-  const handleFileChange = async (e) => {
-    if (e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setFileName(file.name);
-      setProgress(0);
-      let progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            setTimeout(() => navigate("/results"), 500);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 150);
+const handleFileChange = async (e) => {
+  if (e.target.files.length === 0) return;
+
+  const file = e.target.files[0];
+  setFileName(file.name);
+  setProgress(10);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch(`${API_URL}/analyze`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("API request failed");
     }
-  };
+
+    const data = await response.json();
+
+    // خزّن النتيجة عشان Results.js يقرأها
+    localStorage.setItem("analysisResult", JSON.stringify(data));
+
+    setProgress(100);
+    navigate("/results");
+
+  } catch (error) {
+    console.error("Upload error:", error);
+    alert("فشل تحليل الملف");
+    setProgress(0);
+  }
+};
+
  return (
     <div style={styles.body}>
       <div style={styles.pageWrapper} className={language === 'ar' ? 'text-ar' : 'text-en'}>
@@ -129,4 +150,5 @@ export default function Upload() {
     </div>
   );
 }
+
 
