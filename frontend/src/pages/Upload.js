@@ -52,25 +52,33 @@ export default function Upload() {
   };
 
  
-  const handleFileChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+const handleFileChange = async (e) => {
+  if (e.target.files.length === 0) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
+  const file = e.target.files[0];
+  setFileName(file.name);
+  setProgress(10);
 
   try {
+    const formData = new FormData();
+    formData.append("file", file);
+
     const res = await fetch(`${API_URL}/api/upload_file`, {
       method: "POST",
       body: formData,
     });
 
+    if (!res.ok) throw new Error("Upload failed");
+
     const data = await res.json();
 
+    // نخزن ناتج الـ backend الحقيقي
     localStorage.setItem("slides", JSON.stringify(data));
 
+    setProgress(100);
     navigate("/results");
   } catch (err) {
+    console.error(err);
     alert("فشل تحليل الملف");
   }
 };
@@ -140,6 +148,7 @@ export default function Upload() {
     </div>
   );
 }
+
 
 
 
