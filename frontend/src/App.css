@@ -1,0 +1,126 @@
+/* =================================== */
+/* ===   إصلاح اتجاه النص العربي   === */
+/* =================================== */
+
+/* القاعدة العامة: العربي يمين، الإنجليزي يسار */
+.text-ar {
+  text-align: right;
+}
+.text-en {
+  text-align: left;
+}
+
+/* استثناءات: العناصر اللي نبيها دايمًا في النص */
+.headline, .upload-box {
+  text-align: center !important;
+}
+
+/* تخصيص اتجاه النص داخل العناصر (لضمان التطبيق) */
+.text-ar .slide-content,
+.text-ar .explanation-box,
+.text-ar .feature-box,
+.text-ar .content,
+.text-ar .left-column {
+  text-align: right;
+}
+
+.text-en .slide-content,
+.text-en .explanation-box,
+.text-en .feature-box,
+.text-en .content,
+.text-en .left-column {
+  text-align: left;
+}
+/* --- تنسيقات اتجاه النص --- */
+.text-ar { text-align: right; }
+.text-en { text-align: left; }
+
+/* تحديد العناصر التي يجب أن تبقى في المنتصف دائمًا */
+.headline, .upload-box {
+  text-align: center !important;
+}
+
+/* تحديد العناصر التي يتغير اتجاهها مع اللغة */
+.text-ar .slide-content, .text-ar .explanation-box, .text-ar .feature-box { text-align: right; }
+.text-en .slide-content, .text-en .explanation-box, .text-en .feature-box { text-align: left; }
+
+/* --- تنسيقات قسم الميزات --- */
+.features-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 40px;
+    width: 100%;
+}
+
+.feature-box {
+    background-color: #1e232d;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.feature-box h3 {
+    margin-top: 0;
+    color: #E0E0E0;
+    font-size: 18px;
+}
+
+.feature-subtitle {
+    color: #808080;
+    font-size: 14px;
+    margin-top: -10px;
+}
+
+.feature-description {
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.5;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+.feature-box:hover {
+    border-color: #3a6ea5;
+    transform: translateY(-5px);
+}
+
+.feature-box:hover .feature-description {
+    max-height: 120px;
+    opacity: 1;
+    margin-top: 15px;
+}
+
+/* --- تنسيقات التجاوب مع الجوال --- */
+@media (max-width: 768px) {
+    .features-container {
+        grid-template-columns: 1fr; /* يخليها فوق بعض في الجوال */
+    }
+}
+/* --- تنسيق أزرار "تلخيص" و "تحسين" --- */
+.action-btn {
+  background-color: #2A3B5C;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+  background-color: #3b82f6;
+}
+
+/* --- إصلاح اتجاه النص في صفحة النتائج --- */
+.text-ar .left-column { text-align: right; }
+.text-en .left-column { text-align: left; }
+.text-ar .right-column { text-align: right; }
+.text-en .right-column { text-align: left; }
