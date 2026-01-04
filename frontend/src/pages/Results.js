@@ -2,6 +2,9 @@ import Footer from '../Footer';
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_URL =
+  process.env.REACT_APP_API_URL || "https://eidaah-backend.onrender.com/";
+
 const staticTranslations = {
   ar: {
     logo: "إيضاح",
@@ -29,8 +32,7 @@ const staticTranslations = {
   },
 };
 
-const slides = JSON.parse(localStorage.getItem("slides")) || [];
-
+  const slides = JSON.parse(localStorage.getItem("slides")) || [];
 
 const styles = {
   body: { backgroundColor: "#0a0f1c", color: "#E0E0E0", fontFamily: "'Cairo', sans-serif", margin: 0, padding: 40, minHeight: "100vh" },
@@ -71,7 +73,7 @@ export default function Results() {
   const handleImprove = () => setImprovedText("هذا نص محسّن مؤقت");
 
 
-   const analyzeSlide = async (slide) => {
+     const analyzeSlide = async (slide) => {
     const res = await fetch(`${API_URL}/api/analyze_slide`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -159,5 +161,6 @@ return (
     </>
   );
 }
+
 
 
