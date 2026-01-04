@@ -107,7 +107,7 @@ return (
           <div style={styles.mainContainer}>
             <div style={styles.leftColumn}>
               <div style={styles.slideThumbnails}>
-                {slideData.map((slide, index) => (
+                {slides.map((slide, index) => (
                   <button
                     key={index}
                     style={{
@@ -126,8 +126,8 @@ return (
               </div>
 
               <div>
-                <h2>{slideData[currentSlide].title[language]}</h2>
-                <p>{slideData[currentSlide].text[language]}</p>
+                <h2>{slides[currentSlide].title[language]}</h2>
+                <p>{slides[currentSlide].text[language]}</p>
 
                 <div style={styles.actionButtons}>
                   <button onClick={handleSummarize} className="action-btn">
@@ -147,9 +147,9 @@ return (
               <h2>{staticTranslations[language].enhance_slide}</h2>
               <div style={styles.explanationBox}>
                 <h3>{staticTranslations[language].analytical_explanation}</h3>
-                <p>{slideData[currentSlide].explanation[language]}</p>
+                <p>{slides[currentSlide].explanation[language]}</p>
                 <h3>{staticTranslations[language].real_world_example}</h3>
-                <p>{slideData[currentSlide].example[language]}</p>
+                <p>{slides[currentSlide].example[language]}</p>
               </div>
             </div>
           </div>
@@ -161,6 +161,7 @@ return (
     </>
   );
 }
+
 
 
 
