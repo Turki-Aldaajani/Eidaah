@@ -1,4 +1,4 @@
-import Footer from '../Footer'; // <-- هذا هو الصحيح
+import Footer from '../Footer'; 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -29,7 +29,7 @@ const staticTranslations = {
   },
 };
 
-const slides = JSON.parse(localStorage.getItem("slides"));
+const slides = JSON.parse(localStorage.getItem("slides")) || [];
 
 
 const styles = {
@@ -51,6 +51,7 @@ const styles = {
   dummyText: { marginTop: 10, padding: 10, backgroundColor: "#1e2d42", borderRadius: 8, fontStyle: "italic" },
 };
 
+
 export default function Results() {
   const navigate = useNavigate();
   const [language, setLanguage] = useState(localStorage.getItem("language") || "ar");
@@ -58,6 +59,8 @@ export default function Results() {
   const [summaryText, setSummaryText] = useState("");
   const [improvedText, setImprovedText] = useState("");
 
+  const [analysis, setAnalysis] = useState(null); 
+  
   const toggleLanguage = () => {
     const newLang = language === "ar" ? "en" : "ar";
     setLanguage(newLang);
@@ -67,6 +70,19 @@ export default function Results() {
   const handleSummarize = () => setSummaryText("هذا نص ملخص مؤقت");
   const handleImprove = () => setImprovedText("هذا نص محسّن مؤقت");
 
+
+   const analyzeSlide = async (slide) => {
+    const res = await fetch(`${API_URL}/api/analyze_slide`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: slide.text }),
+    });
+
+    const data = await res.json();
+    setAnalysis(data);
+  };
+
+  
 return (
     <>
       <div style={styles.body}>
@@ -143,4 +159,5 @@ return (
     </>
   );
 }
+
 
