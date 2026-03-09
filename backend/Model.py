@@ -127,7 +127,7 @@ async def analyze_slide(request: Request, payload: AnalyzeRequest):
 # ---------------------------------------------------------
 @app.get("/", tags=["General"])
 def home():
-    from Model import model as ai_model
+    from Model import client as ai_model
     return {
         "message": "Eidaah Server is Running and Ready!",
         "ai_status": "ready" if ai_model else "not configured — missing GROQ_API_KEY",
