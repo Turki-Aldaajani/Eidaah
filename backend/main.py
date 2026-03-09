@@ -5,9 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 import io
 import os
 from dotenv import load_dotenv
@@ -16,18 +13,16 @@ load_dotenv()
 
 import ai_logic
 
-# ---------------------------------------------------------
-# Rate Limiter Setup
-# ---------------------------------------------------------
-limiter = Limiter(key_func=get_remote_address)
 
 # ---------------------------------------------------------
 # App Lifespan (startup/shutdown events)
 # ---------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup
     print("🚀 Eidaah server starting...")
     yield
+    # Shutdown
     print("👋 Eidaah server shutting down.")
 
 
@@ -39,18 +34,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Attach rate limiter to app
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ---------------------------------------------------------
 # CORS Configuration
+# In production, set FRONTEND_URL in .env to your actual frontend domain.
+# Example: FRONTEND_URL=https://eidaah.vercel.app
 # ---------------------------------------------------------
 FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
 
+# Build origins list
 if FRONTEND_URL == "*":
     origins = ["*"]
 else:
+    # Allow the configured frontend + common local dev URLs
     origins = [
         FRONTEND_URL,
         "http://localhost:3000",
@@ -65,6 +61,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # ---------------------------------------------------------
 # Global Exception Handler
 # ---------------------------------------------------------
@@ -76,17 +73,24 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "An internal server error occurred. Please try again."}
     )
 
+
 # ---------------------------------------------------------
 # ENDPOINT 1: Upload File
-# Rate limit: 10 uploads per minute per IP
+# Screen: Upload Page
+# Function: Receives file -> Splits it -> Returns list of slides & text
 # ---------------------------------------------------------
 MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20MB
 
 @app.post("/api/upload_file", tags=["Step 1: Upload"])
-@limiter.limit("10/minute")
-async def upload_file(request: Request, file: UploadFile = File(..., description="The file to be parsed (PDF or PPTX)")):
+async def upload_file(file: UploadFile = File(..., description="The file to be parsed (PDF or PPTX)")):
+    """
+    Receives a PDF or PPTX file, extracts text from each page/slide,
+    and returns a JSON list ready for the frontend to display.
+    """
+    # 1. Read the file into memory
     file_contents = await file.read()
 
+    # 2. Check size after reading
     if len(file_contents) > MAX_UPLOAD_SIZE:
         return JSONResponse(
             status_code=413,
@@ -95,16 +99,19 @@ async def upload_file(request: Request, file: UploadFile = File(..., description
 
     file_stream = io.BytesIO(file_contents)
 
+    # 3. Process the file using ai_logic to get pages
     pages = await ai_logic.process_file_to_pages(
         file=file_stream,
         file_type=file.content_type,
         filename=file.filename
     )
 
+    # 4. Return the parsed slides structure (same shape as before)
     return {
         "filename": file.filename,
         "slides": pages
     }
+
 
 # ---------------------------------------------------------
 # Data Model for Analysis Request
@@ -112,24 +119,31 @@ async def upload_file(request: Request, file: UploadFile = File(..., description
 class AnalyzeRequest(BaseModel):
     text: str
 
+
 # ---------------------------------------------------------
 # ENDPOINT 2: Analyze Specific Slide
-# Rate limit: 20 requests per minute per IP
+# Screen: Enhance/Clarify Page
+# Function: Receives text of ONE slide -> Returns Analysis & Example
 # ---------------------------------------------------------
 @app.post("/api/analyze_slide", tags=["Step 2: Analyze"])
-@limiter.limit("20/minute")
-async def analyze_slide(request: Request, payload: AnalyzeRequest):
+async def analyze_slide(payload: AnalyzeRequest):
+    """
+    Receives raw text (from a selected slide) and returns the
+    AI-generated explanation and real-world example.
+    """
     result = await ai_logic.process_text_directly(payload.text)
     return result
+
 
 # ---------------------------------------------------------
 # Health Check Endpoint
 # ---------------------------------------------------------
 @app.get("/", tags=["General"])
 def home():
+    """Health check — also reports whether AI model is ready."""
     from Model import model as ai_model
     return {
         "message": "Eidaah Server is Running and Ready!",
-        "ai_status": "ready" if ai_model else "not configured — missing GROQ_API_KEY",
+        "ai_status": "ready" if ai_model else "not configured — missing GEMINI_API_KEY",
         "version": "2.0.0"
     }
