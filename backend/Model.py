@@ -1,123 +1,135 @@
-# Model.py
-# AI Model Integration - Groq API (Llama 3.3 70B)
-# Replaces local Qwen2-1.5B with Groq cloud API
-# Free tier, no regional restrictions, blazing fast inference
+# main.py
 
+from fastapi import FastAPI, File, UploadFile, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from contextlib import asynccontextmanager
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+import io
 import os
-from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# ---------------------
-# Configuration
-# ---------------------
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL_NAME = "llama-3.3-70b-versatile"  # Production model, great Arabic support
+import ai_logic
 
-if not GROQ_API_KEY:
-    print("⚠️  WARNING: GROQ_API_KEY not found in .env file!")
-    print("   Get a free key at: https://console.groq.com/keys")
-    print("   Then add it to your .env file: GROQ_API_KEY=your_key_here")
-    print("   The server will start, but AI analysis will not work.\n")
-    client = None
+# ---------------------------------------------------------
+# Rate Limiter Setup
+# ---------------------------------------------------------
+limiter = Limiter(key_func=get_remote_address)
+
+# ---------------------------------------------------------
+# App Lifespan (startup/shutdown events)
+# ---------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🚀 Eidaah server starting...")
+    yield
+    print("👋 Eidaah server shutting down.")
+
+
+# Initialize the app with metadata
+app = FastAPI(
+    title="Eidaah - AI Presentation Explainer",
+    description="API to handle file parsing and AI analysis for slides.",
+    version="2.0.0",
+    lifespan=lifespan,
+)
+
+# Attach rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ---------------------------------------------------------
+# CORS Configuration
+# ---------------------------------------------------------
+FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
+
+if FRONTEND_URL == "*":
+    origins = ["*"]
 else:
-    client = OpenAI(
-        api_key=GROQ_API_KEY,
-        base_url="https://api.groq.com/openai/v1",
+    origins = [
+        FRONTEND_URL,
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------------------------------------------------------
+# Global Exception Handler
+# ---------------------------------------------------------
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print(f"❌ Unhandled error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred. Please try again."}
     )
-    print(f"✅ Groq AI model configured successfully! (using {MODEL_NAME})")
 
+# ---------------------------------------------------------
+# ENDPOINT 1: Upload File
+# Rate limit: 10 uploads per minute per IP
+# ---------------------------------------------------------
+MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20MB
 
-# ---------------------
-# System Prompts
-# ---------------------
-SYSTEM_PROMPT = """You are "Eidaah" (إيضاح), an expert educational assistant for university students.
-You help students understand presentation slides clearly and thoroughly.
+@app.post("/api/upload_file", tags=["Step 1: Upload"])
+@limiter.limit("5/minute")
+async def upload_file(request: Request, file: UploadFile = File(..., description="The file to be parsed (PDF or PPTX)")):
+    file_contents = await file.read()
 
-LANGUAGE RULES (VERY IMPORTANT):
-- If the slide text is in Arabic, you MUST respond ENTIRELY in Arabic.
-- If the slide text is in English, you MUST respond ENTIRELY in English.
-- If the text is mixed, respond in the dominant language.
-- Never mix languages in your response."""
+    if len(file_contents) > MAX_UPLOAD_SIZE:
+        return JSONResponse(
+            status_code=413,
+            content={"detail": "File too large. Maximum size is 20MB."}
+        )
 
-EXPLANATION_PROMPT = """Analyze and explain this presentation slide content clearly and concisely.
-Focus on making complex concepts easy to understand for a university student.
-Write 2-4 sentences maximum.
+    file_stream = io.BytesIO(file_contents)
 
-Slide content:
-{text}"""
-
-EXAMPLE_PROMPT = """Based on this slide content, give ONE concrete, practical real-world example 
-that illustrates the main concept. Keep it brief (2-3 sentences max).
-Make it relatable to university students.
-
-Slide content:
-{text}"""
-
-
-# ---------------------
-# Helper: Call Groq API
-# ---------------------
-def _call_groq(prompt: str, max_tokens: int = 300, temperature: float = 0.3) -> str:
-    """Make a single call to the Groq API."""
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature,
+    pages = await ai_logic.process_file_to_pages(
+        file=file_stream,
+        file_type=file.content_type,
+        filename=file.filename
     )
-    return response.choices[0].message.content.strip()
 
+    return {
+        "filename": file.filename,
+        "slides": pages
+    }
 
-# ---------------------
-# Main Generation Function
-# (Same signature as before — ai_logic.py calls this directly)
-# ---------------------
-def generate_explanation_and_example(text: str):
-    """
-    Takes slide text, returns (explanation, example).
-    This is the ONLY function ai_logic.py calls — signature preserved.
-    """
-    if not text.strip():
-        return "No text found on this slide.", "No example available."
+# ---------------------------------------------------------
+# Data Model for Analysis Request
+# ---------------------------------------------------------
+class AnalyzeRequest(BaseModel):
+    text: str
 
-    if not client:
-        return (
-            "AI model is not configured. Please add GROQ_API_KEY to the .env file.",
-            "Visit https://console.groq.com/keys to get a free API key."
-        )
+# ---------------------------------------------------------
+# ENDPOINT 2: Analyze Specific Slide
+# Rate limit: 20 requests per minute per IP
+# ---------------------------------------------------------
+@app.post("/api/analyze_slide", tags=["Step 2: Analyze"])
+@limiter.limit("10/minute")
+async def analyze_slide(request: Request, payload: AnalyzeRequest):
+    result = await ai_logic.process_text_directly(payload.text)
+    return result
 
-    try:
-        # Step 1 — Generate explanation
-        explanation = _call_groq(
-            EXPLANATION_PROMPT.format(text=text),
-            max_tokens=300,
-            temperature=0.3,
-        )
-
-        # Step 2 — Generate example
-        example = _call_groq(
-            EXAMPLE_PROMPT.format(text=text[:500]),
-            max_tokens=200,
-            temperature=0.5,
-        )
-
-        return explanation, example
-
-    except Exception as e:
-        error_msg = str(e)
-        print(f"❌ Groq API Error: {error_msg}")
-
-        # Handle common errors with helpful messages
-        if "401" in error_msg or "invalid" in error_msg.lower():
-            return "Invalid API key. Please check your GROQ_API_KEY.", ""
-        elif "429" in error_msg or "rate" in error_msg.lower():
-            return "Rate limit reached. Please wait a moment and try again.", ""
-        elif "503" in error_msg or "unavailable" in error_msg.lower():
-            return "AI service temporarily unavailable. Please try again in a moment.", ""
-        else:
-            return f"Error generating analysis: {error_msg}", ""
+# ---------------------------------------------------------
+# Health Check Endpoint
+# ---------------------------------------------------------
+@app.get("/", tags=["General"])
+def home():
+    from Model import model as ai_model
+    return {
+        "message": "Eidaah Server is Running and Ready!",
+        "ai_status": "ready" if ai_model else "not configured — missing GROQ_API_KEY",
+        "version": "2.0.0"
+    }
