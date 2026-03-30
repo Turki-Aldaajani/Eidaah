@@ -165,7 +165,6 @@ export default function Upload() {
     localStorage.setItem("language", newLang);
   };
 
-  // ✅ FIX 2: Properly handle backend response
   const handleFileChange = async (e) => {
     if (e.target.files.length === 0) return;
 
@@ -196,17 +195,18 @@ export default function Upload() {
       
       setProgress(80);
 
-      // ✅ Transform backend response to frontend format
-      const transformedSlides = data.slides.map((slide, index) => ({
+      // Transform backend response to frontend format
+      const transformedSlides = data.slides.map((slide) => ({
         slide_number: slide.slide_number,
         text: slide.text,
-        // We'll get explanation and example later when user clicks "Explain"
         explanation: null,
         example: null
       }));
 
       localStorage.setItem("slides", JSON.stringify(transformedSlides));
       localStorage.setItem("filename", data.filename);
+      // Store session_id for the new topics/images endpoints
+      localStorage.setItem("session_id", data.session_id);
 
       setProgress(100);
       
