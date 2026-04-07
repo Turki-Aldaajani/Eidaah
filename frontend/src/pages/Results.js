@@ -254,10 +254,10 @@ const styles = {
     borderRadius: 8,
     marginTop: 12,
     overflow: "hidden",
-    minHeight: 120,
+    minHeight: 200,
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: "stretch",
+    justifyContent: "stretch"
   },
   slideImage: {
     width: "100%",
@@ -508,19 +508,19 @@ export default function Results() {
                   />
                 ) : (
                   <div style={{
-                    width: "100%",
-                    padding: "20px 24px",
+                    flex: 1,
+                    alignSelf: "stretch",
+                    padding: "24px 28px",
                     color: "#E0E0E0",
-                    fontSize: 14,
-                    lineHeight: 1.8,
+                    fontSize: 16,
+                    lineHeight: 2,
                     whiteSpace: "pre-wrap",
                     textAlign: language === "ar" ? "right" : "left",
                     direction: language === "ar" ? "rtl" : "ltr",
-                    maxHeight: 320,
                     overflowY: "auto",
                     boxSizing: "border-box",
                   }}>
-                    <span style={{ display: "block", color: "#4A5568", fontSize: 11, marginBottom: 10 }}>
+                    <span style={{ display: "block", color: "#4A5568", fontSize: 12, marginBottom: 14 }}>
                       {t.slide} {currentSlideData.slide_number}
                     </span>
                     {currentSlideData.text}
