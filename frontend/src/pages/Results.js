@@ -138,6 +138,7 @@ const styles = {
   },
   slideText: {
     backgroundColor: "#0B101B",
+    color: "#E0E0E0",
     padding: 20,
     borderRadius: 8,
     marginTop: 12,
@@ -446,7 +447,6 @@ export default function Results() {
   const t = staticTranslations[language];
 
   return (
-    <>
       <div style={styles.body}>
         <div style={styles.pageWrapper} className={language === 'ar' ? 'text-ar' : 'text-en'}>
           {/* Header */}
@@ -651,9 +651,7 @@ export default function Results() {
             </div>
           </div>
         </div>
+        <Footer language={language} />
       </div>
-
-      <Footer language={language} />
-    </>
   );
 }
