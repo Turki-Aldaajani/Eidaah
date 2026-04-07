@@ -497,7 +497,7 @@ export default function Results() {
                 ))}
               </select>
 
-              {/* Slide image */}
+              {/* Slide preview */}
               <div style={styles.slideImageWrapper}>
                 {slideImages[currentSlideData.slide_number] ? (
                   <img
@@ -507,15 +507,25 @@ export default function Results() {
                     loading="lazy"
                   />
                 ) : (
-                  <span style={{ color: "#4A5568", fontSize: 13 }}>
-                    {t.slide} {currentSlideData.slide_number}
-                  </span>
+                  <div style={{
+                    width: "100%",
+                    padding: "20px 24px",
+                    color: "#E0E0E0",
+                    fontSize: 14,
+                    lineHeight: 1.8,
+                    whiteSpace: "pre-wrap",
+                    textAlign: language === "ar" ? "right" : "left",
+                    direction: language === "ar" ? "rtl" : "ltr",
+                    maxHeight: 320,
+                    overflowY: "auto",
+                    boxSizing: "border-box",
+                  }}>
+                    <span style={{ display: "block", color: "#4A5568", fontSize: 11, marginBottom: 10 }}>
+                      {t.slide} {currentSlideData.slide_number}
+                    </span>
+                    {currentSlideData.text}
+                  </div>
                 )}
-              </div>
-
-              {/* Slide text */}
-              <div style={styles.slideText}>
-                <p>{currentSlideData.text}</p>
               </div>
 
               {/* Explain slide button */}
