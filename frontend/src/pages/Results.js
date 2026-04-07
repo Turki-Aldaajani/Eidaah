@@ -144,7 +144,8 @@ const styles = {
     marginTop: 12,
     maxHeight: "400px",
     overflowY: "auto",
-    lineHeight: 1.6
+    lineHeight: 1.6,
+    colorScheme: "dark"
   },
   explanationBox: { 
     backgroundColor: "#0B101B", 

@@ -26,3 +26,24 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Dark scrollbars for all scrollable areas */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2A3B5C #0B101B;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0B101B;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #2A3B5C;
+  border-radius: 3px;
+}
