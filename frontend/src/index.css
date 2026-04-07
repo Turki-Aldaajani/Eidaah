@@ -1,9 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 
-html, body {
+html {
   margin: 0;
+  padding: 0;
+  min-height: 100%;
   background-color: #0a0f1c;
-  font-family: 'Cairo', sans-serif; /* تطبيق الخط الجديد */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #0a0f1c;
+  font-family: 'Cairo', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

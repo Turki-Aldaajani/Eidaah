@@ -248,11 +248,20 @@ const styles = {
     margin: 0,
     lineHeight: 1.6
   },
-  slideImage: {
-    width: "100%",
+  slideImageWrapper: {
+    backgroundColor: "#0B101B",
     borderRadius: 8,
     marginTop: 12,
-    backgroundColor: "#0B101B"
+    overflow: "hidden",
+    minHeight: 120,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  slideImage: {
+    width: "100%",
+    display: "block",
+    borderRadius: 0
   },
   statusDot: {
     display: "inline-block",
@@ -488,14 +497,20 @@ export default function Results() {
               </select>
 
               {/* Slide image */}
-              {slideImages[currentSlideData.slide_number] && (
-                <img
-                  src={slideImages[currentSlideData.slide_number]}
-                  alt={`${t.slide} ${currentSlideData.slide_number}`}
-                  style={styles.slideImage}
-                  loading="lazy"
-                />
-              )}
+              <div style={styles.slideImageWrapper}>
+                {slideImages[currentSlideData.slide_number] ? (
+                  <img
+                    src={slideImages[currentSlideData.slide_number]}
+                    alt={`${t.slide} ${currentSlideData.slide_number}`}
+                    style={styles.slideImage}
+                    loading="lazy"
+                  />
+                ) : (
+                  <span style={{ color: "#4A5568", fontSize: 13 }}>
+                    {t.slide} {currentSlideData.slide_number}
+                  </span>
+                )}
+              </div>
 
               {/* Slide text */}
               <div style={styles.slideText}>
