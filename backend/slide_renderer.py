@@ -1,127 +1,197 @@
 # slide_renderer.py
 # Converts PDF pages and PPTX slides to JPEG images for visual preview.
 #
-# PDF:  pdf2image (poppler-utils)
-# PPTX: LibreOffice headless → PDF → pdf2image
+# PDF:  pymupdf (fitz) — pure Python, no system dependencies
+# PPTX: python-pptx → renders each slide to a PIL image → JPEG
 #
 # Both paths produce the same output: numbered JPEG files in a directory.
 
 import os
-import subprocess
-import tempfile
+import io
 from pathlib import Path
 
-# Try importing pdf2image — graceful fallback if not installed
+# pymupdf (fitz) — pure Python PDF renderer
 try:
-    from pdf2image import convert_from_bytes, convert_from_path
-    PDF2IMAGE_AVAILABLE = True
+    import fitz  # PyMuPDF
+    FITZ_AVAILABLE = True
 except ImportError:
-    PDF2IMAGE_AVAILABLE = False
-    print("⚠️  pdf2image not installed — slide preview disabled.")
+    FITZ_AVAILABLE = False
+    print("⚠️  pymupdf not installed — PDF slide preview disabled. Run: pip install pymupdf")
+
+# python-pptx for PPTX rendering
+try:
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+    PPTX_AVAILABLE = True
+except ImportError:
+    PPTX_AVAILABLE = False
+    print("⚠️  python-pptx not installed — PPTX slide preview disabled.")
+
+# Pillow for image operations
+try:
+    from PIL import Image, ImageDraw, ImageFont
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+    print("⚠️  Pillow not installed — PPTX slide preview disabled. Run: pip install Pillow")
 
 
 # ---------------------
 # Configuration
 # ---------------------
 RENDER_DPI = 150        # Balance between quality and file size
-JPEG_QUALITY = 80       # JPEG compression quality (1-100)
+JPEG_QUALITY = 80       # JPEG compression quality (1–100)
+SLIDE_WIDTH = 1280      # Text-rendered slide width (px)
+SLIDE_HEIGHT = 720      # Text-rendered slide height (px)
 
 
+# ---------------------
+# PDF → JPEG via pymupdf
+# ---------------------
 def render_pdf_to_images(file_bytes: bytes, output_dir: str) -> list:
     """
-    Render each PDF page as a JPEG image.
+    Render each PDF page as a JPEG image using pymupdf.
     Returns list of image filenames: ["1.jpg", "2.jpg", ...]
     """
-    if not PDF2IMAGE_AVAILABLE:
+    if not FITZ_AVAILABLE:
         return []
 
     os.makedirs(output_dir, exist_ok=True)
 
     try:
-        images = convert_from_bytes(
-            file_bytes,
-            dpi=RENDER_DPI,
-            fmt="jpeg",
-        )
+        doc = fitz.open(stream=file_bytes, filetype="pdf")
     except Exception as e:
-        print(f"❌ PDF rendering error: {e}")
+        print(f"❌ PDF open error: {e}")
         return []
 
     filenames = []
-    for i, img in enumerate(images):
-        filename = f"{i + 1}.jpg"
-        filepath = os.path.join(output_dir, filename)
-        img.save(filepath, "JPEG", quality=JPEG_QUALITY)
-        filenames.append(filename)
+    zoom = RENDER_DPI / 72  # pymupdf default is 72 DPI
+    mat = fitz.Matrix(zoom, zoom)
 
+    for page_num in range(len(doc)):
+        try:
+            page = doc.load_page(page_num)
+            pix = page.get_pixmap(matrix=mat)
+            filename = f"{page_num + 1}.jpg"
+            filepath = os.path.join(output_dir, filename)
+            pix.save(filepath)
+            filenames.append(filename)
+        except Exception as e:
+            print(f"❌ Error rendering PDF page {page_num + 1}: {e}")
+
+    doc.close()
+    print(f"✅ Rendered {len(filenames)} PDF pages to images.")
     return filenames
+
+
+# ---------------------
+# PPTX → JPEG via python-pptx + Pillow
+# ---------------------
+def _get_shape_text(shape) -> str:
+    """Safely extract text from a pptx shape."""
+    try:
+        if hasattr(shape, "text") and shape.text.strip():
+            return shape.text.strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _render_slide_as_image(slide, slide_index: int) -> "Image.Image | None":
+    """
+    Render a single pptx slide as a PIL Image using text layout.
+    Returns None if Pillow is not available.
+    """
+    if not PIL_AVAILABLE:
+        return None
+
+    # Background
+    img = Image.new("RGB", (SLIDE_WIDTH, SLIDE_HEIGHT), color=(15, 23, 42))  # dark blue-black
+    draw = ImageDraw.Draw(img)
+
+    # Slide number badge (top-left)
+    badge_text = f"Slide {slide_index}"
+    draw.rectangle([20, 20, 130, 50], fill=(59, 130, 246))  # blue badge
+    draw.text((30, 27), badge_text, fill=(255, 255, 255))
+
+    # Collect all text from slide shapes
+    lines = []
+    for shape in slide.shapes:
+        text = _get_shape_text(shape)
+        if text:
+            lines.append(text)
+
+    # Draw text content
+    y = 80
+    for line in lines:
+        # Word-wrap manually: split into chunks of ~60 chars
+        words = line.split()
+        current = ""
+        for word in words:
+            if len(current) + len(word) + 1 <= 60:
+                current = f"{current} {word}".strip()
+            else:
+                if current:
+                    draw.text((40, y), current, fill=(224, 224, 224))
+                    y += 28
+                current = word
+                if y > SLIDE_HEIGHT - 60:
+                    draw.text((40, y), "...", fill=(128, 128, 128))
+                    break
+        if current and y <= SLIDE_HEIGHT - 60:
+            draw.text((40, y), current, fill=(224, 224, 224))
+            y += 28
+        y += 10  # extra spacing between shapes
+
+        if y > SLIDE_HEIGHT - 60:
+            break
+
+    # Bottom border accent
+    draw.rectangle([0, SLIDE_HEIGHT - 4, SLIDE_WIDTH, SLIDE_HEIGHT], fill=(59, 130, 246))
+
+    return img
 
 
 def render_pptx_to_images(file_bytes: bytes, output_dir: str) -> list:
     """
-    Render each PPTX slide as a JPEG image.
-    Pipeline: PPTX → LibreOffice → PDF → pdf2image → JPEG
+    Render each PPTX slide as a JPEG image using python-pptx + Pillow.
     Returns list of image filenames: ["1.jpg", "2.jpg", ...]
     """
-    if not PDF2IMAGE_AVAILABLE:
+    if not PPTX_AVAILABLE or not PIL_AVAILABLE:
         return []
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Write PPTX to temp file
-    tmp_pptx = tempfile.NamedTemporaryFile(suffix=".pptx", delete=False)
     try:
-        tmp_pptx.write(file_bytes)
-        tmp_pptx.close()
+        prs = Presentation(io.BytesIO(file_bytes))
+    except Exception as e:
+        print(f"❌ PPTX open error: {e}")
+        return []
 
-        tmp_dir = tempfile.mkdtemp()
-
-        # Convert PPTX → PDF via LibreOffice headless
+    filenames = []
+    for i, slide in enumerate(prs.slides):
         try:
-            subprocess.run(
-                [
-                    "libreoffice", "--headless", "--convert-to", "pdf",
-                    "--outdir", tmp_dir, tmp_pptx.name
-                ],
-                timeout=120,
-                check=True,
-                capture_output=True,
-            )
-        except FileNotFoundError:
-            print("⚠️  LibreOffice not found — PPTX slide preview disabled.")
-            print("   Install with: sudo apt install libreoffice-core libreoffice-impress")
-            return []
-        except subprocess.TimeoutExpired:
-            print("❌ LibreOffice conversion timed out.")
-            return []
-        except subprocess.CalledProcessError as e:
-            print(f"❌ LibreOffice error: {e.stderr.decode()[:200]}")
-            return []
+            img = _render_slide_as_image(slide, i + 1)
+            if img is None:
+                continue
+            filename = f"{i + 1}.jpg"
+            filepath = os.path.join(output_dir, filename)
+            img.save(filepath, "JPEG", quality=JPEG_QUALITY)
+            filenames.append(filename)
+        except Exception as e:
+            print(f"❌ Error rendering PPTX slide {i + 1}: {e}")
 
-        # Find the generated PDF
-        base_name = Path(tmp_pptx.name).stem
-        pdf_path = os.path.join(tmp_dir, f"{base_name}.pdf")
-
-        if not os.path.exists(pdf_path):
-            print(f"❌ PDF not generated at expected path: {pdf_path}")
-            return []
-
-        # Convert PDF → JPEG images
-        with open(pdf_path, "rb") as f:
-            return render_pdf_to_images(f.read(), output_dir)
-
-    finally:
-        # Cleanup temp files
-        try:
-            os.unlink(tmp_pptx.name)
-        except OSError:
-            pass
+    print(f"✅ Rendered {len(filenames)} PPTX slides to images.")
+    return filenames
 
 
+# ---------------------
+# Main entry point
+# ---------------------
 def render_slides(file_bytes: bytes, file_type: str, filename: str, output_dir: str) -> list:
     """
-    Main entry point. Detects file type and renders accordingly.
-    Returns list of image filenames.
+    Detect file type and render slides to JPEG images.
+    Returns list of image filenames (empty if rendering unavailable).
     """
     is_pdf = file_type == "application/pdf"
     is_pptx = (

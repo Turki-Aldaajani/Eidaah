@@ -12,8 +12,9 @@ python-multipart==0.0.9
 pdfplumber==0.10.3
 python-pptx==0.6.23
 
-# Slide Rendering (PDF/PPTX → JPEG) — optional, needs poppler
-pdf2image==1.17.0
+# Slide Rendering (PDF/PPTX → JPEG) — pure Python, no system dependencies
+pymupdf==1.24.14
+Pillow==11.1.0
 
 # AI - Groq API (OpenAI-compatible)
 openai==1.60.0
