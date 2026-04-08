@@ -274,6 +274,12 @@ const getStyles = (isMobile, isTablet) => ({
     margin: 0,
     lineHeight: 1.6,
   },
+  slideImage: {
+    width: "100%",
+    borderRadius: 8,
+    marginTop: 12,
+    display: "block",
+  },
   slideCard: {
     width: "100%",
     borderRadius: 10,
@@ -288,36 +294,40 @@ const getStyles = (isMobile, isTablet) => ({
     background: "linear-gradient(90deg, #3b82f6 0%, #6366f1 100%)",
   },
   slideCardBody: {
-    padding: "16px 18px 18px 18px",
-    minHeight: 140,
-    position: "relative",
+    padding: "18px 18px 0 18px",
+    minHeight: 130,
+  },
+  slideCardTitle: {
+    fontSize: isMobile ? 15 : 17,
+    fontWeight: "bold",
+    color: "#f0f4ff",
+    marginBottom: 10,
+    marginTop: 0,
+    lineHeight: 1.4,
+  },
+  slideCardContent: {
+    fontSize: isMobile ? 12 : 13,
+    color: "#94a3b8",
+    lineHeight: 1.75,
+    whiteSpace: "pre-wrap",
+    marginBottom: 0,
+  },
+  slideCardFooter: {
+    marginTop: 14,
+    padding: "8px 18px",
+    borderTop: "1px solid #1e2d42",
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
   },
   slideCardNumber: {
-    position: "absolute",
-    top: 12,
-    right: 14,
     backgroundColor: "#1e3a5c",
     color: "#7ab4f5",
     fontSize: 11,
     fontWeight: "bold",
-    padding: "2px 8px",
+    padding: "2px 10px",
     borderRadius: 10,
     letterSpacing: 0.5,
-  },
-  slideCardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#f0f4ff",
-    marginBottom: 10,
-    marginTop: 2,
-    lineHeight: 1.4,
-    paddingRight: 50,
-  },
-  slideCardContent: {
-    fontSize: 13,
-    color: "#94a3b8",
-    lineHeight: 1.75,
-    whiteSpace: "pre-wrap",
   },
   statusDot: {
     display: "inline-block",
@@ -343,9 +353,11 @@ function SlideCard({ slide, label, styles }) {
     <div style={styles.slideCard}>
       <div style={styles.slideCardAccent} />
       <div style={styles.slideCardBody}>
-        <span style={styles.slideCardNumber}>{label} {slide.slide_number}</span>
         {title && <div style={styles.slideCardTitle}>{title}</div>}
         {body && <div style={styles.slideCardContent}>{body}</div>}
+      </div>
+      <div style={styles.slideCardFooter}>
+        <span style={styles.slideCardNumber}>{label} {slide.slide_number}</span>
       </div>
     </div>
   );
@@ -378,6 +390,7 @@ export default function Results() {
   const [summary, setSummary] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [indexingComplete, setIndexingComplete] = useState(false);
+  const [slideImages, setSlideImages] = useState({});
   const [activeTopicId, setActiveTopicId] = useState(null); // which topic is being analyzed
   const [topicAnalysis, setTopicAnalysis] = useState(null);
   const [topicLoading, setTopicLoading] = useState(false);
@@ -408,6 +421,14 @@ export default function Results() {
         const res = await fetch(`${API_URL}/api/session/${sessionId}/status`);
         if (!res.ok) return;
         const data = await res.json();
+
+        if (data.slides) {
+          const imgMap = {};
+          data.slides.forEach((s) => {
+            if (s.image_url) imgMap[s.slide_number] = `${API_URL}${s.image_url}`;
+          });
+          setSlideImages(imgMap);
+        }
 
         if (data.indexing_complete) {
           setIndexingComplete(true);
@@ -601,12 +622,21 @@ export default function Results() {
                 ))}
               </select>
 
-              {/* Slide preview card */}
-              <SlideCard
-                slide={currentSlideData}
-                label={t.slide}
-                styles={styles}
-              />
+              {/* Slide preview: real image (PDF) or styled card (PPTX/fallback) */}
+              {slideImages[currentSlideData.slide_number] ? (
+                <img
+                  src={slideImages[currentSlideData.slide_number]}
+                  alt={`${t.slide} ${currentSlideData.slide_number}`}
+                  style={styles.slideImage}
+                  loading="lazy"
+                />
+              ) : (
+                <SlideCard
+                  slide={currentSlideData}
+                  label={t.slide}
+                  styles={styles}
+                />
+              )}
 
               {/* Explain slide button */}
               <button 
