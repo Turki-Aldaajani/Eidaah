@@ -1,0 +1,23 @@
+# =======================================
+# Eidaah Backend v3.1 - Dependencies
+# (No local embeddings — pure LLM)
+# =======================================
+
+# FastAPI and Web Server
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+python-multipart==0.0.9
+
+# File Processing
+pdfplumber==0.10.3
+python-pptx==0.6.23
+
+# Slide Rendering (PDF/PPTX → JPEG) — optional, needs poppler
+pdf2image==1.17.0
+
+# AI - Groq API (OpenAI-compatible)
+openai==1.60.0
+
+# Utilities
+python-dotenv==1.0.1
+pydantic==2.9.0
