@@ -1,12 +1,5 @@
 FROM python:3.11-slim
 
-# System dependencies for slide rendering
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    poppler-utils \
-    libreoffice-core \
-    libreoffice-impress \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 # Install Python dependencies

@@ -274,13 +274,50 @@ const getStyles = (isMobile, isTablet) => ({
     margin: 0,
     lineHeight: 1.6,
   },
-  slideImage: {
+  slideCard: {
     width: "100%",
-    maxWidth: "100%",
-    borderRadius: 8,
+    borderRadius: 10,
     marginTop: 12,
-    backgroundColor: "#0B101B",
-    display: "block",
+    backgroundColor: "#0d1117",
+    border: "1px solid #2a3a5c",
+    overflow: "hidden",
+    boxSizing: "border-box",
+  },
+  slideCardAccent: {
+    height: 4,
+    background: "linear-gradient(90deg, #3b82f6 0%, #6366f1 100%)",
+  },
+  slideCardBody: {
+    padding: "16px 18px 18px 18px",
+    minHeight: 140,
+    position: "relative",
+  },
+  slideCardNumber: {
+    position: "absolute",
+    top: 12,
+    right: 14,
+    backgroundColor: "#1e3a5c",
+    color: "#7ab4f5",
+    fontSize: 11,
+    fontWeight: "bold",
+    padding: "2px 8px",
+    borderRadius: 10,
+    letterSpacing: 0.5,
+  },
+  slideCardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#f0f4ff",
+    marginBottom: 10,
+    marginTop: 2,
+    lineHeight: 1.4,
+    paddingRight: 50,
+  },
+  slideCardContent: {
+    fontSize: 13,
+    color: "#94a3b8",
+    lineHeight: 1.75,
+    whiteSpace: "pre-wrap",
   },
   statusDot: {
     display: "inline-block",
@@ -296,6 +333,23 @@ const getStyles = (isMobile, isTablet) => ({
     margin: "20px 0 8px 0",
   },
 });
+
+function SlideCard({ slide, label, styles }) {
+  const lines = slide.text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const title = lines[0] || "";
+  const body = lines.slice(1).join("\n");
+
+  return (
+    <div style={styles.slideCard}>
+      <div style={styles.slideCardAccent} />
+      <div style={styles.slideCardBody}>
+        <span style={styles.slideCardNumber}>{label} {slide.slide_number}</span>
+        {title && <div style={styles.slideCardTitle}>{title}</div>}
+        {body && <div style={styles.slideCardContent}>{body}</div>}
+      </div>
+    </div>
+  );
+}
 
 export default function Results() {
   const navigate = useNavigate();
@@ -324,7 +378,6 @@ export default function Results() {
   const [summary, setSummary] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [indexingComplete, setIndexingComplete] = useState(false);
-  const [slideImages, setSlideImages] = useState({});
   const [activeTopicId, setActiveTopicId] = useState(null); // which topic is being analyzed
   const [topicAnalysis, setTopicAnalysis] = useState(null);
   const [topicLoading, setTopicLoading] = useState(false);
@@ -355,16 +408,6 @@ export default function Results() {
         const res = await fetch(`${API_URL}/api/session/${sessionId}/status`);
         if (!res.ok) return;
         const data = await res.json();
-
-        if (data.slides) {
-          const imgMap = {};
-          data.slides.forEach((s) => {
-            if (s.image_url) {
-              imgMap[s.slide_number] = `${API_URL}${s.image_url}`;
-            }
-          });
-          setSlideImages(imgMap);
-        }
 
         if (data.indexing_complete) {
           setIndexingComplete(true);
@@ -558,20 +601,12 @@ export default function Results() {
                 ))}
               </select>
 
-              {/* Slide image */}
-              {slideImages[currentSlideData.slide_number] && (
-                <img
-                  src={slideImages[currentSlideData.slide_number]}
-                  alt={`${t.slide} ${currentSlideData.slide_number}`}
-                  style={styles.slideImage}
-                  loading="lazy"
-                />
-              )}
-
-              {/* Slide text */}
-              <div style={styles.slideText}>
-                <p>{currentSlideData.text}</p>
-              </div>
+              {/* Slide preview card */}
+              <SlideCard
+                slide={currentSlideData}
+                label={t.slide}
+                styles={styles}
+              />
 
               {/* Explain slide button */}
               <button 
