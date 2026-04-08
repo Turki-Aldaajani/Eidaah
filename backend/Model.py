@@ -39,6 +39,11 @@ LANGUAGE RULES (VERY IMPORTANT):
 - If the text is mixed, respond in the dominant language.
 - Never mix languages in your response."""
 
+LANGUAGE_INSTRUCTIONS = {
+    "ar": "CRITICAL INSTRUCTION: You MUST respond ENTIRELY in Arabic (العربية) regardless of the language of the input text. Do not use any English words.",
+    "en": "CRITICAL INSTRUCTION: You MUST respond ENTIRELY in English regardless of the language of the input text. Do not use any Arabic words.",
+}
+
 EXPLANATION_PROMPT = """Analyze and explain this presentation slide content clearly and concisely.
 Focus on making complex concepts easy to understand for a university student.
 Write 2-4 sentences maximum.
@@ -81,10 +86,11 @@ _call_groq = call_groq
 # ---------------------
 # Legacy: Slide-level generation (preserved for /api/analyze_slide)
 # ---------------------
-def generate_explanation_and_example(text: str):
+def generate_explanation_and_example(text: str, language: str = None):
     """
     Takes slide text, returns (explanation, example).
     Backward compatible — ai_logic.py calls this directly.
+    If language is provided ("ar" or "en"), forces the response in that language.
     """
     if not text.strip():
         return "No text found on this slide.", "No example available."
@@ -95,14 +101,20 @@ def generate_explanation_and_example(text: str):
             "Visit https://console.groq.com/keys to get a free API key."
         )
 
+    system = SYSTEM_PROMPT
+    if language and language in LANGUAGE_INSTRUCTIONS:
+        system = SYSTEM_PROMPT + "\n\n" + LANGUAGE_INSTRUCTIONS[language]
+
     try:
         explanation = call_groq(
             EXPLANATION_PROMPT.format(text=text),
             max_tokens=300, temperature=0.3,
+            system_prompt=system,
         )
         example = call_groq(
             EXAMPLE_PROMPT.format(text=text[:500]),
             max_tokens=200, temperature=0.5,
+            system_prompt=system,
         )
         return explanation, example
 

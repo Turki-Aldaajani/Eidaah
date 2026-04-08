@@ -22,7 +22,7 @@ from session_store import (
 from slide_renderer import render_slides
 from chunker import chunk_slides
 from topic_detector import detect_topics
-from rag_generator import generate_summary, generate_topic_analysis
+from rag_generator import generate_summary, generate_topic_analysis  # noqa: F401 (generate_summary used in endpoint)
 
 # Thread pool for blocking work
 executor = ThreadPoolExecutor(max_workers=3)
@@ -219,6 +219,7 @@ async def get_slide_image(session_id: str, filename: str):
 class AnalyzeTopicRequest(BaseModel):
     session_id: str
     topic_id: int
+    language: str = "ar"
 
 
 @app.post("/api/analyze_topic", tags=["Step 2: Analyze"])
@@ -251,9 +252,44 @@ async def analyze_topic(payload: AnalyzeTopicRequest):
         session.chunks,
         session.summary,
         call_groq,
+        payload.language,
     )
 
     return result
+
+
+# ---------------------------------------------------------
+# ENDPOINT: Generate Summary (on-demand, with language)
+# ---------------------------------------------------------
+class SummaryRequest(BaseModel):
+    language: str = "ar"
+
+
+@app.post("/api/session/{session_id}/summary", tags=["Step 2: Analyze"])
+async def get_summary(session_id: str, payload: SummaryRequest):
+    """Generate (or regenerate) the presentation summary in the requested language."""
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found or expired.")
+
+    if not session.indexing_complete:
+        return JSONResponse(
+            status_code=202,
+            content={"detail": "Indexing still in progress. Please wait."}
+        )
+
+    all_text = "\n\n".join(s["text"] for s in session.slides)
+
+    loop = asyncio.get_event_loop()
+    summary = await loop.run_in_executor(
+        executor,
+        generate_summary,
+        all_text,
+        call_groq,
+        payload.language,
+    )
+
+    return {"summary": summary}
 
 
 # ---------------------------------------------------------
@@ -261,11 +297,12 @@ async def analyze_topic(payload: AnalyzeTopicRequest):
 # ---------------------------------------------------------
 class AnalyzeRequest(BaseModel):
     text: str
+    language: str = "ar"
 
 
 @app.post("/api/analyze_slide", tags=["Step 2: Analyze (Legacy)"])
 async def analyze_slide(payload: AnalyzeRequest):
-    result = await ai_logic.process_text_directly(payload.text)
+    result = await ai_logic.process_text_directly(payload.text, language=payload.language)
     return result
 
 

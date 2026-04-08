@@ -328,6 +328,7 @@ export default function Results() {
   const [activeTopicId, setActiveTopicId] = useState(null); // which topic is being analyzed
   const [topicAnalysis, setTopicAnalysis] = useState(null);
   const [topicLoading, setTopicLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const pollingRef = useRef(null);
 
   // Load slides from localStorage
@@ -395,6 +396,35 @@ export default function Results() {
     const newLang = language === "ar" ? "en" : "ar";
     setLanguage(newLang);
     localStorage.setItem("language", newLang);
+    // Re-fetch summary in new language if it's already visible
+    if (showSummary && sessionId) {
+      fetchSummary(newLang);
+    }
+  };
+
+  const fetchSummary = async (lang) => {
+    if (!sessionId) return;
+    setSummaryLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/session/${sessionId}/summary`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: lang }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSummary(data.summary);
+      }
+    } catch (err) {
+      console.error("Summary fetch error:", err);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleShowSummary = async () => {
+    setShowSummary(true);
+    await fetchSummary(language);
   };
 
   // Per-slide explain
@@ -408,7 +438,7 @@ export default function Results() {
       const res = await fetch(`${API_URL}/api/analyze_slide`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: slides[currentSlide].text }),
+        body: JSON.stringify({ text: slides[currentSlide].text, language }),
       });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
@@ -441,6 +471,7 @@ export default function Results() {
         body: JSON.stringify({
           session_id: sessionId,
           topic_id: topic.topic_id,
+          language,
         }),
       });
       if (res.status === 202) { setTopicLoading(false); return; }
@@ -568,19 +599,22 @@ export default function Results() {
                   <p style={styles.sectionTitle}>{t.topics_title}</p>
 
                   {/* Show Summary button */}
-                  {summary && !showSummary && (
+                  {!showSummary && (
                     <button
-                      style={{ ...styles.secondaryBtn, marginTop: 0, marginBottom: 14 }}
-                      onClick={() => setShowSummary(true)}
+                      style={{ ...styles.secondaryBtn, marginTop: 0, marginBottom: 14, opacity: summaryLoading ? 0.6 : 1 }}
+                      onClick={handleShowSummary}
+                      disabled={summaryLoading}
                     >
-                      {t.generate_summary}
+                      {summaryLoading ? t.loading : t.generate_summary}
                     </button>
                   )}
 
-                  {showSummary && summary && (
+                  {showSummary && (
                     <div style={styles.summaryBox}>
                       <p style={styles.summaryLabel}>{t.summary_title}</p>
-                      <p style={styles.summaryText}>{summary}</p>
+                      <p style={styles.summaryText}>
+                        {summaryLoading ? t.loading : summary}
+                      </p>
                     </div>
                   )}
 

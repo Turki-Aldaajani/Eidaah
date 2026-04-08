@@ -150,7 +150,7 @@ async def process_file_to_pages(file: io.BytesIO, file_type: str, filename: str)
 # STEP 2: Process specific text for the 'Clarify' button
 # Receives raw text from the frontend and sends it to the AI model
 # ---------------------------------------------------------
-async def process_text_directly(text: str):
+async def process_text_directly(text: str, language: str = None):
     print(f"\n{'='*60}")
     print(f"📝 Analyzing text (length: {len(text)} chars)")
     print(f"{'='*60}")
@@ -166,7 +166,7 @@ async def process_text_directly(text: str):
 
     try:
         print("🤖 Calling AI model...")
-        explanation, example = generate_explanation_and_example(truncated_text)
+        explanation, example = generate_explanation_and_example(truncated_text, language=language)
         print(f"✅ Analysis complete!")
         print(f"   Explanation: {explanation[:100]}...")
         print(f"   Example: {example[:100]}...")

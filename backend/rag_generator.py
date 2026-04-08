@@ -16,6 +16,11 @@ LANGUAGE RULES:
 You will receive presentation content related to a topic.
 Provide accurate, educational responses."""
 
+LANGUAGE_INSTRUCTIONS = {
+    "ar": "CRITICAL INSTRUCTION: You MUST respond ENTIRELY in Arabic (العربية) regardless of the language of the input content. Do not use any English words.",
+    "en": "CRITICAL INSTRUCTION: You MUST respond ENTIRELY in English regardless of the language of the input content. Do not use any Arabic words.",
+}
+
 RAG_PROMPT_TEMPLATE = """TOPIC: {topic_label}
 
 RELEVANT CONTENT FROM THE PRESENTATION:
@@ -41,14 +46,18 @@ Content:
 {text}"""
 
 
-def generate_summary(all_text: str, call_groq_fn) -> str:
+def generate_summary(all_text: str, call_groq_fn, language: str = None) -> str:
     """Generate a global summary of the entire presentation."""
     truncated = all_text[:4000]
+    system = RAG_SYSTEM_PROMPT
+    if language and language in LANGUAGE_INSTRUCTIONS:
+        system = RAG_SYSTEM_PROMPT + "\n\n" + LANGUAGE_INSTRUCTIONS[language]
     try:
         return call_groq_fn(
             SUMMARY_PROMPT.format(text=truncated),
             max_tokens=250,
             temperature=0.2,
+            system_prompt=system,
         )
     except Exception as e:
         print(f"⚠️  Summary generation failed: {e}")
@@ -60,6 +69,7 @@ def generate_topic_analysis(
     chunks: list,
     summary: str,
     call_groq_fn,
+    language: str = None,
 ) -> dict:
     """
     Generate explanation and example for a specific topic using chunks.
@@ -74,12 +84,16 @@ def generate_topic_analysis(
         content=truncated_content,
     )
 
+    system = RAG_SYSTEM_PROMPT
+    if language and language in LANGUAGE_INSTRUCTIONS:
+        system = RAG_SYSTEM_PROMPT + "\n\n" + LANGUAGE_INSTRUCTIONS[language]
+
     try:
         raw = call_groq_fn(
             prompt=prompt,
             max_tokens=600,
             temperature=0.3,
-            system_prompt=RAG_SYSTEM_PROMPT,
+            system_prompt=system,
         )
 
         # Parse JSON response
