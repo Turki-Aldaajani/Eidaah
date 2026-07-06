@@ -2,15 +2,8 @@
 
 html, body {
   margin: 0;
-  background-color: #0a0f1c;
-  font-family: 'Cairo', sans-serif; /* تطبيق الخط الجديد */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-#root {
-  background-color: #0a0f1c;
-  min-height: 100vh;
 }
 
 code {
