@@ -211,7 +211,7 @@ export default function Upload() {
       setProgress(100);
       
       setTimeout(() => {
-        navigate("/results");
+        navigate("/analyze/results");
       }, 500);
 
     } catch (err) {

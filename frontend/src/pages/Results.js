@@ -569,7 +569,7 @@ export default function Results() {
         <div style={styles.pageWrapper}>
           <div style={styles.noContent}>
             <p style={styles.errorText}>{error}</p>
-            <button style={styles.backBtn} onClick={() => navigate("/")}>
+            <button style={styles.backBtn} onClick={() => navigate("/analyze")}>
               {staticTranslations[language].back_button}
             </button>
           </div>
@@ -593,7 +593,7 @@ export default function Results() {
               <span>{t.logo}</span>
             </div>
             <div style={styles.headerControls}>
-              <button style={styles.backBtn} onClick={() => navigate("/")}>
+              <button style={styles.backBtn} onClick={() => navigate("/analyze")}>
                 {t.back_button}
               </button>
               <button style={styles.langBtn} onClick={toggleLanguage}>
