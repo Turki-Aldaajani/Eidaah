@@ -532,9 +532,9 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .entry-card:hover{border-color:var(--pri);box-shadow:var(--sh-m)}
 .entry-ic{width:56px;height:56px;border-radius:50%;background:var(--pri-soft);border:1px solid var(--pri-line);color:var(--pri);display:grid;place-items:center;margin:0 auto 16px}
 .entry-ic .ic{width:26px;height:26px}
-.entry-card.alt .entry-ic{background:var(--accent-soft);border-color:#D8DEA8;color:var(--accent)}
+.entry-card.alt .entry-ic{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 30%,#fff);color:var(--accent)}
 .entry-card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
 .entry-card p{font-size:.85rem;color:var(--mut);line-height:1.8}
 .entry-tag{display:inline-block;margin-top:14px;font-size:.75rem;font-weight:600;color:var(--pri);border:1px solid var(--pri-line);background:var(--pri-soft);padding:4px 12px;border-radius:var(--r-s)}
-.entry-card.alt .entry-tag{color:var(--accent);border-color:#D8DEA8;background:var(--accent-soft)}
+.entry-card.alt .entry-tag{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,#fff);background:var(--accent-soft)}
 [data-theme="dark"] .entry-card{background:#172218;border-color:var(--line)}
