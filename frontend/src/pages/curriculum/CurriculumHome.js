@@ -1,0 +1,56 @@
+import React from "react";
+import { Link } from "react-router-dom";
+import TopNav from "../../components/TopNav";
+import Icon from "../../components/Icon";
+import { STAGES, LEVEL_NAMES, subjectsForStage, stageById } from "../../data/curriculum";
+
+const LEVELS = ["primary", "middle", "high"];
+
+function GradeCard({ stage }) {
+  const count = subjectsForStage(stage).length;
+  return (
+    <Link className={`card grade-card lv-${stage.lv}`} to={`/learn/${stage.id}`}>
+      <h3 className="g-name">{stage.n}</h3>
+      <span className="g-sub">{count} مواد دراسية</span>
+      <span className="g-cta">
+        ابدأ التعلّم <Icon name="arrow" />
+      </span>
+    </Link>
+  );
+}
+
+export default function CurriculumHome() {
+  return (
+    <>
+      <TopNav />
+      <section className="view view-home">
+        <div className="hero">
+          <div className="container hero-in anim">
+            <span className="hero-kicker">
+              <Icon name="sparkles" /> منصة تعلّم بالذكاء الاصطناعي
+            </span>
+            <h1 className="hero-title">
+              اختر <span className="hl">مرحلتك الدراسية</span>
+            </h1>
+            <p className="hero-sub">تعلّم أسرع بالذكاء الاصطناعي، مصمم خصيصاً للمنهج السعودي</p>
+          </div>
+        </div>
+        <div className="container home-groups">
+          {LEVELS.map((lv) => (
+            <section className="level-group" key={lv}>
+              <h2 className="level-h">
+                <span className={`lv-chip lv-${lv}`}>{LEVEL_NAMES[lv]}</span>
+                <i className="lv-line"></i>
+              </h2>
+              <div className="grid grades">
+                {STAGES.filter((s) => s.lv === lv).map((s) => (
+                  <GradeCard stage={stageById(s.id)} key={s.id} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
