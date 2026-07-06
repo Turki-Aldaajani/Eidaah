@@ -7,6 +7,7 @@ import Results from "./pages/Results";
 import About from "./About";
 import FAQ from "./FAQ";
 import CurriculumHome from "./pages/curriculum/CurriculumHome";
+import Subjects from "./pages/curriculum/Subjects";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/learn" element={<CurriculumHome />} />
+          <Route path="/learn/:stageId" element={<Subjects />} />
           <Route path="/analyze" element={<Upload />} />
           <Route path="/analyze/results" element={<Results />} />
           <Route path="/about" element={<About />} />
