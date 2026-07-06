@@ -23,6 +23,7 @@ from slide_renderer import render_slides
 from chunker import chunk_slides
 from topic_detector import detect_topics
 from rag_generator import generate_summary, generate_topic_analysis  # noqa: F401 (generate_summary used in endpoint)
+from lesson_tool import generate_lesson_tool_content
 
 # Thread pool for blocking work
 executor = ThreadPoolExecutor(max_workers=3)
@@ -304,6 +305,49 @@ class AnalyzeRequest(BaseModel):
 async def analyze_slide(payload: AnalyzeRequest):
     result = await ai_logic.process_text_directly(payload.text, language=payload.language)
     return result
+
+
+# ---------------------------------------------------------
+# ENDPOINT: Curriculum Lesson AI Tools (summary / example / notes / quiz)
+# ---------------------------------------------------------
+LESSON_TOOLS = {"sum", "ex", "notes", "quiz"}
+
+
+class LessonToolRequest(BaseModel):
+    stage: str
+    subject: str
+    lesson_title: str
+    tool: str
+    language: str = "ar"
+
+
+@app.post("/api/lesson_tool", tags=["Curriculum: AI Tools"])
+async def lesson_tool_endpoint(payload: LessonToolRequest):
+    """Generate one of the four curriculum AI-tool panels, or the lesson quiz."""
+    if payload.tool not in LESSON_TOOLS:
+        raise HTTPException(400, f"Invalid tool '{payload.tool}'. Must be one of: {sorted(LESSON_TOOLS)}.")
+
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        executor,
+        generate_lesson_tool_content,
+        payload.stage,
+        payload.subject,
+        payload.lesson_title,
+        payload.tool,
+        call_groq,
+        payload.language,
+    )
+
+    if result is None:
+        return JSONResponse(
+            status_code=502,
+            content={"detail": "تعذّر توليد المحتوى الآن، حاول مرة أخرى."},
+        )
+
+    if payload.tool == "quiz":
+        return {"tool": "quiz", "questions": result}
+    return {"tool": payload.tool, **result}
 
 
 # ---------------------------------------------------------
