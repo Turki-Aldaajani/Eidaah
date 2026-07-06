@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Footer from './Footer';
-import './App.css';
+import { Link } from 'react-router-dom';
+import TopNav from './components/TopNav';
+import Icon from './components/Icon';
 
-// بيانات الأسئلة والأجوبة (النسخة الكاملة)
 const faqData = {
   ar: {
     project: [
@@ -39,44 +38,14 @@ const faqData = {
   }
 };
 
-// التنسيقات (مع إصلاح العناوين وتسريب النص)
-const styles = {
-  body: { background: "#0a0f1c", color: "white", fontFamily: "'Cairo', sans-serif", margin: 0, padding: 40, minHeight: "100vh" },
-  pageWrapper: { backgroundColor: "#2a2f3a", borderRadius: 24, padding: 48, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", width: "100%", maxWidth: 900, margin: "0 auto" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 48 },
-  logo: { display: "flex", alignItems: "center", gap: 12 },
-  logoIcon: { width: 40, height: 40, backgroundColor: "#3b82f6", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center" },
-  logoInner: { width: 24, height: 24, border: "2px solid white", borderRadius: "50%" },
-  headerControls: { display: "flex", gap: 15, alignItems: "center" },
-  backBtn: { background: "none", border: "1px solid #4A5568", color: "white", padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontWeight: "bold" },
-  langBtn: { backgroundColor: "#2A3B5C", color: "white", border: "none", padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontWeight: "bold" },
-  content: { maxWidth: 800, margin: '0 auto' },
-  categoryTitle: { // <-- هذا هو الكود الصحيح للعنوان
-    color: '#3b82f6',
-    fontSize: '22px',
-    borderBottom: '2px solid #3b82f6',
-    paddingBottom: '5px',
-    marginTop: '30px'
-    // تم حذف 'display: inline-block'
-  },
-  faqItem: { backgroundColor: '#1e2d42', borderRadius: '8px', margin: '10px 0', overflow: 'hidden' },
-  faqQuestion: { padding: '15px 20px', cursor: 'pointer', fontWeight: 'bold' },
-  faqAnswer: {
-    color: '#ccc',
-    transition: 'max-height 0.3s ease-out, padding 0.3s ease-out',
-    overflow: 'hidden'
-  }
-};
-
 const staticTranslations = {
-  ar: { logo: "إيضاح", back_button: "← رجوع", page_title: "الأسئلة الشائعة", cat_project: "التعريف بالمشروع", cat_features: "الاستخدام والمميزات", cat_support: "الدعم الفني" },
-  en: { logo: "SlideAI", back_button: "← Back", page_title: "Frequently Asked Questions", cat_project: "About The Project", cat_features: "Usage & Features", cat_support: "Support" }
+  ar: { page_title: "الأسئلة الشائعة", cat_project: "التعريف بالمشروع", cat_features: "الاستخدام والمميزات", cat_support: "الدعم الفني", home: "الرئيسية" },
+  en: { page_title: "Frequently Asked Questions", cat_project: "About The Project", cat_features: "Usage & Features", cat_support: "Support", home: "Home" }
 };
 
 export default function FAQ() {
-  const navigate = useNavigate();
   const [language, setLanguage] = useState(localStorage.getItem("language") || "ar");
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openKey, setOpenKey] = useState(null);
 
   const toggleLanguage = () => {
     const newLang = language === 'ar' ? 'en' : 'ar';
@@ -84,80 +53,67 @@ export default function FAQ() {
     localStorage.setItem("language", newLang);
   };
 
-  const toggleFAQ = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  const toggleFAQ = (key) => setOpenKey((prev) => (prev === key ? null : key));
 
-  const currentStatic = staticTranslations[language];
-  const currentData = faqData[language];
-  const isArabic = language === 'ar';
+  const t = staticTranslations[language];
+  const data = faqData[language];
+
+  const sections = [
+    { key: "project", title: t.cat_project, items: data.project },
+    { key: "features", title: t.cat_features, items: data.features },
+    { key: "support", title: t.cat_support, items: data.support },
+  ];
 
   return (
-    <div style={styles.body}>
-      <div style={styles.pageWrapper} className={isArabic ? 'text-ar' : 'text-en'}>
-        <div style={styles.header}>
-          <div style={styles.logo}>
-            <div style={styles.logoIcon}><div style={styles.logoInner}></div></div>
-            <span>{currentStatic.logo}</span>
-          </div>
-          <div style={styles.headerControls}>
-            <button style={styles.backBtn} onClick={() => navigate("/")}>
-              {currentStatic.back_button}
-            </button>
-            <button style={styles.langBtn} onClick={toggleLanguage}>
+    <>
+      <TopNav />
+      <section className="view view-faq">
+        <div className="container faq-container">
+          <div className="page-head">
+            <nav className="crumbs">
+              <Link to="/">{t.home}</Link>
+              <i className="sep">‹</i>
+              <span className="cur">{t.page_title}</span>
+            </nav>
+            <h1>
+              <span className="h-ic" style={{ "--c": "var(--pri)" }}>
+                <Icon name="help" />
+              </span>
+              {t.page_title}
+            </h1>
+            <button type="button" className="btn ghost" onClick={toggleLanguage}>
               {language === "ar" ? "English" : "العربية"}
             </button>
           </div>
+
+          {sections.map((sec) => (
+            <section className="faq-sec" key={sec.key}>
+              <h2 className="faq-sec-t">{sec.title}</h2>
+              <div className="faq-list">
+                {sec.items.map((item, i) => {
+                  const itemKey = `${sec.key}-${i}`;
+                  const isOpen = openKey === itemKey;
+                  return (
+                    <div className={`faq-item${isOpen ? " open" : ""}`} key={itemKey}>
+                      <button type="button" className="faq-q" onClick={() => toggleFAQ(itemKey)}>
+                        <span>{item.q}</span>
+                        <span className="faq-chev">
+                          <Icon name="chev" />
+                        </span>
+                      </button>
+                      <div className="faq-a">
+                        <div className="faq-a-in">
+                          <p>{item.a}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
-
-        <div style={styles.content} className={isArabic ? 'text-ar' : 'text-en'}>
-          <h1 style={{ color: 'white', textAlign: 'center' }}>{currentStatic.page_title}</h1>
-
-          {/* --- هذا هو الكود الصحيح للعنوان (بدون تنسيق inline) --- */}
-<h2 style={{ ...styles.categoryTitle, textAlign: isArabic ? 'right' : 'left' }}>{currentStatic.cat_project}</h2>          {currentData.project.map((item, index) => (
-            <div key={'p'+index} style={styles.faqItem}>
-              <div style={styles.faqQuestion} onClick={() => toggleFAQ('p'+index)}>
-                <span>{item.q}</span>
-              </div>
-              <div style={{
-                ...styles.faqAnswer,
-                maxHeight: openIndex === 'p'+index ? '100px' : '0',
-                padding: openIndex === 'p'+index ? '0 20px 15px' : '0 20px'
-              }}>{item.a}</div>
-            </div>
-          ))}
-
-          {/* --- الكود الصحيح للعنوان الثاني --- */}
-<h2 style={{ ...styles.categoryTitle, textAlign: isArabic ? 'right' : 'left' }}>{currentStatic.cat_features}</h2>          {currentData.features.map((item, index) => (
-            <div key={'f'+index} style={styles.faqItem}>
-              <div style={styles.faqQuestion} onClick={() => toggleFAQ('f'+index)}>
-                <span>{item.q}</span>
-              </div>
-              <div style={{
-                ...styles.faqAnswer,
-                maxHeight: openIndex === 'f'+index ? '100px' : '0',
-                padding: openIndex === 'f'+index ? '0 20px 15px' : '0 20px'
-              }}>{item.a}</div>
-            </div>
-          ))}
-
-          {/* --- الكود الصحيح للعنوان الثالث --- */}
-<h2 style={{ ...styles.categoryTitle, textAlign: isArabic ? 'right' : 'left' }}>{currentStatic.cat_support}</h2>          {currentData.support.map((item, index) => (
-            <div key={'s'+index} style={styles.faqItem}>
-              <div style={styles.faqQuestion} onClick={() => toggleFAQ('s'+index)}>
-                <span>{item.q}</span>
-              </div>
-              <div style={{
-                ...styles.faqAnswer,
-                maxHeight: openIndex === 's'+index ? '100px' : '0',
-                padding: openIndex === 's'+index ? '0 20px 15px' : '0 20px'
-              }}>{item.a}</div>
-            </div>
-          ))}
-
-        </div>
-      </div>
-      <Footer language={language} />
-    </div>
+      </section>
+    </>
   );
 }
