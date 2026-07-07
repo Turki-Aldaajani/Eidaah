@@ -6,6 +6,11 @@ import Upload from "./pages/Upload";
 import Results from "./pages/Results";
 import About from "./About";
 import FAQ from "./FAQ";
+import CurriculumHome from "./pages/curriculum/CurriculumHome";
+import Subjects from "./pages/curriculum/Subjects";
+import Chapters from "./pages/curriculum/Chapters";
+import Lessons from "./pages/curriculum/Lessons";
+import Lesson from "./pages/curriculum/Lesson";
 
 function App() {
   return (
@@ -13,6 +18,11 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/learn" element={<CurriculumHome />} />
+          <Route path="/learn/:stageId" element={<Subjects />} />
+          <Route path="/learn/:stageId/:subjectId" element={<Chapters />} />
+          <Route path="/learn/:stageId/:subjectId/:chapterId" element={<Lessons />} />
+          <Route path="/learn/:stageId/:subjectId/:chapterId/:lessonIdx" element={<Lesson />} />
           <Route path="/analyze" element={<Upload />} />
           <Route path="/analyze/results" element={<Results />} />
           <Route path="/about" element={<About />} />
