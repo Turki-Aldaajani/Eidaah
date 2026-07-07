@@ -91,13 +91,13 @@ const CHANNELS = [
   { n: "عين دروس", nat: "sa", v: true },
   { n: "أ. خالد الحربي", nat: "sa", v: false },
   { n: "أ. نورة القحطاني", nat: "sa", v: false },
-  { n: "أكاديمية التفوق", nat: "gcc", v: true },
-  { n: "شرح المناهج العربية", nat: "ar", v: false },
+  { n: "أكاديمية التفوق", nat: "kw", v: true },
+  { n: "شرح المناهج العربية", nat: "eg", v: false },
   { n: "أ. عبدالله المالكي", nat: "sa", v: false },
-  { n: "منصة تفوّق الخليج", nat: "gcc", v: false },
-  { n: "أ. محمد عادل", nat: "ar", v: false },
+  { n: "منصة تفوّق الخليج", nat: "kw", v: false },
+  { n: "أ. محمد عادل", nat: "jo", v: false },
 ];
-export const NAT_NAMES = { sa: "سعودي", gcc: "خليجي", ar: "عربي" };
+export const NAT_NAMES = { sa: "سعودي", jo: "أردني", eg: "مصري", kw: "كويتي" };
 
 const VIDS_META = [
   { ty: "شرح مبسط وسريع", ch: 0, durM: 4, views: 1200000, year: 2026, rate: 4.8, match: 0, reason: 2 },
