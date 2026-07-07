@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Icon from "../../components/Icon";
-import { defaultFilters, applyFilters, NAT_NAMES, toArabicDigits } from "../../data/curriculum";
+import { defaultFilters, applyFilters, NAT_NAMES, toArabicDigits, fmtRate } from "../../data/curriculum";
 
 const FILTER_FIELDS = [
   { key: "nat", label: "جنسية الشارح", opts: [["all", "الكل"], ["sa", "سعودي"], ["gcc", "خليجي"], ["ar", "عربي"]] },
@@ -55,7 +55,7 @@ function VideoCard({ video, onWatch }) {
             <Icon name="calendar" /> {toArabicDigits(video.year)}
           </span>
           <span className="v-rate">
-            <Icon name="star" filled /> {video.rate.toFixed(1).replace(".", "٫")}
+            <Icon name="star" filled /> {fmtRate(video.rate)}
           </span>
         </div>
         <div className="v-foot">
