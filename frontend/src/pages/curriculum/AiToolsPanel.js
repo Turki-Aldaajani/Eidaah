@@ -93,11 +93,11 @@ function NotesContent({ laws, defs, exam }) {
 export default function AiToolsPanel({ stage, subject, lesson, onStepDone }) {
   const [openKey, setOpenKey] = useState(null);
   const [cache, setCache] = useState({});
-  const [loadingKey, setLoadingKey] = useState(null);
+  const [loading, setLoading] = useState({});
   const [errors, setErrors] = useState({});
 
   const fetchTool = async (tool) => {
-    setLoadingKey(tool);
+    setLoading((l) => ({ ...l, [tool]: true }));
     setErrors((e) => ({ ...e, [tool]: null }));
     try {
       const res = await fetch(`${API_URL}/api/lesson_tool`, {
@@ -115,7 +115,7 @@ export default function AiToolsPanel({ stage, subject, lesson, onStepDone }) {
     } catch (err) {
       setErrors((e) => ({ ...e, [tool]: "تعذّر الاتصال بالخادم" }));
     } finally {
-      setLoadingKey(null);
+      setLoading((l) => ({ ...l, [tool]: false }));
     }
   };
 
@@ -129,7 +129,7 @@ export default function AiToolsPanel({ stage, subject, lesson, onStepDone }) {
   };
 
   const renderBody = (key) => {
-    if (loadingKey === key) return <LoadingRow />;
+    if (loading[key]) return <LoadingRow />;
     if (errors[key]) return <p className="q-hint">{errors[key]}</p>;
     const data = cache[key];
     if (!data) return null;
