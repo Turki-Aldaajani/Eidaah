@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 import asyncio
 import io
 import os
+import re
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 
@@ -62,9 +63,21 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
 origins = ["*"] if FRONTEND_URL == "*" else [
     FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000",
 ]
+
+# Vercel preview deployments get a random per-deploy subdomain
+# (e.g. eidaah-jgqp-<hash>-<team>.vercel.app), so an exact match on
+# FRONTEND_URL alone rejects every preview URL. Derive the project slug
+# from FRONTEND_URL and allow any preview subdomain for that project too.
+_vercel_preview_regex = None
+if FRONTEND_URL != "*":
+    _slug_match = re.match(r"https?://([a-z0-9-]+)\.vercel\.app", FRONTEND_URL)
+    if _slug_match:
+        _vercel_preview_regex = rf"https://{re.escape(_slug_match.group(1))}(-[a-z0-9]+)*\.vercel\.app"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=_vercel_preview_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
