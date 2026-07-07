@@ -1,0 +1,32 @@
+/* حلّل ملفاتك: حالة الرفع */
+.upload-drop{border:2px dashed var(--pri-line);border-radius:var(--r);padding:34px 20px;text-align:center;background:var(--bg-h);max-width:520px;margin:18px auto 0}
+.upload-drop p{color:var(--mut);font-size:.85rem;margin-bottom:12px}
+.upload-progress{width:100%;background:var(--line);border-radius:99px;height:6px;margin-top:16px;overflow:hidden}
+.upload-progress i{display:block;height:100%;background:var(--pri);transition:width .3s ease}
+.upload-filename{margin-top:12px;color:var(--mut);font-size:.82rem;font-style:italic}
+.upload-error{color:var(--err);margin-top:10px;font-weight:600;font-size:.85rem}
+.upload-features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
+@media(max-width:720px){.upload-features{grid-template-columns:1fr}}
+.upload-feature{border:1px solid var(--line);border-radius:var(--r);padding:18px;background:#fff}
+[data-theme="dark"] .upload-feature{background:#172218;border-color:var(--line)}
+.upload-feature h3{font-size:.98rem;font-weight:700;margin-bottom:6px}
+.upload-feature p{color:var(--mut);font-size:.82rem;line-height:1.7}
+
+/* حلّل ملفاتك: حالة النتائج */
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+@media(max-width:860px){.result-grid{grid-template-columns:1fr}}
+.result-card{padding:20px}
+.result-select{width:100%;padding:9px 12px;border-radius:var(--r-s);border:1px solid var(--line2);background:#fff;font-size:.85rem;font-weight:600;color:var(--ink);font-family:inherit}
+[data-theme="dark"] .result-select{background:#172218;border-color:var(--line2);color:var(--ink)}
+.result-slide{margin-top:12px;border-radius:var(--r-s);overflow:hidden;border:1px solid var(--line)}
+.result-slide-accent{height:4px;background:linear-gradient(90deg,var(--pri),var(--pri-h))}
+.result-slide-body{padding:16px 18px;min-height:120px;background:var(--bg-h)}
+.result-slide-body b{font-size:.95rem}
+.result-slide-body p{font-size:.82rem;color:var(--mut);margin-top:8px;white-space:pre-wrap;line-height:1.75}
+.result-slide-img{width:100%;display:block}
+.result-slide-foot{padding:8px 18px;border-top:1px solid var(--line);font-size:.72rem;color:var(--faint)}
+.result-explain-box{background:var(--bg-h);border:1px solid var(--line);border-radius:var(--r-s);padding:18px;min-height:200px}
+.result-explain-box h3{font-size:.92rem;color:var(--pri);margin-bottom:8px}
+.result-explain-box p{font-size:.86rem;color:var(--ink);margin-bottom:16px;line-height:1.8}
+.result-summary{border-inline-start:3px solid var(--pri);background:var(--pri-soft);border-radius:var(--r-s);padding:12px 16px;font-size:.82rem;color:var(--mut);margin-bottom:14px}
+.result-topic{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-h);border:1px solid var(--line);border-radius:var(--r-s);padding:10px 14px;margin-bottom:8px;font-size:.85rem;font-weight:600}
