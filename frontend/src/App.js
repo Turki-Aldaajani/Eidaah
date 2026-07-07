@@ -10,6 +10,7 @@ import CurriculumHome from "./pages/curriculum/CurriculumHome";
 import Subjects from "./pages/curriculum/Subjects";
 import Chapters from "./pages/curriculum/Chapters";
 import Lessons from "./pages/curriculum/Lessons";
+import Lesson from "./pages/curriculum/Lesson";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/learn/:stageId" element={<Subjects />} />
           <Route path="/learn/:stageId/:subjectId" element={<Chapters />} />
           <Route path="/learn/:stageId/:subjectId/:chapterId" element={<Lessons />} />
+          <Route path="/learn/:stageId/:subjectId/:chapterId/:lessonIdx" element={<Lesson />} />
           <Route path="/analyze" element={<Upload />} />
           <Route path="/analyze/results" element={<Results />} />
           <Route path="/about" element={<About />} />
