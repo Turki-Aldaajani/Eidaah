@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import Lesson from "./Lesson";
+import { ThemeProvider } from "../../theme/ThemeContext";
 
 // The progress ring renders the percentage and "مكتمل" as sibling elements
 // (<b>{pct}٪</b><span>مكتمل</span>) with no connecting text node between them,
@@ -20,10 +21,12 @@ function textMatcher(text) {
 function renderAt(path) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/learn/:stageId/:subjectId/:chapterId/:lessonIdx" element={<Lesson />} />
-        <Route path="/learn" element={<div>curriculum home</div>} />
-      </Routes>
+      <ThemeProvider>
+        <Routes>
+          <Route path="/learn/:stageId/:subjectId/:chapterId/:lessonIdx" element={<Lesson />} />
+          <Route path="/learn" element={<div>curriculum home</div>} />
+        </Routes>
+      </ThemeProvider>
     </MemoryRouter>
   );
 }

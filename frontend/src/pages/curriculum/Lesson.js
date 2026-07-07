@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Icon from "../../components/Icon";
+import TopNav from "../../components/TopNav";
 import VideoGrid from "./VideoGrid";
 import AiToolsPanel from "./AiToolsPanel";
 import { stageById, SUB_DEFS, CHAPTERS, lessonsFor, mockVideos, STEPS, toArabicDigits } from "../../data/curriculum";
@@ -91,6 +92,7 @@ export default function Lesson() {
 
   return (
     <>
+      <TopNav />
       <section className="view view-lesson">
         <div className="container">
           <div className="lp-head anim">
