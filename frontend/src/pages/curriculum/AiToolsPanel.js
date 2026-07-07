@@ -103,7 +103,7 @@ export default function AiToolsPanel({ stage, subject, lesson, onStepDone }) {
       const res = await fetch(`${API_URL}/api/lesson_tool`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage: stage.id, subject: subject.n, lesson_title: lesson.t, tool, language: "ar" }),
+        body: JSON.stringify({ stage: stage.n, subject: subject.n, lesson_title: lesson.t, tool, language: "ar" }),
       });
       const data = await res.json();
       if (!res.ok) {

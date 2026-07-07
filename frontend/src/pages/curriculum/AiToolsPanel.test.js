@@ -29,7 +29,7 @@ test("clicking the summary card fetches /api/lesson_tool and renders the points"
     expect.objectContaining({ method: "POST" })
   );
   const requestBody = JSON.parse(global.fetch.mock.calls[0][1].body);
-  expect(requestBody).toEqual({ stage: "m1", subject: "رياضيات", lesson_title: "القوى والأسس", tool: "sum", language: "ar" });
+  expect(requestBody).toEqual({ stage: "الصف الأول المتوسط", subject: "رياضيات", lesson_title: "القوى والأسس", tool: "sum", language: "ar" });
   expect(onStepDone).toHaveBeenCalledWith("sum");
 });
 
