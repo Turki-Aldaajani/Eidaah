@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import Icon from './components/Icon';
+import Footer from './Footer';
 
 const faqData = {
   ar: {
@@ -114,6 +115,7 @@ export default function FAQ() {
           ))}
         </div>
       </section>
+      <Footer />
     </>
   );
 }

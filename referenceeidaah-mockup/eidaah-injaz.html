@@ -1,0 +1,1642 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إيضاح، نادي إنجاز</title>
+<meta name="description" content="إيضاح: منصة تعليمية مدعومة بالذكاء الاصطناعي من فريق الذكاء الاصطناعي بنادي إنجاز، جامعة الإمام محمد بن سعود الإسلامية (نموذج أولي)">
+<style>
+/* ============ إيضاح · مداد v2 - متوافق مع كود المنصات (DGA) ============ */
+
+/* خط ثمانية - ضع ملفات الخط في مجلد fonts/ بجانب هذا الملف بهذه الأسماء،
+   أو أرسل الملفات ليتم دمجها Base64 داخل الملف مباشرة */
+@font-face{font-family:'Thmanyah';src:local('Thmanyah'),local('Thmanyah Regular'),url('fonts/Thmanyah-Regular.woff2') format('woff2'),url('fonts/Thmanyah-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Thmanyah';src:local('Thmanyah Medium'),url('fonts/Thmanyah-Medium.woff2') format('woff2'),url('fonts/Thmanyah-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'Thmanyah';src:local('Thmanyah SemiBold'),url('fonts/Thmanyah-SemiBold.woff2') format('woff2'),url('fonts/Thmanyah-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+@font-face{font-family:'Thmanyah';src:local('Thmanyah Bold'),url('fonts/Thmanyah-Bold.woff2') format('woff2'),url('fonts/Thmanyah-Bold.ttf') format('truetype');font-weight:700;font-display:swap}
+
+:root{
+ /* هوية نادي إنجاز - الأساسي والتفاعلي والـ Accent */
+ --pri:#155043;--pri-h:#125D64;--pri-a:#0F3E34;--pri-soft:#E7EFEC;--pri-line:#B9CFC8;
+ --accent:#869200;--accent-soft:#F2F4E0;
+ /* حالات دلالية (من الألوان الثانوية - للشارات والحالات فقط) */
+ --suc:#3CA45D;--suc-bg:#EAF6EE;--suc-line:#BFE3CB;
+ --warn:#B57A0A;--warn-bg:#FDF6E3;--warn-line:#F3C43C;
+ --err:#FB4C3C;--err-bg:#FEECEA;--err-line:#FBC3BD;
+ --info:#3CA6EB;--info-bg:#E8F4FC;--info-line:#B5DDF6;
+ --pink:#EB3C87;
+ /* محايدات هوية إنجاز */
+ --ink:#2B2B2B;--mut:#5A5A54;--faint:#9A968A;--line:#E7E3D6;--line2:#D8D2BF;--bg-h:#FAFAFA;--bg-2:#E3D8B3;
+ /* مقاييس */
+ --r-s:6px;--r:10px;--r-l:14px;
+ --card:#fff;
+ --sh:0 1px 2px rgba(21,80,67,.05);
+ --sh-m:0 4px 12px rgba(21,80,67,.09);
+}
+body{background:var(--bg-h)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Thmanyah','Segoe UI',Tahoma,Arial,sans-serif;font-weight:400;background:var(--card);color:var(--ink);line-height:1.8;min-height:100vh}
+body.locked{overflow:hidden}
+h1,h2,h3{font-weight:700}
+h4{font-weight:600}
+a{color:inherit;text-decoration:none;cursor:pointer}
+button{font-family:inherit;font-weight:500;cursor:pointer;border:0;background:none;color:inherit}
+button:disabled{opacity:.45;cursor:not-allowed}
+.container{max-width:1080px;margin-inline:auto;padding-inline:22px}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px;border-radius:var(--r-s)}
+.decor{display:none}
+
+/* الأيقونات الموحّدة */
+.ic{width:18px;height:18px;flex:0 0 auto;vertical-align:-3px}
+h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
+
+/* الشريط العلوي */
+.topnav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:var(--pri);color:#fff;font-weight:700;font-size:1rem;display:grid;place-items:center}
+.brand-txt{display:flex;flex-direction:column;line-height:1.2}
+.brand-txt b{font-size:1.05rem;font-weight:700}
+.brand-txt i{font-style:normal;font-size:.68rem;color:var(--faint)}
+.nav-side{display:flex;align-items:center;gap:12px}
+.proto-chip{font-size:.72rem;font-weight:500;color:var(--mut);border:1px solid var(--line);padding:4px 11px;border-radius:var(--r-s);background:var(--bg-h)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--pri-soft);color:var(--pri);font-weight:700;font-size:.85rem;display:grid;place-items:center;border:1px solid var(--pri-line)}
+
+/* حركات مقتضبة */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.anim{animation:fadeIn .4s ease both}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* الرئيسية */
+.hero{padding:64px 0 8px}
+.hero-in{text-align:start}
+.hero-kicker{display:inline-flex;align-items:center;gap:7px;color:var(--pri);font-weight:600;font-size:.8rem;border:1px solid var(--pri-line);background:var(--pri-soft);padding:5px 13px;border-radius:var(--r-s);margin-bottom:20px}
+.hero-title{font-size:clamp(1.9rem,4vw,2.7rem);font-weight:700;line-height:1.4}
+.hero-title .hl{box-shadow:inset 0 -0.42em 0 var(--pri-soft)}
+.hero-sub{color:var(--mut);font-size:1.02rem;margin-top:12px;max-width:520px}
+.hero-chips{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:18px;color:var(--mut);font-size:.85rem}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:0}
+.chip .ic{width:16px;height:16px;color:var(--pri)}
+.home-groups{padding:20px 22px 80px}
+.level-group{margin-top:44px}
+.level-h{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.lv-chip{font-size:.78rem;font-weight:600;color:var(--mut)}
+.lv-chip::before{content:'';display:inline-block;width:8px;height:8px;border-radius:2px;margin-inline-end:8px;vertical-align:1px}
+.lv-chip.lv-primary::before{background:var(--pri)}
+.lv-chip.lv-middle::before{background:var(--pri-h)}
+.lv-chip.lv-high::before{background:var(--accent)}
+.lv-line{flex:1;height:1px;background:var(--line)}
+
+/* الشبكات والبطاقات */
+.grid{display:grid;gap:12px}
+.grades{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);transition:border-color .2s,background .2s,box-shadow .2s}
+.card:hover{border-color:var(--line2);background:var(--bg-h)}
+
+/* بطاقة الصف */
+.grade-card{display:flex;flex-direction:column;padding:20px}
+.grade-card:hover{border-color:var(--pri);box-shadow:0 3px 12px rgba(27,131,84,.1)}
+.grade-card:active{border-color:var(--pri-a)}
+.g-top{display:flex;align-items:baseline;justify-content:space-between}
+.g-num{font-size:2.3rem;font-weight:400;color:#D2D6DB;line-height:1;letter-spacing:1px;transition:color .25s}
+.grade-card:hover .g-num{color:var(--pri)}
+.g-name{font-size:.99rem;font-weight:600;margin-top:16px}
+.g-sub{color:var(--faint);font-size:.78rem;margin-top:2px}
+.g-cta{margin-top:14px;color:var(--pri);font-weight:600;font-size:.82rem;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity .2s}
+.grade-card:hover .g-cta{opacity:1}
+.g-cta .ic{width:15px;height:15px}
+
+/* رأس الصفحات */
+.view{padding-bottom:80px}
+.page-head{padding:44px 0 24px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:.8rem;font-weight:500;margin-bottom:16px;color:var(--faint)}
+.crumbs a:hover{color:var(--pri)}
+.crumbs .cur{color:var(--ink);font-weight:600}
+.crumbs .sep{font-style:normal;color:#CDD2DE}
+.page-head h1{font-size:clamp(1.4rem,3vw,1.9rem);display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.page-head h1 .h-ic{width:42px;height:42px;border-radius:var(--r-s);background:color-mix(in srgb,var(--c) 10%,#fff);border:1px solid color-mix(in srgb,var(--c) 30%,#fff);color:var(--c);display:inline-grid;place-items:center}
+.page-head h1 .h-ic .ic{width:22px;height:22px}
+.page-head p{color:var(--mut);font-size:.92rem;margin-top:6px}
+
+/* المواد */
+.subjects{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.subject-card{display:flex;align-items:flex-start;gap:13px;padding:18px;position:relative;overflow:hidden}
+.subject-card::before{content:'';position:absolute;top:0;inset-inline:0;height:3px;background:var(--c)}
+.subject-card:hover{border-color:var(--c)}
+.s-icon{width:40px;height:40px;flex:0 0 auto;border-radius:var(--r-s);display:grid;place-items:center;background:color-mix(in srgb,var(--c) 9%,#fff);border:1px solid color-mix(in srgb,var(--c) 28%,#fff);color:var(--c)}
+.s-icon .ic{width:21px;height:21px}
+.s-body{flex:1;min-width:0}
+.s-body h3{font-size:1rem;font-weight:600}
+.s-desc{color:var(--mut);font-size:.8rem}
+.s-meta{display:block;color:var(--faint);font-size:.73rem;margin-top:8px}
+.s-arrow{align-self:center;color:var(--faint);opacity:0;transform:translateX(4px);transition:.2s}
+.subject-card:hover .s-arrow{opacity:1;transform:none;color:var(--c)}
+
+/* الفصول: قائمة تحريرية */
+.chapters{display:block;max-width:820px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.chapter-card{display:flex;align-items:center;gap:20px;padding:20px 22px;border:0;border-radius:0;box-shadow:none;border-bottom:1px solid var(--line)}
+.chapter-card:last-child{border-bottom:0}
+.chapter-card:hover{background:var(--bg-h);border-color:var(--line)}
+.ch-num{font-size:2rem;font-weight:400;color:#D2D6DB;min-width:56px;text-align:center;line-height:1;transition:color .25s}
+.chapter-card:hover .ch-num{color:var(--c)}
+.ch-body{flex:1}
+.ch-body h3{font-size:1.05rem;font-weight:600}
+.ch-meta{color:var(--mut);font-size:.8rem;margin-top:2px}
+.ch-units{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.ch-units span{border:1px solid var(--line);color:var(--mut);font-size:.72rem;font-weight:500;padding:2px 10px;border-radius:var(--r-s);background:var(--card)}
+.ch-badge{border:1px solid var(--pri-line);color:var(--pri);background:var(--pri-soft);font-size:.74rem;font-weight:600;padding:5px 12px;border-radius:var(--r-s);white-space:nowrap}
+
+/* الدروس: قائمة صفوف */
+.lessons{display:block;max-width:820px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.lesson-card{display:flex;align-items:center;gap:16px;padding:17px 20px;border:0;border-radius:0;box-shadow:none;border-bottom:1px solid var(--line)}
+.lesson-card:last-child{border-bottom:0}
+.lesson-card:hover{background:var(--bg-h);border-color:var(--line)}
+.l-idx{width:34px;height:34px;flex:0 0 auto;border-radius:var(--r-s);border:1px solid var(--line);color:var(--mut);font-weight:600;font-size:.9rem;display:grid;place-items:center;background:var(--card);transition:.2s}
+.lesson-card:hover .l-idx{border-color:var(--c);color:var(--c)}
+.l-body{flex:1;min-width:0}
+.l-body h3{font-size:.97rem;font-weight:600}
+.l-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:6px;align-items:center}
+.meta-chip{display:inline-flex;align-items:center;gap:5px;color:var(--faint);font-size:.75rem;font-weight:500}
+.meta-chip .ic{width:14px;height:14px}
+.diff{font-size:.72rem;font-weight:600;padding:2px 10px;border-radius:var(--r-s);border:1px solid}
+.d-easy{color:var(--suc);border-color:var(--suc-line);background:var(--suc-bg)}
+.d-mid{color:var(--warn);border-color:var(--warn-line);background:var(--warn-bg)}
+.d-hard{color:var(--err);border-color:var(--err-line);background:var(--err-bg)}
+.l-go{color:var(--pri);font-weight:600;font-size:.82rem;border:1px solid var(--pri-line);padding:7px 15px;border-radius:var(--r-s);white-space:nowrap;background:var(--card);transition:.2s}
+.lesson-card:hover .l-go{background:var(--pri);color:#fff;border-color:var(--pri)}
+
+/* أزرار (حالات كود المنصات) */
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--pri);color:#fff;font-weight:500;font-size:.9rem;padding:11px 22px;border-radius:var(--r-s);transition:background .2s}
+.btn:hover{background:var(--pri-h)}
+.btn:active{background:var(--pri-a)}
+.btn .ic{width:16px;height:16px}
+.btn.ghost{background:var(--card);color:var(--pri);border:1px solid var(--pri-line)}
+.btn.ghost:hover{background:var(--pri-soft)}
+.btn.ghost:active{background:#D8ECE0}
+
+/* صفحة الدرس */
+.lp-head{padding:40px 0 22px;border-bottom:1px solid var(--line)}
+.lp-head h1{font-size:clamp(1.45rem,3vw,2rem)}
+.lp-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.mchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:var(--r-s);padding:4px 12px;font-size:.77rem;font-weight:500;color:var(--mut);background:var(--card)}
+.mchip .ic{width:14px;height:14px}
+.mc-sub{border-color:color-mix(in srgb,var(--c) 40%,#fff);color:var(--c);background:color-mix(in srgb,var(--c) 6%,#fff)}
+.mob-prog{display:flex;align-items:center;gap:12px;margin-top:16px}
+.mp-bar{flex:1;height:6px;background:var(--line);border-radius:999px;overflow:hidden}
+.mp-bar i{display:block;height:100%;width:0;background:var(--pri);border-radius:999px;transition:width .5s ease}
+.mob-prog b{font-size:.82rem;color:var(--pri);font-weight:600}
+
+.lesson-layout{display:block}
+.side{display:none}
+.sec-head{margin:30px 0 14px}
+.sec-head h2,.ai-head h2{font-size:1.2rem;display:flex;align-items:center;gap:9px}
+.sec-head p,.ai-head p{color:var(--mut);font-size:.86rem;margin-top:3px}
+
+/* شريط التصفية */
+.fbar{padding:14px 16px;margin-bottom:16px}
+.fbar:hover{background:var(--card);border-color:var(--line)}
+.fbar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.fbar-t{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.88rem}
+.fbar-t .ic{color:var(--pri)}
+.freset{display:inline-flex;align-items:center;gap:6px;color:var(--mut);font-size:.78rem;font-weight:500;padding:4px 10px;border-radius:var(--r-s);transition:.2s}
+.freset:hover{color:var(--pri);background:var(--pri-soft)}
+.freset .ic{width:14px;height:14px}
+.fbar-row{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end}
+.fsel{display:flex;flex-direction:column;gap:4px;font-size:.72rem;color:var(--faint);font-weight:500;min-width:130px;flex:1}
+.fsel-w{position:relative;display:block}
+.fsel select{appearance:none;-webkit-appearance:none;width:100%;font-family:inherit;font-size:.82rem;font-weight:500;color:var(--ink);background:var(--card);border:1px solid var(--line2);border-radius:var(--r-s);padding:8px 12px;padding-inline-end:32px;cursor:pointer;transition:border-color .2s}
+.fsel select:hover{border-color:var(--faint)}
+.fsel select:focus{outline:2px solid var(--pri);outline-offset:1px;border-color:var(--pri)}
+.fsel-ic{position:absolute;inset-inline-end:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint);pointer-events:none}
+.fchip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);border-radius:var(--r-s);padding:8px 14px;font-size:.82rem;font-weight:500;background:var(--card);color:var(--mut);transition:.2s;height:38px}
+.fchip .ic{width:16px;height:16px}
+.fchip:hover{border-color:var(--pri)}
+.fchip.on{background:var(--pri-soft);border-color:var(--pri);color:var(--pri);font-weight:600}
+.fcount{margin-top:11px;font-size:.75rem;color:var(--faint)}
+
+/* بطاقات الفيديو */
+.vid-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.vid-card{overflow:hidden;display:flex;flex-direction:column;padding:0}
+.vid-card:hover{border-color:var(--line2);background:var(--card);box-shadow:var(--sh-m)}
+.thumb{aspect-ratio:16/9;position:relative;display:grid;place-items:center;overflow:hidden;filter:saturate(.85)}
+.th-ic{color:rgba(255,255,255,.4)}
+.th-ic .ic{width:52px;height:52px;stroke-width:1.4}
+.th-play{position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.95);color:var(--ink);display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.22);transition:transform .2s}
+.th-play .ic{width:20px;height:20px;margin-inline-start:-2px}
+.vid-card:hover .th-play{transform:scale(1.08)}
+.th-dur{position:absolute;bottom:9px;inset-inline-end:9px;background:rgba(16,20,30,.8);color:#fff;font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:5px}
+.th-reason{position:absolute;top:9px;inset-inline-start:9px;max-width:calc(100% - 18px);display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.95);color:var(--ink);font-size:.64rem;font-weight:600;padding:3px 9px;border-radius:var(--r-s);border:1px solid var(--line)}
+.th-reason .ic{width:12px;height:12px;color:var(--pri)}
+.v-info{padding:13px 15px 15px;display:flex;flex-direction:column;gap:7px;flex:1}
+.v-title{font-size:.88rem;font-weight:600;line-height:1.6}
+.v-ch{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ch-ava{width:24px;height:24px;flex:0 0 auto;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:600;background:var(--pri-soft);color:var(--pri);border:1px solid var(--pri-line)}
+.ch-n{font-size:.77rem;font-weight:500;color:var(--mut)}
+.ver{color:var(--pri);display:inline-flex}
+.ver .ic{width:14px;height:14px}
+.ch-nat{font-size:.66rem;font-weight:500;color:var(--faint);border:1px solid var(--line);border-radius:var(--r-s);padding:1px 7px}
+.v-stats{display:flex;flex-wrap:wrap;gap:5px 12px;font-size:.72rem;color:var(--faint)}
+.v-stats span{display:inline-flex;align-items:center;gap:4px}
+.v-stats .ic{width:13px;height:13px}
+.v-rate{color:var(--warn);font-weight:600}
+.v-rate .ic{width:13px;height:13px}
+.v-foot{margin-top:auto;padding-top:9px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.match{font-size:.68rem;font-weight:600;padding:2px 9px;border-radius:var(--r-s);border:1px solid}
+.match.m-a{color:var(--suc);border-color:var(--suc-line);background:var(--suc-bg)}
+.match.m-b{color:var(--info);border-color:var(--info-line);background:var(--info-bg)}
+.match.m-c{color:var(--warn);border-color:var(--warn-line);background:var(--warn-bg)}
+.v-watch{display:inline-flex;align-items:center;gap:5px;color:#fff;background:var(--pri);font-weight:500;font-size:.76rem;padding:6px 13px;border-radius:var(--r-s);transition:.2s}
+.v-watch:hover{background:var(--pri-h)}
+.v-watch .ic{width:13px;height:13px}
+.v-empty{grid-column:1/-1;border:1px dashed var(--line2);border-radius:var(--r);padding:36px 20px;text-align:center;color:var(--faint);display:flex;flex-direction:column;align-items:center;gap:12px}
+.v-empty .ic{width:30px;height:30px}
+.v-empty p{font-size:.9rem;font-weight:500;color:var(--mut)}
+
+/* قسم الذكاء الاصطناعي */
+.ai-sec{margin-top:48px}
+.ai-head{margin-bottom:16px}
+.ai-badge{display:inline-flex;align-items:center;gap:6px;color:var(--pri);border:1px solid var(--pri-line);background:var(--pri-soft);font-size:.74rem;font-weight:600;padding:4px 12px;border-radius:var(--r-s);margin-bottom:10px}
+.ai-badge .ic{width:14px;height:14px}
+.ai-list{display:block;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.ai-card{background:var(--card);border-bottom:1px solid var(--line);transition:background .2s}
+.ai-card:last-child{border-bottom:0}
+.ai-card.open{background:var(--bg-h)}
+.ai-toggle{width:100%;display:flex;align-items:center;gap:14px;padding:16px 20px;text-align:start}
+.ai-toggle:hover .ai-tt b{color:var(--pri)}
+.ai-ico{width:40px;height:40px;flex:0 0 auto;border-radius:var(--r-s);display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--mut);transition:.2s}
+.ai-ico .ic{width:19px;height:19px}
+.ai-card.open .ai-ico{border-color:var(--pri-line);background:var(--pri-soft);color:var(--pri)}
+.ai-tt{flex:1;display:flex;flex-direction:column}
+.ai-tt b{font-size:.97rem;font-weight:600;transition:color .2s}
+.ai-tt small{color:var(--mut);font-size:.78rem;font-weight:400}
+.chev{color:var(--faint);transition:transform .3s,color .3s;display:inline-flex}
+.chev .ic{width:16px;height:16px}
+.ai-card.open .chev{transform:rotate(180deg);color:var(--pri)}
+.ai-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.ai-card.open .ai-body{grid-template-rows:1fr}
+.ai-inner{overflow:hidden;min-height:0;padding:0 20px}
+.ai-inner > *:first-child{margin-top:2px}
+.ai-inner > *:last-child{margin-bottom:20px}
+.ai-loading{display:flex;align-items:center;gap:11px;color:var(--mut);font-weight:500;font-size:.86rem;padding:4px 0 18px}
+.dots{display:inline-flex;gap:4px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--pri);animation:dot 1s infinite ease-in-out}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,100%{opacity:.25}50%{opacity:1}}
+
+.sum-list{list-style:none;display:flex;flex-direction:column}
+.sum-list li{padding:11px 0;padding-inline-start:24px;font-size:.9rem;position:relative;border-bottom:1px dashed var(--line)}
+.sum-list li:last-child{border-bottom:0}
+.sum-list li::before{content:'';position:absolute;inset-inline-start:4px;top:1.05em;width:7px;height:7px;border-radius:2px;background:var(--pri)}
+.ai-foot{margin-top:12px;color:var(--faint);font-size:.73rem;display:flex;align-items:center;gap:6px}
+.ai-foot .ic{width:13px;height:13px}
+.ex-card{border:1px solid var(--line);border-inline-start:3px solid var(--pri);border-radius:var(--r-s);padding:16px 18px;background:var(--card)}
+.ex-card h4{font-size:.95rem;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ex-card h4 .ic{color:var(--pri)}
+.ex-card p{font-size:.89rem;color:#3A4150;margin-bottom:10px}
+.notes{display:grid;gap:11px}
+.note-block{border:1px solid var(--line);border-radius:var(--r-s);padding:14px 17px;background:var(--card)}
+.note-block h4{font-size:.88rem;font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:8px}
+.note-block h4 .ic{width:16px;height:16px}
+.note-block ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.note-block li{font-size:.84rem;color:#3A4150;padding-inline-start:16px;position:relative}
+.note-block li::before{content:'–';position:absolute;inset-inline-start:0;color:var(--faint)}
+.nb-law{border-inline-start:3px solid var(--info)}
+.nb-law h4 .ic{color:var(--info)}
+.nb-def{border-inline-start:3px solid var(--pri)}
+.nb-def h4 .ic{color:var(--pri)}
+.nb-exam{border-inline-start:3px solid var(--warn)}
+.nb-exam h4 .ic{color:var(--warn)}
+
+/* الاختبار */
+.quiz{display:flex;flex-direction:column;gap:14px}
+.q-item{border:1px solid var(--line);border-radius:var(--r-s);padding:15px 17px;background:var(--card);transition:border-color .2s}
+.q-item.q-ok{border-color:var(--suc-line)}
+.q-item.q-bad{border-color:var(--err-line)}
+.q-text{font-weight:600;font-size:.93rem;display:flex;gap:10px;align-items:flex-start}
+.q-n{width:23px;height:23px;flex:0 0 auto;border-radius:var(--r-s);border:1px solid var(--line);color:var(--mut);font-size:.72rem;display:grid;place-items:center}
+.q-opts{display:grid;grid-template-columns:1fr;gap:7px;margin-top:11px}
+.opt{border:1px solid var(--line);border-radius:var(--r-s);padding:9px 13px;padding-inline-start:36px;font-weight:400;font-size:.86rem;text-align:start;transition:.15s;background:var(--card);position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.opt::before{content:'';position:absolute;inset-inline-start:12px;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line2);transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--pri-line);background:var(--bg-h)}
+.opt.sel{border-color:var(--pri);background:var(--pri-soft);font-weight:500}
+.opt.sel::before{border-color:var(--pri);background:var(--pri);box-shadow:inset 0 0 0 3px var(--card)}
+.opt.correct{border-color:var(--suc);background:var(--suc-bg)}
+.opt.correct::before{border-color:var(--suc);background:var(--suc);box-shadow:inset 0 0 0 3px var(--card)}
+.opt.wrong{border-color:var(--err);background:var(--err-bg)}
+.opt.wrong::before{border-color:var(--err);background:var(--err);box-shadow:inset 0 0 0 3px var(--card)}
+.opt:disabled{cursor:default}
+.om{display:inline-flex}
+.om .ic{width:15px;height:15px}
+.opt.correct .om{color:var(--suc)}
+.opt.wrong .om{color:var(--err)}
+.q-submit{align-self:flex-start}
+.q-hint{color:var(--err);font-weight:500;font-size:.82rem}
+.q-result{display:flex;flex-wrap:wrap;align-items:center;gap:18px;border:1px solid var(--pri-line);background:var(--pri-soft);border-radius:var(--r);padding:16px 20px}
+.q-score{display:flex;align-items:baseline;gap:6px}
+.q-score b{font-size:2.3rem;font-weight:400;color:var(--pri);line-height:1}
+.q-score span{color:var(--mut);font-size:.85rem}
+.q-fb{flex:1;font-weight:600;font-size:.9rem;min-width:200px}
+
+/* CTA السفلي */
+.next-cta{margin-top:48px;background:var(--ink);border-radius:var(--r-l);padding:26px 28px;display:flex;flex-wrap:wrap;align-items:center;gap:20px;color:#fff}
+.cta-txt{flex:1;min-width:230px}
+.cta-txt h3{font-size:1.15rem;font-weight:600}
+.cta-txt p{opacity:.72;font-size:.86rem;margin-top:2px}
+.cta-btn{background:var(--pri)}
+.cta-btn:hover{background:#22995F}
+
+/* الشريط الجانبي */
+.prog-card,.streak-card,.tip-card{padding:18px;border-radius:var(--r)}
+.prog-card h3{font-size:.92rem;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.prog-card h3 .ic{color:var(--pri)}
+.ring-wrap{position:relative;width:120px;margin:0 auto}
+.ring{width:120px;height:120px;transform:rotate(-90deg)}
+.ring-bg,.ring-fg{fill:none;stroke-width:8;stroke-linecap:round}
+.ring-bg{stroke:var(--line)}
+.ring-fg{stroke:url(#rg);stroke-dasharray:327;stroke-dashoffset:327;transition:stroke-dashoffset .7s ease}
+#rg stop:first-child{stop-color:var(--pri)}
+#rg stop:last-child{stop-color:var(--pri-h)}
+.ring-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-txt b{font-size:1.4rem;font-weight:600;color:var(--ink)}
+.ring-txt span{font-size:.66rem;color:var(--faint)}
+.remain{text-align:center;color:var(--mut);font-size:.77rem;margin:12px 0 14px}
+.p-steps{list-style:none;display:flex;flex-direction:column}
+.p-steps li{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--mut);padding:8px 0;border-bottom:1px dashed var(--line)}
+.p-steps li:last-child{border-bottom:0}
+.p-steps li i{width:26px;height:26px;flex:0 0 auto;border-radius:var(--r-s);border:1px solid var(--line);display:grid;place-items:center;font-style:normal;background:var(--card);color:var(--faint);transition:.25s}
+.p-steps li i .ic{width:14px;height:14px}
+.p-steps li.done{color:var(--ink)}
+.p-steps li.done i{background:var(--pri);border-color:var(--pri);color:#fff}
+.streak-card{display:flex;align-items:center;gap:13px}
+.st-fire{width:36px;height:36px;flex:0 0 auto;border-radius:var(--r-s);background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);display:grid;place-items:center}
+.st-fire .ic{width:18px;height:18px}
+.streak-card b{font-size:.88rem;font-weight:600}
+.streak-card p{font-size:.74rem;color:var(--mut)}
+.tip-card{display:flex;gap:11px;font-size:.8rem;color:#3A4150;line-height:1.85;background:var(--bg-h)}
+.tip-ic{width:32px;height:32px;flex:0 0 auto;border-radius:var(--r-s);background:var(--card);border:1px solid var(--line);color:var(--pri);display:grid;place-items:center}
+.tip-ic .ic{width:16px;height:16px}
+.tip-card b{color:var(--pri);font-weight:600}
+
+/* المشغّل التجريبي */
+.pm-back{position:fixed;inset:0;background:rgba(18,22,32,.55);backdrop-filter:blur(4px);z-index:100;display:grid;place-items:center;padding:20px;animation:fadeIn .2s both}
+.pmodal{background:var(--card);border-radius:var(--r-l);max-width:660px;width:100%;overflow:hidden;position:relative;box-shadow:0 24px 64px rgba(10,14,26,.35);border:1px solid var(--line)}
+.pm-x{position:absolute;top:12px;inset-inline-start:12px;width:32px;height:32px;border-radius:var(--r-s);background:rgba(18,22,32,.55);color:#fff;z-index:2;display:grid;place-items:center}
+.pm-x .ic{width:15px;height:15px}
+.p-screen{aspect-ratio:16/9;position:relative;display:grid;place-items:center;filter:saturate(.85)}
+.ps-ic{color:rgba(255,255,255,.35)}
+.ps-ic .ic{width:64px;height:64px;stroke-width:1.3}
+.p-play{position:absolute;width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.95);color:var(--ink);display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.p-play .ic{width:24px;height:24px;margin-inline-start:-2px}
+.pause-ic{display:inline-flex;gap:5px}
+.pause-ic i{width:5px;height:20px;border-radius:2px;background:var(--ink)}
+.p-bar{position:absolute;bottom:42px;inset-inline:18px;height:4px;background:rgba(255,255,255,.3);border-radius:999px;overflow:hidden}
+.p-bar i{display:block;height:100%;width:0;background:var(--card)}
+.playing .p-bar i{animation:play 24s linear forwards}
+@keyframes play{to{width:100%}}
+.p-proto{position:absolute;bottom:13px;inset-inline:18px;color:rgba(255,255,255,.82);font-size:.68rem;text-align:center}
+.pm-info{padding:16px 20px}
+.pm-info h4{font-size:.98rem;font-weight:600}
+.pm-info p{color:var(--mut);font-size:.8rem;margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* التوست */
+.toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translate(50%,84px);background:var(--ink);color:#fff;font-weight:500;font-size:.84rem;padding:11px 22px;border-radius:var(--r-s);box-shadow:0 12px 30px rgba(10,14,26,.3);z-index:120;transition:transform .35s ease;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{transform:translate(50%,0)}
+
+/* التذييل */
+.foot{border-top:1px solid var(--line);padding:22px 0;color:var(--faint);font-size:.76rem;text-align:center}
+.foot b{color:var(--ink);font-weight:600}
+
+/* قسم الهوية أسفل الرئيسية */
+.home-id{background:linear-gradient(160deg,#155043 0%,#125D64 100%);margin-top:20px;position:relative;overflow:hidden}
+.home-id::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(134,146,0,.16);top:-180px;inset-inline-start:-120px}
+.home-id::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;border:2px solid rgba(255,255,255,.08);bottom:-150px;inset-inline-end:-80px}
+.home-id-in{position:relative;z-index:1;text-align:center;padding:56px 22px;color:#fff;max-width:640px;margin-inline:auto}
+.home-id-mark{width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;font-weight:700;font-size:1.8rem;margin:0 auto 18px}
+.home-id-t{font-size:1.9rem;font-weight:700}
+.home-id-d{font-size:1.02rem;font-weight:600;margin-top:10px;color:#EAF2EF}
+.home-id-u{font-size:.9rem;color:#CDE0DA;margin-top:2px}
+.home-id-s{font-size:.9rem;color:#D8E7E2;margin-top:14px;line-height:1.9}
+.home-id-btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:24px}
+.home-id-btns .btn{background:#869200;color:#fff}
+.home-id-btns .btn:hover{background:#98A611}
+.home-id-btns .btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)}
+.home-id-btns .btn.ghost:hover{background:rgba(255,255,255,.12)}
+
+/* صفحة عن الفريق */
+.tm-wrap{display:flex;flex-direction:column;gap:26px}
+.tm-group{}
+.tm-role{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.tm-role-ic{width:38px;height:38px;flex:0 0 auto;border-radius:var(--r-s);background:var(--pri-soft);border:1px solid var(--pri-line);color:var(--pri);display:grid;place-items:center}
+.tm-role-ic .ic{width:19px;height:19px}
+.tm-role h3{font-size:1.02rem;font-weight:700;color:var(--pri)}
+.tm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.tm-cards.solo{grid-template-columns:minmax(240px,320px)}
+.tm-card{display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 17px;box-shadow:var(--sh);transition:border-color .2s,box-shadow .2s,transform .2s}
+.tm-card:hover{border-color:var(--pri-line);box-shadow:var(--sh-m);transform:translateY(-2px)}
+.tm-ava{width:44px;height:44px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:1.1rem;color:#fff;background:linear-gradient(135deg,#155043,#125D64)}
+.tm-name{font-size:.95rem;font-weight:600}
+
+/* صفحة الأسئلة الشائعة */
+.faq-container{max-width:820px}
+.faq-sec{margin-bottom:26px}
+.faq-sec-t{font-size:1.05rem;font-weight:700;color:var(--pri);margin-bottom:12px;padding-inline-start:12px;border-inline-start:3px solid var(--accent)}
+.faq-list{display:block;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.faq-item{border-bottom:1px solid var(--line)}
+.faq-item:last-child{border-bottom:0}
+.faq-item.open{background:var(--bg-h)}
+.faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 20px;text-align:start;font-weight:600;font-size:.95rem;color:var(--ink);transition:color .2s}
+.faq-q:hover{color:var(--pri)}
+.faq-chev{color:var(--faint);transition:transform .3s,color .3s;display:inline-flex;flex:0 0 auto}
+.faq-chev .ic{width:17px;height:17px}
+.faq-item.open .faq-chev{transform:rotate(180deg);color:var(--pri)}
+.faq-a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.faq-item.open .faq-a{grid-template-rows:1fr}
+.faq-a-in{overflow:hidden;min-height:0}
+.faq-a-in p{padding:0 20px 4px;color:var(--mut);font-size:.9rem;line-height:1.95}
+.faq-a-in > p:first-child{padding-top:2px}
+.faq-item.open .faq-a-in p:last-child{padding-bottom:18px}
+.faq-mail{display:inline-flex;align-items:center;gap:8px;margin:0 20px 18px;padding:9px 14px;background:var(--pri-soft);border:1px solid var(--pri-line);border-radius:var(--r-s);color:var(--pri);font-size:.85rem;font-weight:600;transition:.2s}
+.faq-mail:hover{background:#D8E7E1}
+.faq-mail .ic{width:15px;height:15px}
+
+/* سطح المكتب */
+@media(min-width:1024px){
+ .lesson-layout{display:grid;grid-template-columns:288px 1fr;grid-template-areas:"side main";gap:30px;align-items:start;margin-top:26px}
+ .lmain{grid-area:main;min-width:0}
+ .side{grid-area:side;display:flex;flex-direction:column;gap:13px;position:sticky;top:82px}
+ .mob-prog{display:none}
+ .q-opts{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+ .grades{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+ .chapter-card,.lesson-card{flex-wrap:wrap}
+ .l-go{width:100%;text-align:center}
+ .proto-chip{display:none}
+ .fsel{min-width:calc(50% - 6px)}
+ .v-foot{flex-wrap:wrap}
+}
+
+/* ===================== زر الوضع الليلي ===================== */
+.theme-btn{width:36px;height:36px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--card);color:var(--mut);display:grid;place-items:center;transition:.2s}
+.theme-btn:hover{border-color:var(--pri);color:var(--pri)}
+.theme-btn .ic{width:17px;height:17px}
+
+/* ===================== الصفحة الرئيسية (Landing) ===================== */
+body{transition:background .3s ease,color .3s ease}
+.lp-hero{padding:54px 0 26px}
+.lp-hero-in{display:grid;gap:36px;align-items:center}
+.lp-h1{font-size:clamp(1.9rem,4.2vw,2.85rem);font-weight:700;line-height:1.45}
+.lp-desc{color:var(--mut);font-size:1.02rem;margin-top:14px;max-width:520px;line-height:1.95}
+.lp-btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.lp-illu{display:flex;justify-content:center}
+.ilu{width:100%;max-width:500px;height:auto;display:block}
+.i-bg{fill:var(--pri-soft)}
+.i-card{fill:#155043}
+.i-play{fill:rgba(255,255,255,.16)}
+.i-tri{fill:#F3C43C}
+.i-line{fill:rgba(255,255,255,.34)}
+.i-cap{fill:#F3C43C}
+.i-capline{stroke:#F3C43C;stroke-width:6;stroke-linecap:round}
+.i-chip{fill:var(--card);stroke:var(--line);stroke-width:2}
+.i-chipline{fill:var(--line2)}
+.i-dot.d1{fill:#3CA6EB}.i-dot.d2{fill:#EB3C87}
+.i-book1{fill:#125D64}.i-book2{fill:#3CA45D}
+.i-sp{fill:#869200}
+.flt{transform-box:fill-box;transform-origin:center;animation:iluFloat 4.5s ease-in-out infinite}
+.flt.f2{animation-delay:.8s}.flt.f3{animation-delay:1.6s}
+@keyframes iluFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.lp-sec{padding:44px 0}
+.lp-sec.alt{background:var(--card);border-block:1px solid var(--line)}
+.lp-t{font-size:1.45rem;font-weight:700;text-align:center}
+.lp-ts{color:var(--mut);text-align:center;margin-top:6px;font-size:.92rem}
+.path-grid{display:grid;gap:18px;margin-top:28px}
+.path-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:30px 28px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh);transition:transform .25s,border-color .25s,box-shadow .25s}
+.path-card:hover{transform:translateY(-4px);border-color:var(--pri-line);box-shadow:var(--sh-m)}
+.path-ic{width:56px;height:56px;border-radius:14px;background:var(--pri-soft);border:1px solid var(--pri-line);color:var(--pri);display:grid;place-items:center}
+.path-ic .ic{width:26px;height:26px}
+.path-card h3{font-size:1.2rem;font-weight:700}
+.path-card p{color:var(--mut);font-size:.92rem;line-height:1.9}
+.path-card .btn{align-self:flex-start;margin-top:6px}
+.feat4{display:grid;gap:14px;margin-top:28px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.feat-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.feat-card:hover{transform:translateY(-3px);border-color:var(--pri-line);box-shadow:var(--sh-m)}
+.feat-ic{width:44px;height:44px;border-radius:var(--r-s);background:var(--pri-soft);border:1px solid var(--pri-line);color:var(--pri);display:grid;place-items:center;margin-bottom:12px}
+.feat-ic .ic{width:20px;height:20px}
+.feat-card h4{font-size:.98rem;font-weight:600}
+.feat-card p{color:var(--mut);font-size:.83rem;margin-top:4px;line-height:1.85}
+.why-row{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:26px}
+.why-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 22px;font-weight:600;font-size:.92rem;box-shadow:var(--sh)}
+.why-item .ic{width:19px;height:19px;color:var(--suc)}
+.jr{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:30px}
+.jr-step{display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;max-width:170px;padding:0 8px}
+.jr-ic{width:54px;height:54px;border-radius:50%;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:var(--sh-m)}
+.jr-ic .ic{width:23px;height:23px}
+.jr-t{font-size:.83rem;font-weight:600;color:var(--mut);line-height:1.7}
+.jr-sep{color:var(--faint);display:inline-flex;padding:2px}
+.jr-sep .ic{width:18px;height:18px}
+.soon-grid{display:grid;gap:12px;margin-top:26px;grid-template-columns:repeat(auto-fill,minmax(185px,1fr))}
+.soon-card{position:relative;background:var(--card);border:1px dashed var(--line2);border-radius:var(--r);padding:24px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;transition:border-color .2s}
+.soon-card:hover{border-color:var(--pri-line)}
+.soon-card .ic{width:22px;height:22px;color:var(--pri)}
+.soon-card b{font-size:.88rem;font-weight:600}
+.soon-badge{position:absolute;top:10px;inset-inline-start:10px;font-size:.62rem;font-weight:700;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-line);padding:2px 9px;border-radius:999px}
+@media(min-width:760px){.path-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:920px){
+ .lp-hero-in{grid-template-columns:1.05fr .95fr}
+ .jr{flex-direction:row;align-items:flex-start;justify-content:center;gap:0}
+ .jr-sep{align-self:flex-start;margin-top:15px}
+ .jr-sep .ic{transform:rotate(90deg)}
+}
+
+/* ===================== صفحة تحليل الملفات ===================== */
+.up-container{max-width:860px}
+.upz{border:2px dashed var(--line2);border-radius:var(--r);background:var(--card);padding:52px 22px;text-align:center;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:10px}
+.upz:hover,.upz.drag{border-color:var(--pri);background:var(--pri-soft)}
+.upz .ic{width:36px;height:36px;color:var(--pri)}
+.upz b{font-size:1rem;font-weight:600}
+.upz small{color:var(--faint);font-size:.8rem}
+.upfile{display:flex;align-items:center;gap:14px;padding:16px 18px;flex-wrap:wrap}
+.upfile > .ic{width:26px;height:26px;color:var(--pri);flex:0 0 auto}
+.upf-b{flex:1;min-width:180px}
+.upf-b b{font-size:.95rem;font-weight:600;display:block}
+.upf-b small{color:var(--faint);font-size:.76rem}
+.upf-a{display:flex;gap:10px;flex-wrap:wrap}
+.up-t{font-size:1.15rem;font-weight:700;margin:26px 0 14px;display:flex;align-items:center;gap:9px}
+.up-t .ic{color:var(--pri);width:20px;height:20px}
+.up-block{padding:18px 20px;margin-bottom:14px}
+.up-block h3{font-size:.98rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.up-block h3 .ic{color:var(--pri);width:17px;height:17px}
+.up-qs{padding-inline-start:20px;display:flex;flex-direction:column;gap:8px;font-size:.9rem;color:#3A4150}
+.up-disc{margin-top:4px}
+[data-theme="dark"] .up-qs{color:var(--mut)}
+
+/* ===================== الوضع الليلي (هوية إنجاز الداكنة) ===================== */
+[data-theme="dark"]{
+ --card:#1B2622;
+ --bg-h:#131C18;--bg-2:#232B20;
+ --ink:#E9EBE4;--mut:#B4BCAE;--faint:#7F887A;
+ --line:#2B372F;--line2:#3B4941;
+ --pri:#57B893;--pri-h:#74C7A7;--pri-a:#3E9C79;--pri-soft:#1B2F27;--pri-line:#2F4A3E;
+ --accent:#B9C63A;--accent-soft:#262C14;
+ --suc:#5FC786;--suc-bg:#17281D;--suc-line:#2E5A3D;
+ --warn:#E6B84C;--warn-bg:#2B2414;--warn-line:#5C4A1E;
+ --err:#F2766B;--err-bg:#2C1A17;--err-line:#5C2B25;
+ --info:#6BBDF2;--info-bg:#152430;--info-line:#28455C;
+ --sh:0 1px 2px rgba(0,0,0,.35);
+ --sh-m:0 6px 16px rgba(0,0,0,.45);
+}
+[data-theme="dark"] .topnav{background:rgba(19,28,24,.93)}
+[data-theme="dark"] .brand-mark{background:#1E6B58;color:#EAF2EE}
+[data-theme="dark"] .btn{color:#0E1A15}
+[data-theme="dark"] .btn.ghost{color:var(--pri);background:var(--card)}
+[data-theme="dark"] .btn.ghost:hover{background:var(--pri-soft)}
+[data-theme="dark"] .btn.ghost:active{background:#213A30}
+[data-theme="dark"] .v-watch{color:#0E1A15}
+[data-theme="dark"] .lesson-card:hover .l-go{color:#0E1A15}
+[data-theme="dark"] .p-steps li.done i{color:#0E1A15}
+[data-theme="dark"] .jr-ic{color:#0E1A15}
+[data-theme="dark"] .th-reason{background:rgba(21,30,26,.92);color:var(--ink);border-color:var(--line2)}
+[data-theme="dark"] .th-play,[data-theme="dark"] .p-play{background:rgba(233,235,228,.95);color:#131C18}
+[data-theme="dark"] .next-cta{background:#0E241C}
+[data-theme="dark"] .toast{background:#243029;border:1px solid var(--line2)}
+[data-theme="dark"] .pm-x{background:rgba(10,16,13,.6)}
+[data-theme="dark"] .faq-mail:hover{background:#213A30}
+[data-theme="dark"] .home-id-btns .btn{color:#fff}
+[data-theme="dark"] .home-id-btns .btn.ghost{background:transparent;color:#fff}
+[data-theme="dark"] .home-id-btns .btn.ghost:hover{background:rgba(255,255,255,.12)}
+[data-theme="dark"] .tm-ava{color:#EAF2EE}
+[data-theme="dark"] .i-sp{fill:#B9C63A}
+[data-theme="dark"] .i-card{fill:#1E6B58}
+[data-theme="dark"] .cta-btn{color:#0E1A15}
+
+</style>
+</head>
+<body>
+<div class="decor"></div>
+<header class="topnav"><div class="container nav-in">
+ <a class="brand" data-act="home"><span class="brand-mark">إ</span><span class="brand-txt"><b>إيضاح</b><i>نادي إنجاز · جامعة الإمام</i></span></a>
+ <div class="nav-side"><button class="theme-btn" id="themeBtn" data-act="theme" aria-label="تبديل المظهر"></button><span class="proto-chip">نموذج أولي</span><span class="avatar" title="تركي">ت</span></div>
+</div></header>
+<main id="app"></main>
+<footer class="foot"><div class="container"><b>إيضاح</b> © ٢٠٢٦ · فريق الذكاء الاصطناعي بنادي إنجاز، جامعة الإمام محمد بن سعود الإسلامية · نموذج أولي، جميع البيانات تجريبية</div></footer>
+<div id="modal-root"></div>
+<div id="toast" class="toast"></div>
+<script>
+/* ============ إيضاح · مداد، البيانات التجريبية ============ */
+
+const STAGES=[
+ {id:'p1',n:'الصف الأول الابتدائي',lv:'primary'},
+ {id:'p2',n:'الصف الثاني الابتدائي',lv:'primary'},
+ {id:'p3',n:'الصف الثالث الابتدائي',lv:'primary'},
+ {id:'p4',n:'الصف الرابع الابتدائي',lv:'primary'},
+ {id:'p5',n:'الصف الخامس الابتدائي',lv:'primary'},
+ {id:'p6',n:'الصف السادس الابتدائي',lv:'primary'},
+ {id:'m1',n:'الصف الأول المتوسط',lv:'middle'},
+ {id:'m2',n:'الصف الثاني المتوسط',lv:'middle'},
+ {id:'m3',n:'الصف الثالث المتوسط',lv:'middle'},
+ {id:'h1',n:'الصف الأول الثانوي',lv:'high'},
+ {id:'h2',n:'الصف الثاني الثانوي',lv:'high'},
+ {id:'h3',n:'الصف الثالث الثانوي',lv:'high'}
+];
+
+const LEVEL_NAMES={primary:'المرحلة الابتدائية',middle:'المرحلة المتوسطة',high:'المرحلة الثانوية'};
+
+/* المواد الدراسية بأسمائها الواقعية في المنهج السعودي، بألوان عائلة هوية إنجاز */
+const SUB_DEFS={
+ mylang:{n:'لغتي',icn:'book-open',c:'#B57A0A',g:['#F3C43C','#B57A0A'],d:'قراءة وكتابة وأناشيد وتعبير'},
+ math:{n:'الرياضيات',icn:'calculator',c:'#155043',g:['#125D64','#155043'],d:'أعداد ومعادلات وهندسة بأسلوب مبسط'},
+ sci:{n:'العلوم',icn:'flask',c:'#3CA45D',g:['#3CA45D','#155043'],d:'اكتشف العالم من حولك بالتجربة'},
+ ar:{n:'اللغة العربية',icn:'book-open',c:'#B57A0A',g:['#F3C43C','#B57A0A'],d:'نحو وقراءة وتعبير وإملاء'},
+ en:{n:'اللغة الإنجليزية',icn:'globe',c:'#3CA6EB',g:['#3CA6EB','#155043'],d:'قواعد ومفردات ومحادثة'},
+ isl:{n:'الدراسات الإسلامية',icn:'crescent',c:'#125D64',g:['#125D64','#0F3E34'],d:'قرآن وتوحيد وفقه وحديث'},
+ soc:{n:'الدراسات الاجتماعية',icn:'map',c:'#B93815',g:['#B93815','#7A2610'],d:'وطني: تاريخه وجغرافيته ورؤيته'},
+ dig:{n:'المهارات الرقمية',icn:'monitor',c:'#869200',g:['#869200','#5F6800'],d:'أساسيات الحاسب والبرمجة الممتعة'},
+ art:{n:'التربية الفنية',icn:'pen',c:'#EB3C87',g:['#EB3C87','#B02866'],d:'رسم وزخرفة وتشكيل بالخامات'},
+ pe:{n:'التربية البدنية',icn:'ball',c:'#FB4C3C',g:['#FB4C3C','#C03428'],d:'لياقة ومهارات حركية وألعاب'},
+ phy:{n:'الفيزياء',icn:'atom',c:'#2C7A8C',g:['#3CA6EB','#2C7A8C'],d:'قوانين الحركة والطاقة والكون'},
+ chem:{n:'الكيمياء',icn:'test-tube',c:'#EB3C87',g:['#EB3C87','#B02866'],d:'العناصر والتفاعلات والمحاليل'},
+ bio:{n:'الأحياء',icn:'dna',c:'#3CA45D',g:['#869200','#155043'],d:'الخلية والوراثة وأجهزة الجسم'},
+ dtech:{n:'التقنية الرقمية',icn:'monitor',c:'#869200',g:['#869200','#5F6800'],d:'برمجة وشبكات وذكاء اصطناعي'},
+ biz:{n:'إدارة الأعمال',icn:'briefcase',c:'#FB4C3C',g:['#FB4C3C','#B02866'],d:'ريادة أعمال وتخطيط وقيادة'},
+ cs:{n:'حاسب',icn:'monitor',c:'#125D64',g:['#125D64','#0F3E34'],d:'برمجة وخوارزميات وأمن معلومات'}
+};
+
+const LEVEL_SUBJECTS={
+ primary:['mylang','math','sci','isl','en','dig','art','pe'],
+ middle:['math','sci','ar','en','isl','soc','dig'],
+ high:['math','phy','chem','bio','ar','en','isl','dtech','biz']
+};
+
+const CHAPTERS=[
+ {id:1,n:'الفصل الدراسي الأول',w:'١٣ أسبوعاً',u:['التأسيس','المفاهيم الأساسية']},
+ {id:2,n:'الفصل الدراسي الثاني',w:'١٣ أسبوعاً',u:['التوسع','مهارات التطبيق']}
+];
+
+const LESSONS={
+ math:['الأعداد النسبية','القوى والأسس','الجذور التربيعية','نظرية فيثاغورس','المعادلات الخطية','النسبة المئوية والتناسب'],
+ sci:['طرائق العلم وتفكيره','الخلية ووظائف أجزائها','الوراثة والصفات','القوى والحركة','الطاقة وتحولاتها','النظام البيئي والتوازن'],
+ ar:['أنواع الجملة','المبتدأ والخبر','كان وأخواتها','الهمزة المتوسطة','النص الشعري: وطني','مهارة التلخيص'],
+ en:['المضارع البسيط Present Simple','الماضي البسيط Past Simple','مفردات: My Daily Routine','قراءة: At School','أدوات الاستفهام Wh-Questions','كتابة بريد إلكتروني بسيط'],
+ phy:['الحركة في خط مستقيم','قوانين نيوتن للحركة','الشغل والطاقة','الزخم والدفع','الحرارة ودرجة الحرارة','خصائص الموجات'],
+ chem:['تركيب الذرة','الجدول الدوري الحديث','الروابط الكيميائية','التفاعلات الكيميائية','المول والحسابات الكيميائية','المحاليل والذائبية'],
+ bio:['الخلية: وحدة بناء الحياة','الانقسام الخلوي','الوراثة المندلية','DNA وتضاعفه','البناء الضوئي','التنفس الخلوي'],
+ cs:['مقدمة في البرمجة','الخوارزميات والمخططات الانسيابية','بايثون: المتغيرات والبيانات','الجمل الشرطية','الحلقات التكرارية','أمن المعلومات'],
+ dig:['أساسيات جهاز الحاسب','الكتابة على لوحة المفاتيح','الرسام والإبداع الرقمي','سكراتش: أول برنامج لي','الإنترنت الآمن','العروض التقديمية'],
+ soc:['وطني المملكة العربية السعودية','تاريخ الدولة السعودية','الخرائط والاتجاهات','رؤية المملكة 2030','الموارد الطبيعية في وطني','السكان والعمران'],
+ isl:['أركان الإسلام','الطهارة وأحكامها','الصلاة وأركانها','السيرة النبوية: الهجرة','الأخلاق الإسلامية','أحكام التجويد'],
+ mylang:['أصدقاء الحروف','المقطع الساكن','ظاهرة التنوين','قراءة: مدرستي الجميلة','الإملاء: التاء المربوطة والمفتوحة','التعبير: أصف يومي'],
+ art:['عناصر العمل الفني','الألوان الأساسية والثانوية','الزخرفة الإسلامية','فن الخط العربي','الرسم بالألوان المائية','التشكيل بالخامات المتعددة'],
+ pe:['الإحماء والإطالة','مهارات الجري والتوازن','كرة القدم: التمرير','كرة السلة: المحاورة','اللياقة القلبية التنفسية','السلامة أثناء النشاط'],
+ biz:['مدخل إلى إدارة الأعمال','ريادة الأعمال','التخطيط ودراسة الجدوى','التسويق وأساسياته','الإدارة المالية للمشروع','مهارات القيادة وفرق العمل'],
+ dtech:['البرمجة بلغة بايثون','قواعد البيانات','الشبكات وبروتوكولات الإنترنت','مقدمة في الذكاء الاصطناعي','الأمن السيبراني','تطوير مواقع الويب']
+};
+
+const LESSON_MIN=[20,25,15,30,20,25];
+const DIFFS=[{t:'سهل',cls:'d-easy'},{t:'متوسط',cls:'d-mid'},{t:'متقدم',cls:'d-hard'}];
+const DIFF_PATTERN=[0,0,1,1,2,1];
+
+/* ---------- الشروحات المقترحة ---------- */
+const CHANNELS=[
+ {n:'عين دروس',nat:'sa',v:true},
+ {n:'أ. خالد الحربي',nat:'sa',v:false},
+ {n:'أ. نورة القحطاني',nat:'sa',v:false},
+ {n:'أكاديمية التفوق',nat:'gcc',v:true},
+ {n:'شرح المناهج العربية',nat:'ar',v:false},
+ {n:'أ. عبدالله المالكي',nat:'sa',v:false},
+ {n:'منصة تفوّق الخليج',nat:'gcc',v:false},
+ {n:'أ. محمد عادل',nat:'ar',v:false}
+];
+const NAT_NAMES={sa:'سعودي',gcc:'خليجي',ar:'عربي'};
+
+const VIDS_META=[
+ {ty:'شرح مبسط وسريع',ch:0,durM:4,views:1200000,year:2026,rate:4.8,match:0,reason:2},
+ {ty:'شرح شامل مع أمثلة',ch:1,durM:14,views:856000,year:2025,rate:4.7,match:0,reason:0},
+ {ty:'حل تمارين الكتاب',ch:2,durM:23,views:430000,year:2025,rate:4.5,match:1,reason:0},
+ {ty:'مراجعة مركزة قبل الاختبار',ch:3,durM:9,views:2100000,year:2024,rate:4.9,match:0,reason:1},
+ {ty:'أسئلة متوقعة وتدريب مكثف',ch:4,durM:36,views:98000,year:2023,rate:4.2,match:2,reason:0},
+ {ty:'تأسيس من الصفر',ch:5,durM:47,views:610000,year:2026,rate:4.6,match:1,reason:0},
+ {ty:'شرح تفاعلي مختصر',ch:6,durM:7,views:320000,year:2026,rate:4.4,match:1,reason:2},
+ {ty:'مراجعة شاملة للوحدة',ch:7,durM:18,views:1500000,year:2024,rate:4.8,match:0,reason:1}
+];
+const MATCHES=[{t:'ممتاز',cls:'m-a'},{t:'جيد جداً',cls:'m-b'},{t:'جيد',cls:'m-c'}];
+const REASONS=['موصى به بناءً على مطابقة المنهج','الأكثر مشاهدة بين الطلاب','شرح في وقت أقل'];
+const VID_GRADS=[['#155043','#0F3E34'],['#125D64','#155043'],['#3CA45D','#155043'],['#869200','#5F6800'],['#3CA6EB','#125D64'],['#F3C43C','#B57A0A'],['#125D64','#0F3E34'],['#EB3C87','#155043']];
+
+/* ---------- محتوى المساعد الذكي لكل مادة ---------- */
+const AIC={
+ math:{
+  sum:l=>[
+   'يشرح درس «'+l+'» الفكرة الرياضية الأساسية بأسلوب متدرج يبدأ من أمثلة عددية بسيطة قبل الوصول إلى القاعدة العامة.',
+   'يوضح متى نستخدم هذه المهارة، وما شروط تطبيقها، وأشهر الأخطاء التي يقع فيها الطلاب.',
+   'يعرض أمثلة محلولة خطوة بخطوة تنتقل من التطبيق المباشر إلى مسائل تحتاج تفكيراً أعمق.',
+   'يربط الدرس بما سبقت دراسته ليكون أساساً متيناً للدروس القادمة في الوحدة.'],
+  ex:{h:'من التسوق إلى ملعب الحي',p:[
+   'تخيّل أنك وجدت عرضاً على متجر إلكتروني: خصم ٢٥٪ على جهاز سعره ٨٠٠ ريال. حساب السعر النهائي (٦٠٠ ريال) هو تطبيق مباشر لمهارات النِّسب والعمليات التي تتدرب عليها في هذا الدرس.',
+   'وفي ملعب الحي: لو أردت معرفة أطول مسافة مستقيمة بين ركنين متقابلين، فأنت عملياً تستخدم العلاقات بين أضلاع المثلث القائم، نفس منطق درس «{L}» يظهر في القياس والبناء وحتى تصميم الألعاب.']},
+  notes:{
+   laws:['النسبة المئوية = (الجزء ÷ الكل) × ١٠٠','نظرية فيثاغورس: (الوتر)² = (الضلع الأول)² + (الضلع الثاني)²','(أ^م) × (أ^ن) = أ^(م+ن) عند ضرب قوى لها الأساس نفسه'],
+   defs:['العدد النسبي: كل عدد يمكن كتابته على صورة أ/ب حيث ب ≠ صفر','الجذر التربيعي للعدد س: العدد الموجب الذي إذا ضُرب في نفسه أعطى س'],
+   exam:['حفظ القاعدة لا يكفي، تدرّب على ٣ مسائل متنوعة على الأقل','انتبه لوحدات القياس في المسائل الهندسية (سم، م، كم)','أسئلة الخطوات المتعددة هي الأكثر تكراراً في الاختبارات النهائية']},
+  quiz:[
+   {q:'إذا كان س + ٥ = ١٢ فإن قيمة س تساوي:',o:['٥','٦','٧','١٧'],a:2},
+   {q:'الجذر التربيعي للعدد ٨١ هو:',o:['٧','٨','٩','١١'],a:2},
+   {q:'مثلث قائم الزاوية طولا ضلعي القائمة فيه ٣ سم و ٤ سم، فطول الوتر:',o:['٥ سم','٦ سم','٧ سم','١٢ سم'],a:0},
+   {q:'٢٥٪ من العدد ٢٠٠ تساوي:',o:['٢٥','٤٠','٥٠','٧٥'],a:2},
+   {q:'أي مما يلي يُعد عدداً نسبياً؟',o:['√٢','ط (π)','٣/٤','√٥'],a:2}]
+ },
+ sci:{
+  sum:l=>[
+   'يتناول درس «'+l+'» الظاهرة العلمية الأساسية ويفسر كيف تحدث في الطبيعة من حولنا.',
+   'يعرّفك على المصطلحات العلمية الجديدة مع أمثلة ملموسة تسهّل تذكرها.',
+   'يوضح خطوات التجربة أو الملاحظة العلمية المرتبطة بالمفهوم وكيف نستنتج منها.',
+   'يختم بربط المفهوم بحياتك اليومية وبدروس الوحدة الأخرى لبناء صورة متكاملة.'],
+  ex:{h:'مختبر علوم في مطبخ بيتكم',p:[
+   'عندما يغلي الماء في الغلاية ويتصاعد البخار ثم يتكثف على غطاء القدر، فأنت تشاهد تحولات المادة والطاقة أمام عينيك، نفس الأفكار التي يشرحها درس «{L}».',
+   'وحتى جسمك أثناء لعب كرة القدم: تسارع نبضك وتنفسك هو استجابة علمية دقيقة يمكن تفسيرها بما تتعلمه في هذه الوحدة. العلم ليس في الكتاب فقط، بل في كل ما حولك.']},
+  notes:{
+   laws:['خطوات الطريقة العلمية: ملاحظة ثم سؤال ثم فرضية ثم تجربة ثم استنتاج','الطاقة لا تفنى ولا تُستحدث، بل تتحول من صورة إلى أخرى','القوة تغيّر حالة الجسم الحركية (سكون أو حركة)'],
+   defs:['الخلية: الوحدة الأساسية لبناء أجسام الكائنات الحية','النظام البيئي: تفاعل الكائنات الحية مع بعضها ومع بيئتها غير الحية'],
+   exam:['ركّز على المقارنات (مثل: الخلية النباتية والحيوانية) فهي سؤال شبه مضمون','ارسم المخططات وسمِّ أجزاءها، أسئلة الرسم تتكرر كثيراً','اربط كل مصطلح بمثال واقعي ليسهل استرجاعه في الاختبار']},
+  quiz:[
+   {q:'أصغر وحدة بنائية في جسم الكائن الحي هي:',o:['النسيج','الخلية','العضو','الجهاز'],a:1},
+   {q:'العملية التي يصنع بها النبات غذاءه تسمى:',o:['التنفس','التبخر','البناء الضوئي','الهضم'],a:2},
+   {q:'وحدة قياس القوة هي:',o:['المتر','النيوتن','الجول','الكيلوجرام'],a:1},
+   {q:'أي مما يلي مصدر متجدد للطاقة؟',o:['الفحم','النفط','الشمس','الغاز الطبيعي'],a:2},
+   {q:'العضية المسؤولة عن إنتاج الطاقة داخل الخلية هي:',o:['النواة','الميتوكوندريا','الجدار الخلوي','الفجوة'],a:1}]
+ },
+ ar:{
+  sum:l=>[
+   'يقدّم درس «'+l+'» القاعدة اللغوية بأسلوب ميسّر يبدأ بأمثلة من نصوص قصيرة مألوفة.',
+   'يوضح مواضع الاستخدام الصحيح مع التنبيه على الأخطاء الشائعة في الكتابة والإعراب.',
+   'يعرض تدريبات متنوعة: استخراج من النص، وإكمال، وإعراب نماذج مختارة.',
+   'يعزز مهارتي القراءة والتعبير من خلال توظيف القاعدة في جمل من إنشائك.'],
+  ex:{h:'رسالة واتساب بلغة سليمة',p:[
+   'عندما تكتب رسالة اعتذار لمعلمك أو تهنئة لصديقك، فأنت تطبق عملياً ما تتعلمه في درس «{L}»: ترتيب الجملة، وصحة الإملاء، ووضوح المعنى.',
+   'اللغة السليمة تصنع انطباعاً قوياً، جرّب أن تعيد صياغة آخر رسالة كتبتها اليوم بقواعد هذا الدرس ولاحظ الفرق في قوة أسلوبك.']},
+  notes:{
+   laws:['الجملة الاسمية تبدأ باسم، والجملة الفعلية تبدأ بفعل','المبتدأ والخبر مرفوعان، وعلامة رفعهما الأصلية الضمة','كان وأخواتها ترفع المبتدأ (اسمها) وتنصب الخبر (خبرها)'],
+   defs:['المبتدأ: اسم مرفوع يقع غالباً في أول الجملة الاسمية','التلخيص: إعادة كتابة النص بإيجاز مع الحفاظ على أفكاره الرئيسة'],
+   exam:['أسئلة الاستخراج من النص (استخرج مبتدأ/خبراً/حالاً) شبه مؤكدة','راجع مواضع الهمزات، أخطاء الإملاء تخصم درجات سهلة','تدرّب على إعراب جملتين يومياً قبل الاختبار']},
+  quiz:[
+   {q:'الجملة الاسمية هي التي تبدأ بـ:',o:['فعل','اسم','حرف','ظرف'],a:1},
+   {q:'إعراب المبتدأ دائماً:',o:['منصوب','مجرور','مرفوع','مجزوم'],a:2},
+   {q:'في جملة «كان الجوُّ جميلاً»، كلمة «الجوُّ» تُعرب:',o:['خبر كان','اسم كان','مفعولاً به','فاعلاً'],a:1},
+   {q:'جمع كلمة «كتاب» هو:',o:['كاتبون','مكاتب','كُتُب','كتائب'],a:2},
+   {q:'الهمزة في كلمة «سَأَلَ» همزة:',o:['متطرفة','في أول الكلمة','متوسطة على الألف','وصل'],a:2}]
+ },
+ en:{
+  sum:l=>[
+   'يشرح درس «'+l+'» القاعدة أو المهارة اللغوية مع أمثلة إنجليزية قصيرة وترجمتها.',
+   'يوضح البنية الصحيحة للجملة (Word Order) وأشهر الأخطاء التي يقع فيها المتعلم العربي.',
+   'يقدم مفردات الدرس الأساسية مع طريقة نطقها واستخدامها في سياقات يومية.',
+   'يختم بتدريبات محاكية لأسئلة الاختبار: اختيار من متعدد وإكمال جمل.'],
+  ex:{h:'اطلب قهوتك بالإنجليزي',p:[
+   'في المقهى: "Can I have a hot chocolate, please?"، جملة قصيرة لكنها تجمع ما تتعلمه في درس «{L}»: الفعل، والترتيب الصحيح، وأسلوب الطلب المهذب.',
+   'جرّب اليوم: كوّن ثلاث جمل عن روتينك اليومي بالإنجليزية وأرسلها لنفسك. الممارسة اليومية القصيرة أفضل من مذاكرة طويلة متباعدة.']},
+  notes:{
+   laws:['المضارع البسيط مع (he/she/it) نضيف s للفعل: She plays','ترتيب الجملة الإنجليزية: فاعل + فعل + مفعول (S + V + O)','نستخدم am/is/are حسب الفاعل: I am، He is، They are'],
+   defs:['Verb (فعل): كلمة تدل على حدث مثل go, play, write','Wh-Questions: أسئلة تبدأ بـ What, Where, When, Who, Why'],
+   exam:['احفظ تصريفات الأفعال الشائعة (go/went, see/saw)، تتكرر كثيراً','انتبه لإضافة s مع الفاعل المفرد الغائب في المضارع','اقرأ قطعة قصيرة يومياً لتقوية أسئلة الفهم (Reading)']},
+  quiz:[
+   {q:'اختر الصحيح: She ____ to school every day.',o:['go','goes','going','gone'],a:1},
+   {q:'الماضي من الفعل go هو:',o:['goed','gone','went','goes'],a:2},
+   {q:'معنى كلمة Library:',o:['مستشفى','مكتبة','مطعم','حديقة'],a:1},
+   {q:'اختر الصحيح: ____ apple a day is healthy.',o:['A','An','The','Two'],a:1},
+   {q:'جمع كلمة child هو:',o:['childs','childes','children','childrens'],a:2}]
+ },
+ phy:{
+  sum:l=>[
+   'يقدّم درس «'+l+'» المفهوم الفيزيائي مع تعريف الكميات المستخدمة ووحدات قياسها.',
+   'يستنتج القانون الرياضي المرتبط بالمفهوم ويوضح دلالة كل رمز فيه.',
+   'يعرض مسائل محلولة تبدأ بالتعويض المباشر وتتدرج إلى مواقف حياتية.',
+   'ينبّه إلى الفروق الدقيقة بين المفاهيم المتشابهة التي يكثر الخلط بينها.'],
+  ex:{h:'فيزياء السيارة في طريقك للمدرسة',p:[
+   'عندما يضغط السائق على المكابح وتحتاج السيارة مسافة لتتوقف، فهذا تطبيق مباشر لمفاهيم الحركة والقوى والزخم التي يتناولها درس «{L}».',
+   'وحزام الأمان؟ هو تطبيق هندسي لقانون نيوتن الأول: جسمك «يقاوم» تغيير حالته الحركية، والحزام يحميك من هذا القصور الذاتي. الفيزياء تنقذ الأرواح فعلاً.']},
+  notes:{
+   laws:['السرعة المتوسطة = المسافة ÷ الزمن','القانون الثاني لنيوتن: القوة المحصلة = الكتلة × التسارع','الشغل = القوة × الإزاحة (في اتجاه القوة)'],
+   defs:['التسارع: معدل التغير في السرعة بالنسبة للزمن','الزخم: حاصل ضرب كتلة الجسم في سرعته'],
+   exam:['اكتب القانون ثم المعطيات ثم التعويض، خطوات الحل عليها درجات','وحّد وحدات القياس قبل التعويض (كم/س إلى م/ث)','ارسم مخطط القوى للأجسام في المسائل، يسهّل الحل ويرفع درجتك']},
+  quiz:[
+   {q:'وحدة قياس السرعة في النظام الدولي هي:',o:['كم/س','م/ث','م/ث²','نيوتن'],a:1},
+   {q:'الصيغة الرياضية للقانون الثاني لنيوتن:',o:['ق = ك ÷ ت','ق = ك × ت','ك = ق × ت','ت = ق × ك'],a:1},
+   {q:'الشغل المبذول يساوي:',o:['القوة × الزمن','الكتلة × السرعة','القوة × الإزاحة','القوة ÷ المساحة'],a:2},
+   {q:'تسارع الجاذبية الأرضية يساوي تقريباً:',o:['٣.٨ م/ث²','٦.٦ م/ث²','٩.٨ م/ث²','١٢ م/ث²'],a:2},
+   {q:'الموجات الصوتية موجات:',o:['مستعرضة','كهرومغناطيسية','طولية','ضوئية'],a:2}]
+ },
+ chem:{
+  sum:l=>[
+   'يتناول درس «'+l+'» المفهوم الكيميائي مع تمثيله على مستوى الذرات والجزيئات.',
+   'يوضح المصطلحات والرموز الكيميائية المستخدمة وكيفية قراءتها بشكل صحيح.',
+   'يعرض أمثلة وتفاعلات موزونة خطوة بخطوة مع تفسير ما يحدث في كل مرحلة.',
+   'يربط المفهوم بتطبيقات صناعية وحياتية لترى الكيمياء خارج المختبر.'],
+  ex:{h:'الكيمياء في مطبخ العائلة',p:[
+   'انتفاخ الكيك في الفرن ليس سحراً: البيكنج باودر يتفاعل وينتج غاز ثاني أكسيد الكربون الذي يرفع العجينة، تفاعل كيميائي كامل يشبه ما تدرسه في «{L}».',
+   'وصدأ دراجتك القديمة؟ تفاعل أكسدة بطيء بين الحديد والأكسجين. متى فهمت «لماذا» يحدث التفاعل، صار حفظ المعادلات أسهل بكثير.']},
+  notes:{
+   laws:['العدد الذري = عدد البروتونات في نواة الذرة','عدد أفوجادرو يساوي تقريباً ٦٫٠٢٢ × ١٠²³ جسيم/مول','في التفاعل الموزون: عدد ذرات كل عنصر متساوٍ في الطرفين'],
+   defs:['المول: كمية من المادة تحتوي على عدد أفوجادرو من الجسيمات','الرابطة الأيونية: تجاذب بين أيون موجب وأيون سالب'],
+   exam:['احفظ رموز أول ٢٠ عنصراً في الجدول الدوري','تدرّب على وزن المعادلات، سؤال شبه ثابت','فرّق بين الرابطة الأيونية والتساهمية بمثال لكل منهما']},
+  quiz:[
+   {q:'العدد الذري للعنصر يمثل عدد:',o:['النيوترونات','الإلكترونات فقط','البروتونات','الأيونات'],a:2},
+   {q:'الرمز الكيميائي لعنصر الأكسجين:',o:['Os','O','Ox','Og'],a:1},
+   {q:'الرابطة بين الصوديوم Na والكلور Cl في ملح الطعام:',o:['تساهمية','فلزية','هيدروجينية','أيونية'],a:3},
+   {q:'الرقم الهيدروجيني pH للمحلول المتعادل يساوي:',o:['٠','٧','١٠','١٤'],a:1},
+   {q:'عدد أفوجادرو يساوي تقريباً:',o:['٣٫١٤ × ١٠⁸','٦٫٠٢٢ × ١٠²³','٩٫٨ × ١٠²','١٫٦ × ١٠⁻¹⁹'],a:1}]
+ },
+ bio:{
+  sum:l=>[
+   'يشرح درس «'+l+'» التركيب أو العملية الحيوية ودورها في استمرار حياة الكائن.',
+   'يوضح المصطلحات البيولوجية مع مخططات تبسّط الأجزاء والوظائف.',
+   'يتتبع خطوات العملية بالترتيب الصحيح ويبيّن العوامل المؤثرة فيها.',
+   'يربط الدرس بصحة الإنسان وسلوكياته اليومية ليكون التعلم ذا معنى.'],
+  ex:{h:'جسمك أثناء حصة الرياضة',p:[
+   'عند الجري تتسارع أنفاسك ونبضك: خلاياك تطلب وقوداً وأكسجيناً أكثر لإنتاج الطاقة، وهذه بالضبط العمليات الحيوية التي يفسّرها درس «{L}».',
+   'وحتى شبهك بوالديك في لون العينين أو الطول ليس صدفة، بل وراثة منظمة بقوانين دقيقة ستكتشف منطقها في هذه الوحدة.']},
+  notes:{
+   laws:['قواعد DNA: A ترتبط مع T، و C ترتبط مع G','البناء الضوئي: ماء + ثاني أكسيد الكربون + ضوء ينتج جلوكوز + أكسجين','الانقسام المتساوي ينتج خليتين متطابقتين وراثياً'],
+   defs:['الجين: جزء من DNA يحمل صفة وراثية محددة','البلاستيدات الخضراء: عضيات تجري فيها عملية البناء الضوئي'],
+   exam:['ارسم الخلية وسمِّ عضياتها، سؤال رسم متكرر','قارن بين البناء الضوئي والتنفس الخلوي في جدول','تدرّب على مربع بانيت لمسائل الوراثة البسيطة']},
+  quiz:[
+   {q:'تحدث عملية البناء الضوئي في:',o:['النواة','الميتوكوندريا','البلاستيدات الخضراء','الغشاء الخلوي'],a:2},
+   {q:'عدد الكروموسومات في الخلية الجسدية للإنسان:',o:['٢٣','٤٤','٤٦','٤٨'],a:2},
+   {q:'ينتج عن الانقسام المتساوي:',o:['٤ خلايا مختلفة','خليتان متطابقتان','خلية واحدة كبيرة','٨ خلايا جنسية'],a:1},
+   {q:'في DNA، القاعدة A ترتبط دائماً مع:',o:['G','C','T','A'],a:2},
+   {q:'الناتج الرئيس للتنفس الخلوي الذي تستخدمه الخلية كطاقة:',o:['DNA','ATP','O₂','H₂O'],a:1}]
+ },
+ cs:{
+  sum:l=>[
+   'يقدّم درس «'+l+'» المفهوم البرمجي أو التقني بأسلوب عملي يبدأ بمثال قبل التعريف.',
+   'يوضح الصياغة الصحيحة (Syntax) وأشهر الأخطاء التي تظهر للمبتدئين وكيف تُقرأ رسائلها.',
+   'يعرض أمثلة كود قصيرة قابلة للتجربة مع شرح ناتج كل سطر.',
+   'يختم بتحدٍّ برمجي صغير يطبّق الفكرة ويهيئك لمشروع الوحدة.'],
+  ex:{h:'التطبيقات التي تستخدمها كل يوم',p:[
+   'عندما يقترح عليك تطبيق المتجر «منتجات قد تعجبك»، فخلف الكواليس شروط وحلقات تكرارية تفحص بياناتك، نفس اللبنات التي تتعلمها في درس «{L}».',
+   'ولعبتك المفضلة؟ كل حركة شخصية وكل نقطة تُحتسب هي أسطر برمجية منطقية. تعلّمك اليوم هو أول خطوة لتكون أنت من يبني هذه التجارب غداً.']},
+  notes:{
+   laws:['بنية الجملة الشرطية في بايثون: if الشرط: ثم الأوامر بمسافة بادئة','حلقة for تُستخدم للتكرار المعلوم عدده، و while للتكرار المشروط','الخوارزمية: خطوات محددة ومرتبة لحل مشكلة'],
+   defs:['المتغير: اسم يُخزّن قيمة يمكن تغييرها أثناء تنفيذ البرنامج','كلمة المرور القوية: طويلة وتجمع أحرفاً وأرقاماً ورموزاً'],
+   exam:['تتبّع ناتج الكود سطراً سطراً، سؤال «ما ناتج تنفيذ؟» شبه مؤكد','انتبه للمسافات البادئة في بايثون فهي جزء من الصياغة','تدرّب على تحويل مشكلة نصية إلى خطوات خوارزمية']},
+  quiz:[
+   {q:'أي مما يلي لغة برمجة؟',o:['HTTP','Python','Windows','USB'],a:1},
+   {q:'ناتج تنفيذ الأمر: print(2 + 3)',o:['23','5','2+3','خطأ'],a:1},
+   {q:'تُستخدم الحلقات التكرارية (Loops) من أجل:',o:['حذف الملفات','تكرار تنفيذ أوامر','تلوين الشاشة','إيقاف البرنامج'],a:1},
+   {q:'امتداد ملفات لغة بايثون هو:',o:['.doc','.py','.exe','.html'],a:1},
+   {q:'من ممارسات أمن المعلومات الصحيحة:',o:['مشاركة كلمة المرور مع الأصدقاء','استخدام كلمة مرور قوية ومختلفة لكل حساب','فتح أي رابط يصلك','تعطيل التحديثات'],a:1}]
+ },
+ soc:{
+  sum:l=>[
+   'يتناول درس «'+l+'» موضوعه ضمن سياق وطننا: موقعه ومكانته وأثره في حياتنا.',
+   'يعرض الحقائق والتواريخ والمواقع الأساسية بأسلوب قصصي يسهل تذكره.',
+   'يوظف الخرائط والصور والجداول الزمنية لترسيخ المعلومة بصرياً.',
+   'يربط الماضي بالحاضر وبمستهدفات رؤية المملكة 2030 لفهم أعمق.'],
+  ex:{h:'رحلة عائلية عبر الوطن',p:[
+   'في رحلة من الرياض إلى العلا ستقرأ اللوحات، وتقدّر المسافات، وتلاحظ تغيّر التضاريس، كلها مهارات يبنيها درس «{L}» لتفهم وطنك لا لتحفظه فقط.',
+   'وعندما تزور الدرعية التاريخية، فأنت تمشي في المكان الذي بدأت منه قصة الدولة السعودية، التاريخ هنا ليس صفحات، بل أماكن يمكنك لمسها.']},
+  notes:{
+   laws:['اتجاهات الخريطة الأصلية: شمال، جنوب، شرق، غرب','اليوم الوطني السعودي: ٢٣ سبتمبر من كل عام','تأسست الدولة السعودية الأولى عام ١١٣٩هـ (١٧٢٧م) في الدرعية'],
+   defs:['رؤية 2030: خطة وطنية طموحة لتنويع الاقتصاد وتطوير القطاعات','الموارد الطبيعية: ما تمنحه الطبيعة ويستفيد منه الإنسان كالماء والنفط'],
+   exam:['تدرّب على تحديد المواقع على خريطة المملكة الصماء','رتّب الأحداث التاريخية زمنياً، أسئلة الترتيب متكررة','اربط كل مورد طبيعي بمنطقة اشتهرت به']},
+  quiz:[
+   {q:'عاصمة المملكة العربية السعودية هي:',o:['جدة','الدمام','الرياض','مكة المكرمة'],a:2},
+   {q:'مؤسس الدولة السعودية الأولى هو:',o:['الملك عبدالعزيز','الإمام محمد بن سعود','الإمام تركي بن عبدالله','الملك فيصل'],a:1},
+   {q:'اليوم الوطني السعودي يوافق:',o:['٢٢ فبراير','١ محرم','٢٣ سبتمبر','١٥ رمضان'],a:2},
+   {q:'رؤية المملكة الطموحة تعرف باسم رؤية:',o:['2020','2025','2030','2050'],a:2},
+   {q:'من الدول التي تحد المملكة من الشمال:',o:['اليمن','عُمان','العراق','الإمارات'],a:2}]
+ },
+ isl:{
+  sum:l=>[
+   'يعرض درس «'+l+'» الحكم أو المفهوم الشرعي بدليله من القرآن الكريم أو السنة النبوية.',
+   'يوضح الحِكم والمقاصد ليكون الالتزام عن فهم ومحبة لا مجرد حفظ.',
+   'يقدّم التطبيق العملي الصحيح خطوة بخطوة مع تنبيهات على الأخطاء الشائعة.',
+   'يربط الدرس بواقع الطالب اليومي في بيته ومدرسته وتعامله مع الآخرين.'],
+  ex:{h:'يومك كله عبادة وسلوك',p:[
+   'من لحظة استيقاظك: الوضوء، وصلاة الفجر، وبرّك بوالديك قبل الخروج للمدرسة، كل ذلك تطبيق حي لما تتعلمه في درس «{L}».',
+   'وحين تصدُق مع زميلك وتردّ الأمانة وتحفظ لسانك، فأنت تترجم القيم الإسلامية إلى سلوك يراه الناس قبل أن يسمعوه.']},
+  notes:{
+   laws:['أركان الإسلام خمسة: الشهادتان، الصلاة، الزكاة، الصوم، الحج','الصلوات المفروضة خمس في اليوم والليلة','الطهارة شرط لصحة الصلاة'],
+   defs:['الطهارة: النظافة والنزاهة من الحدث والنجس','الأمانة: حفظ الحقوق وأداؤها لأصحابها'],
+   exam:['احفظ الأدلة القصيرة مع مواضع الاستشهاد بها','رتّب أعمال الوضوء والصلاة بالتسلسل الصحيح','أسئلة «اذكر ثمرات/آثار» تتكرر، جهّز ثلاث نقاط لكل قيمة']},
+  quiz:[
+   {q:'عدد أركان الإسلام:',o:['ثلاثة','أربعة','خمسة','ستة'],a:2},
+   {q:'أول أركان الإسلام هو:',o:['الصلاة','الشهادتان','الزكاة','الصوم'],a:1},
+   {q:'عدد الصلوات المفروضة في اليوم والليلة:',o:['ثلاث','أربع','خمس','ست'],a:2},
+   {q:'الصوم المفروض على المسلمين يكون في شهر:',o:['شعبان','رمضان','شوال','محرم'],a:1},
+   {q:'يؤدي المسلمون فريضة الحج في:',o:['المدينة المنورة','الطائف','مكة المكرمة','جدة'],a:2}]
+ }
+};
+AIC.dig=AIC.cs;
+AIC.mylang=AIC.ar;
+AIC.dtech=AIC.cs;
+AIC.art={
+ sum:l=>[
+  'يعرّفك درس «'+l+'» بالمفهوم الفني وأدواته وخاماته المناسبة.',
+  'يوضح خطوات تنفيذ العمل الفني من التخطيط الأولي حتى اللمسة الأخيرة.',
+  'يعرض نماذج ملهمة من الفن السعودي والعالمي مرتبطة بالمفهوم.',
+  'يشجعك على التجريب وإضافة بصمتك الخاصة في كل عمل.'],
+ ex:{h:'الفن من حولك في كل مكان',p:[
+  'تأمل زخارف أبواب الأحياء القديمة والمساجد: تكرار منظم لوحدات هندسية ونباتية، وهو جوهر ما تتدرب عليه في درس «{L}».',
+  'وحين تصمم شعاراً لنادي مدرستك أو غلافاً لمشروعك، فأنت توظف عناصر العمل الفني نفسها: الخط والشكل واللون والملمس.']},
+ notes:{
+  laws:['الألوان الأساسية: الأحمر والأصفر والأزرق','مزج لونين أساسيين ينتج لوناً ثانوياً','عناصر العمل الفني: الخط والشكل واللون والملمس'],
+  defs:['الزخرفة: تكرار منظم لوحدات فنية وفق نظام محدد','الظل والنور: تدرج القيم الضوئية لإبراز الحجم والعمق'],
+  exam:['طبق الفكرة عملياً في كراسة الرسم قبل الحصة','رتب خطوات تنفيذ العمل الفني بالتسلسل','تعرف على أشهر الخطوط العربية وسماتها']},
+ quiz:[
+  {q:'عدد الألوان الأساسية:',o:['اثنان','ثلاثة','أربعة','خمسة'],a:1},
+  {q:'مزج اللونين الأزرق والأصفر ينتج اللون:',o:['البرتقالي','البنفسجي','الأخضر','البني'],a:2},
+  {q:'أي مما يلي من الخطوط العربية؟',o:['التايمز','النسخ','الروماني','القوطي'],a:1},
+  {q:'تكرار وحدة فنية بنظام محدد يسمى:',o:['تظليل','زخرفة','نحت','تلوين'],a:1},
+  {q:'الأداة الأنسب للتلوين المائي:',o:['قلم الرصاص','الفرشاة','المسطرة','الممحاة'],a:1}]
+};
+AIC.pe={
+ sum:l=>[
+  'يشرح درس «'+l+'» المهارة الحركية وخطوات أدائها الصحيح.',
+  'يوضح أهمية الإحماء قبل الأداء والإطالة بعده.',
+  'يبين قواعد السلامة وروح اللعب النظيف أثناء النشاط.',
+  'يربط المهارة بفوائدها على لياقتك وصحتك العامة.'],
+ ex:{h:'لياقتك تبدأ من يومك العادي',p:[
+  'صعود الدرج بدل المصعد، والمشي إلى المسجد أو البقالة: نشاط بدني يومي يبني نفس اللياقة التي يستهدفها درس «{L}».',
+  'وقبل مباراة الحي، دقائق الإحماء القليلة تقلل الإصابات وترفع مستوى أدائك بشكل ملحوظ.']},
+ notes:{
+  laws:['الإحماء قبل النشاط يقلل خطر الإصابة','اشرب الماء قبل النشاط وأثناءه وبعده','تدرج في الحمل من السهل إلى الأصعب'],
+  defs:['اللياقة القلبية التنفسية: قدرة القلب والرئتين على تزويد الجسم بالأكسجين','المرونة: المدى الحركي للمفصل'],
+  exam:['اذكر خطوات الأداء الصحيح للمهارة بالترتيب','عدد فوائد النشاط البدني المنتظم','اذكر قواعد السلامة أثناء اللعب']},
+ quiz:[
+  {q:'عدد لاعبي فريق كرة القدم داخل الملعب:',o:['٩','١٠','١١','١٢'],a:2},
+  {q:'نبدأ الحصة الرياضية دائماً بـ:',o:['المباراة','الإحماء','الاستحمام','التقييم'],a:1},
+  {q:'المدة الموصى بها للنشاط البدني المعتدل يومياً للناشئة:',o:['١٠ دقائق','٢٠ دقيقة','٦٠ دقيقة','٣ ساعات'],a:2},
+  {q:'من قواعد السلامة أثناء النشاط:',o:['اللعب دون إحماء','استخدام أدوات سليمة ومناسبة','تجاهل تعليمات المعلم','اللعب في أرض مبللة'],a:1},
+  {q:'المرونة تقاس بمدى حركة:',o:['العضلات فقط','المفاصل','العظام','الأعصاب'],a:1}]
+};
+AIC.biz={
+ sum:l=>[
+  'يقدم درس «'+l+'» المفهوم الإداري وأهميته في عالم الأعمال اليوم.',
+  'يعرض أمثلة من شركات سعودية ومشاريع ريادية ناشئة.',
+  'يوضح خطوات تطبيق المفهوم عملياً على مشروع صغير.',
+  'يبرز المهارات التي يحتاجها رائد الأعمال الناجح.'],
+ ex:{h:'مشروعك الصغير يبدأ من هنا',p:[
+  'ركن قهوة في فعالية مدرسية: تحسب التكلفة، وتحدد السعر، وتقيس الربح، وهذا تطبيق مباشر لما تتعلمه في درس «{L}».',
+  'ورؤية 2030 فتحت أبواباً واسعة لريادة الأعمال، ففهمك لهذه الأساسيات اليوم هو رأس مالك الحقيقي غداً.']},
+ notes:{
+  laws:['الربح = الإيرادات ناقص التكاليف','وظائف الإدارة: تخطيط وتنظيم وتوجيه ورقابة','دراسة الجدوى خطوة أساسية قبل بدء أي مشروع'],
+  defs:['ريادة الأعمال: تحويل فكرة إلى مشروع يقدم قيمة','السوق المستهدف: الفئة المقصودة بالمنتج أو الخدمة'],
+  exam:['عرف المصطلحات الأساسية بدقة','مثل لكل وظيفة من وظائف الإدارة','اذكر خطوات دراسة الجدوى بالترتيب']},
+ quiz:[
+  {q:'الربح يساوي:',o:['الإيرادات + التكاليف','الإيرادات ناقص التكاليف','التكاليف × ٢','رأس المال'],a:1},
+  {q:'أولى وظائف الإدارة:',o:['الرقابة','التوجيه','التخطيط','التنظيم'],a:2},
+  {q:'الدراسة التي تسبق بدء المشروع تسمى دراسة:',o:['السوق فقط','الجدوى','المنافسين فقط','التشغيل'],a:1},
+  {q:'الوثيقة التي تحدد رؤية المشروع وأهدافه:',o:['الفاتورة','خطة العمل','سجل الحضور','العقد'],a:1},
+  {q:'تحليل SWOT يدرس:',o:['الأرباح فقط','القوة والضعف والفرص والتهديدات','الرواتب','الضرائب'],a:1}]
+};
+
+/* ---------- بيانات الصفحة الرئيسية (Landing)، مبنية على مفهوم المسارات القابلة للتوسع ---------- */
+const PATHS=[
+ {icn:'grad-cap',t:'المناهج التعليمية',d:'استعرض المناهج السعودية حسب المرحلة والصف والمادة، وشاهد أفضل الشروحات المدعومة بالذكاء الاصطناعي.',btn:'ابدأ التعلم',act:'stages'},
+ {icn:'upload',t:'حلّل ملفاتك التعليمية',d:'ارفع عرضاً تقديمياً أو ملفاً تعليمياً، ودع إيضاح يساعدك في فهم المحتوى وتلخيصه وإنشاء أسئلة وملاحظات للمذاكرة.',btn:'رفع ملف',act:'upload'}
+];
+const LP_FEATS=[
+ {icn:'file-text',t:'تلخيص ذكي',d:'تلخيص سريع للنقاط المهمة.'},
+ {icn:'lightbulb',t:'شرح بمثال من الواقع',d:'تبسيط المفاهيم باستخدام أمثلة حياتية.'},
+ {icn:'note',t:'ملاحظات للمذاكرة',d:'إنشاء ملاحظات تساعد على المراجعة قبل الاختبارات.'},
+ {icn:'target',t:'اختبر نفسك',d:'إنشاء أسئلة تفاعلية مع تصحيح فوري.'}
+];
+const LP_WHY=['مبني على المنهج السعودي','مدعوم بالذكاء الاصطناعي','يجمع أفضل مصادر التعلم في مكان واحد'];
+const LP_JOURNEY=[
+ {icn:'layers',t:'اختر المسار'},
+ {icn:'video',t:'شاهد أفضل الشروحات أو ارفع ملفك'},
+ {icn:'sparkles',t:'استخدم أدوات الذكاء الاصطناعي'},
+ {icn:'target',t:'اختبر فهمك'},
+ {icn:'flame',t:'واصل تعلمك'}
+];
+const LP_SOON=[
+ {icn:'layers',t:'بنك الأسئلة'},
+ {icn:'file-text',t:'الملخصات الذكية'},
+ {icn:'target',t:'الاختبارات التكيفية'},
+ {icn:'calendar',t:'خطط المذاكرة'},
+ {icn:'chart',t:'لوحة متابعة التقدم'}
+];
+
+/* ---------- فريق إيضاح، نادي إنجاز ---------- */
+const TEAM=[
+ {role:'قائدة نادي إنجاز',icn:'crown',solo:true,members:['ليان المطيويع']},
+ {role:'قائد الفريق ومهندس AI/NLP',icn:'sparkles',solo:true,members:['ريان الحربي']},
+ {role:'مدير المشروع وصاحب الفكرة',icn:'sparkles',solo:true,members:['تركي الدعجاني']},
+ {role:'تصميم الواجهة (UI/UX)',icn:'pen',members:['ناهد المطيري','ليان القباني']},
+ {role:'الواجهة الأمامية (Frontend)',icn:'code',members:['عبدالعزيز الضيف','رسيل الصمعاني']},
+ {role:'الواجهة الخلفية (Backend)',icn:'server',members:['عبدالعزيز القحطاني','سلطان الراجح']},
+ {role:'الذكاء الاصطناعي (AI/NLP)',icn:'atom',members:['زياد المنيف','ياسر الشريف']},
+ {role:'اختبار الجودة (QA)',icn:'shield',solo:true,members:['فيصل التويجري']}
+];
+
+/* ---------- الأسئلة الشائعة ---------- */
+const FAQ=[
+ {sec:'التعريف بالمشروع',items:[
+  {q:'ما هو مشروع إيضاح؟',a:'إيضاح هو منصة تعليمية ذكية تعتمد على الذكاء الاصطناعي لمساعدة طلاب التعليم العام في المملكة العربية السعودية على فهم المناهج الدراسية بسهولة، من خلال اقتراح أفضل الشروحات وربطها بمساعد ذكي يقدم ملخصات، وأمثلة، وملاحظات للمذاكرة، واختبارات تفاعلية.'},
+  {q:'ما الهدف الرئيسي من المشروع؟',a:'تسهيل الوصول إلى أفضل مصادر تعلم المنهج السعودي، وتحويل مشاهدة الشروحات إلى تجربة تعلم تفاعلية وشخصية مدعومة بالذكاء الاصطناعي.'}
+ ]},
+ {sec:'الاستخدام والمميزات',items:[
+  {q:'ما هي الميزات الحالية؟',a:'يوفر إيضاح حالياً: تصفح المنهج من المرحلة حتى الدرس، واقتراح أفضل الشروحات من قنوات متنوعة مع فلاتر ذكية، ومساعداً ذكياً لكل درس يقدم تلخيصاً، وشرحاً بمثال من الواقع، وملاحظات للمذاكرة، واختباراً تفاعلياً بتصحيح فوري، إضافة إلى متابعة تقدمك في الدرس.'},
+  {q:'ما هي المميزات القادمة؟',a:'نعمل على توصيات أكثر دقة مبنية على مستوى الطالب، وخطط مذاكرة شخصية، وتتبّع للتقدم عبر المواد، ولوحة أداء للمعلم وولي الأمر، ودعم مزيد من الصفوف والمواد تدريجياً.'}
+ ]},
+ {sec:'الدعم الفني',items:[
+  {q:'هل الموقع مجاني؟',a:'نعم، المشروع حالياً مجاني بالكامل كونه مبادرة طلابية.'},
+  {q:'هل بياناتي آمنة؟',a:'نحترم خصوصية المستخدمين، ولا يتم الاحتفاظ بالبيانات الشخصية أو استخدامها خارج نطاق تشغيل الخدمة.'},
+  {q:'وجدت مشكلة، كيف أبلغ عنها؟',a:'يسعدنا تواصلك معنا عبر البريد أدناه، وسنعمل على معالجة الملاحظة في أقرب وقت.',mail:'eidaah.injaz@imamu.edu.sa'}
+ ]}
+];
+
+/* ============ إيضاح · مداد، منطق التطبيق ============ */
+const $=s=>document.querySelector(s);
+const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[+d]);
+const app=document.getElementById('app');
+const modalRoot=document.getElementById('modal-root');
+
+/* ---------- نظام الأيقونات الموحّد (SVG · حِدّة خط واحدة 1.8) ---------- */
+const IC={
+ 'video':'<rect x="3" y="6" width="12" height="12" rx="2.2"/><path d="M15 10.5l5.5-3.2v9.4L15 13.5"/>',
+ 'play':'<path d="M8.5 6.2v11.6l9.3-5.8z"/>',
+ 'clock':'<circle cx="12" cy="12" r="8.6"/><path d="M12 7.4v4.6l3.1 2"/>',
+ 'eye':'<path d="M2.8 12S6.2 5.8 12 5.8 21.2 12 21.2 12 17.8 18.2 12 18.2 2.8 12 2.8 12z"/><circle cx="12" cy="12" r="3"/>',
+ 'check':'<path d="M5 12.5l4.6 4.6L19 7.4"/>',
+ 'x':'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+ 'chev':'<path d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',
+ 'arrow':'<path d="M19 12H5.5M11 6l-6 6 6 6"/>',
+ 'book-open':'<path d="M12 6.3C10 4.7 7 4.4 4 4.9V19c3-.5 6-.2 8 1.4 2-1.6 5-1.9 8-1.4V4.9c-3-.5-6-.2-8 1.4z"/><path d="M12 6.3v14.1"/>',
+ 'calculator':'<rect x="5" y="3" width="14" height="18" rx="2.2"/><path d="M8.5 7.3h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/>',
+ 'flask':'<path d="M9.5 3h5M10 3v5.3L4.9 17.4a2 2 0 0 0 1.8 3h10.6a2 2 0 0 0 1.8-3L14 8.3V3"/><path d="M7.6 14.3h8.8"/>',
+ 'globe':'<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6M12 3.2c2.9 3.4 2.9 14.2 0 17.6M12 3.2c-2.9 3.4-2.9 14.2 0 17.6"/>',
+ 'atom':'<circle cx="12" cy="12" r="1.5"/><ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(58 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(-58 12 12)"/>',
+ 'test-tube':'<path d="M8.5 3h7M14.3 3v13.4a2.6 2.6 0 1 1-5.2 0V3"/><path d="M9.4 12.6h4.6"/>',
+ 'dna':'<path d="M8 3c0 5.5 8 6.5 8 12 0 2.8-1.6 4.8-3.2 6M16 3c0 5.5-8 6.5-8 12 0 2.8 1.6 4.8 3.2 6"/><path d="M9.3 7.4h5.4M9.3 16.6h5.4"/>',
+ 'monitor':'<rect x="3" y="4.2" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16.4V20"/>',
+ 'map':'<path d="M9 4 3.6 6v14L9 18l6 2 5.4-2V4L15 6 9 4z"/><path d="M9 4v14M15 6v14"/>',
+ 'crescent':'<path d="M20.2 14.6A8.6 8.6 0 1 1 9.4 3.8a7.1 7.1 0 0 0 10.8 10.8z"/>',
+ 'sparkles':'<path d="M11 4.5l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z"/><path d="M18.7 14.8v4.6M16.4 17.1H21"/>',
+ 'lightbulb':'<path d="M9.5 17.4v-1.5c0-1.1-2.6-2.4-2.6-5.5a5.1 5.1 0 0 1 10.2 0c0 3.1-2.6 4.4-2.6 5.5v1.5"/><path d="M9.5 20.5h5"/>',
+ 'file-text':'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 12.6h6M9 16h6"/>',
+ 'note':'<path d="M11.5 4.5H6a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2h11.5a2 2 0 0 0 2-2v-5.5"/><path d="M17.4 3.6a2 2 0 0 1 2.9 2.9L12 14.8l-3.6.7.7-3.6z"/>',
+ 'target':'<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2"/>',
+ 'flame':'<path d="M12 21c3.9 0 6.4-2.5 6.4-6 0-4.4-3.9-5.9-4.4-9.4-2.5 1.5-3.1 4-2.6 6-1-.5-2-1.8-2.2-3.3-1.3 1.5-3.6 3.4-3.6 6.7 0 3.5 2.5 6 6.4 6z"/>',
+ 'ruler':'<path d="M3.9 16.3 16.3 3.9a1.6 1.6 0 0 1 2.3 0l1.5 1.5a1.6 1.6 0 0 1 0 2.3L7.7 20.1a1.6 1.6 0 0 1-2.3 0l-1.5-1.5a1.6 1.6 0 0 1 0-2.3z"/><path d="m7.6 12.6 1.8 1.8M10.6 9.6l1.8 1.8M13.6 6.6l1.8 1.8"/>',
+ 'alert':'<path d="M12 4.2 2.9 19.1a1.2 1.2 0 0 0 1 1.9h16.2a1.2 1.2 0 0 0 1-1.9z"/><path d="M12 10v4.4M12 17.6h.01"/>',
+ 'grad-cap':'<path d="m12 4.6 9.8 4.4L12 13.4 2.2 9z"/><path d="M6.6 11.4v4.4c0 1.5 2.4 2.8 5.4 2.8s5.4-1.3 5.4-2.8v-4.4"/><path d="M21.8 9v5"/>',
+ 'filter':'<path d="M4 5h16l-6.2 7.3v5.2l-3.6 2.3v-7.5z"/>',
+ 'badge-check':'<path d="m12 3 2.1 1.5 2.6-.2 1 2.4 2.4 1-.2 2.6L21.4 12l-1.5 2.1.2 2.6-2.4 1-1 2.4-2.6-.2L12 21.4 9.9 19.9l-2.6.2-1-2.4-2.4-1 .2-2.6L2.6 12l1.5-2.1-.2-2.6 2.4-1 1-2.4 2.6.2z"/><path d="m9 12.2 2.1 2.1 4-4.2"/>',
+ 'calendar':'<rect x="4" y="5.4" width="16" height="15" rx="2"/><path d="M8 3.4v4M16 3.4v4M4 10.2h16"/>',
+ 'refresh':'<path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4.4h-4.4"/>',
+ 'chart':'<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4V12l6.1 6.1"/>',
+ 'layers':'<path d="m12 3.6 8.8 4.8L12 13.2 3.2 8.4z"/><path d="m3.2 12.7 8.8 4.8 8.8-4.8M3.2 16.6l8.8 4.8 8.8-4.8"/>',
+ 'help':'<circle cx="12" cy="12" r="8.6"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.8"/><path d="M12 17.2h.01"/>',
+ 'users':'<circle cx="9" cy="8.4" r="3.2"/><path d="M3.6 19.4a5.4 5.4 0 0 1 10.8 0"/><path d="M16 5.6a3.2 3.2 0 0 1 0 6.1M16.8 14.4a5.4 5.4 0 0 1 3.6 5"/>',
+ 'mail':'<rect x="3" y="5.4" width="18" height="13.2" rx="2"/><path d="m3.6 6.6 8.4 6 8.4-6"/>',
+ 'crown':'<path d="M4 8.4 7.2 13l4.8-6.6L16.8 13 20 8.4 18.4 18H5.6z"/>',
+ 'code':'<path d="m8.4 8.4-4 3.6 4 3.6M15.6 8.4l4 3.6-4 3.6M13.6 6.4l-3.2 11.2"/>',
+ 'pen':'<path d="M16.4 3.6a2 2 0 0 1 2.9 2.9L7.7 18.1l-3.9 1 1-3.9z"/><path d="m14.4 5.6 2.9 2.9"/>',
+ 'server':'<rect x="3.4" y="4" width="17.2" height="6" rx="1.6"/><rect x="3.4" y="14" width="17.2" height="6" rx="1.6"/><path d="M7 7h.01M7 17h.01"/>',
+ 'shield':'<path d="M12 3.4 5 6v5.4c0 4.4 3 7.6 7 9.2 4-1.6 7-4.8 7-9.2V6z"/>',
+ 'sun':'<circle cx="12" cy="12" r="4.3"/><path d="M12 2.8v2.3M12 18.9v2.3M2.8 12h2.3M18.9 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/>',
+ 'upload':'<path d="M12 15.5V4M7.5 8 12 3.5 16.5 8"/><path d="M4.5 15v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/>',
+ 'briefcase':'<rect x="3.4" y="7.4" width="17.2" height="12.6" rx="2"/><path d="M9 7.4V5.8a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.6M3.4 12.4h17.2"/>',
+ 'ball':'<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4c-3.1 2.6-3.1 14.6 0 17.2M12 3.4c3.1 2.6 3.1 14.6 0 17.2M3.6 12h16.8"/>'
+};
+function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(IC[n]||'')+'</svg>'}
+function icf(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">'+(n==='star'?'<path d="M12 3.4l2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.9-5.4 2.9 1-6-4.4-4.3 6.1-.9z"/>':'')+'</svg>'}
+
+const state={stage:null,subject:null,chapter:null,lessonIdx:null,videos:[],filters:null,prog:null,quiz:null,celebrated:false};
+
+const STEPS=[
+ {k:'video',t:'شاهد أحد الشروحات',i:'video'},
+ {k:'sum',t:'اقرأ التلخيص الذكي',i:'file-text'},
+ {k:'ex',t:'افهم المثال الواقعي',i:'lightbulb'},
+ {k:'notes',t:'ذاكر ملاحظات المراجعة',i:'note'},
+ {k:'quiz',t:'اختبر نفسك (٥ أسئلة)',i:'target'}
+];
+const AIF=[
+ {k:'sum',i:'file-text',t:'تلخيص الدرس',d:'ملخص ذكي مركّز لأهم ما في الدرس'},
+ {k:'ex',i:'lightbulb',t:'شرح بمثال من الواقع',d:'مثال عملي من حياتك يبسّط الفكرة'},
+ {k:'notes',i:'note',t:'ملاحظات للمذاكرة',d:'قوانين وتعريفات ونقاط متوقعة في الاختبار'},
+ {k:'quiz',i:'target',t:'اختبر نفسك',d:'٥ أسئلة اختيار من متعدد مع تصحيح فوري'}
+];
+
+/* ---------- أدوات مساعدة ---------- */
+function stageById(id){return STAGES.find(s=>s.id===id)}
+function lessonsFor(sub){return (LESSONS[sub]||LESSONS.math).map((t,i)=>({t,min:LESSON_MIN[i%6],diff:DIFFS[DIFF_PATTERN[i%6]]}))}
+function aic(){return AIC[state.subject]||AIC.math}
+function crumbs(items){
+ return '<nav class="crumbs">'+items.map(c=>c.act
+  ?('<a data-act="'+c.act+'"'+(c.arg?(' data-arg="'+c.arg+'"'):'')+'>'+c.t+'</a>')
+  :('<span class="cur">'+c.t+'</span>')
+ ).join('<i class="sep">‹</i>')+'</nav>';
+}
+function mount(html){app.innerHTML=html;window.scrollTo(0,0)}
+function fmtDur(m){const mm=Math.floor(m),ss=(m*7)%60|0;return AR(String(mm).padStart(2,'0'))+':'+AR(String(ss).padStart(2,'0'))}
+function fmtViews(v){return v>=1e6?AR((v/1e6).toFixed(1)).replace('.','٫')+' مليون':AR(Math.round(v/1e3))+' ألف'}
+function fmtRate(r){return AR(r.toFixed(1)).replace('.','٫')}
+
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200)}
+
+/* ---------- المواد حسب الصف (الدراسات الاجتماعية للصفوف العليا من الابتدائية) ---------- */
+function subjectsFor(st){
+ const base=LEVEL_SUBJECTS[st.lv].slice();
+ if(st.lv==='primary'&&['p4','p5','p6'].indexOf(st.id)>-1)base.splice(5,0,'soc');
+ return base;
+}
+
+/* ---------- ١) الصفحة الرئيسية: Landing ---------- */
+function lpIllu(){
+ return '<svg class="ilu" viewBox="0 0 520 420" fill="none" aria-hidden="true">'
+ +'<circle class="i-bg" cx="280" cy="210" r="172"/>'
+ +'<rect class="i-card" x="118" y="118" width="264" height="184" rx="22"/>'
+ +'<circle class="i-play" cx="250" cy="188" r="36"/>'
+ +'<path class="i-tri" d="M241 170v36l30-18z"/>'
+ +'<rect class="i-line" x="150" y="246" width="132" height="12" rx="6"/>'
+ +'<rect class="i-line" x="150" y="270" width="92" height="12" rx="6"/>'
+ +'<g class="flt f1"><path class="i-cap" d="M416 108l50 22-50 22-50-22z"/><path class="i-capline" d="M388 138v26"/></g>'
+ +'<g class="flt f2"><rect class="i-chip" x="58" y="140" width="104" height="38" rx="19"/><circle class="i-dot d1" cx="82" cy="159" r="9"/><rect class="i-chipline" x="100" y="153" width="48" height="11" rx="5.5"/></g>'
+ +'<g class="flt f3"><rect class="i-chip" x="66" y="256" width="104" height="38" rx="19"/><circle class="i-dot d2" cx="90" cy="275" r="9"/><rect class="i-chipline" x="108" y="269" width="48" height="11" rx="5.5"/></g>'
+ +'<g class="flt f2"><path class="i-book1" d="M338 306c24-11 52-11 76 0v64c-24-11-52-11-76 0z"/><path class="i-book2" d="M414 306c24-11 52-11 76 0v64c-24-11-52-11-76 0z"/></g>'
+ +'<path class="i-sp s1" d="M120 74l6 15 15 6-15 6-6 15-6-15-15-6 15-6z"/>'
+ +'<path class="i-sp s2" d="M436 236l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>'
+ +'<path class="i-sp s3" d="M206 356l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>'
+ +'</svg>';
+}
+function vHome(){
+ const paths=PATHS.map((p,i)=>'<div class="path-card anim" style="animation-delay:'+(i*70)+'ms">'
+ +'<span class="path-ic">'+ic(p.icn)+'</span><h3>'+p.t+'</h3><p>'+p.d+'</p>'
+ +'<button class="btn" data-act="'+p.act+'">'+p.btn+' '+ic('arrow')+'</button></div>').join('');
+ const feats=LP_FEATS.map((f,i)=>'<div class="feat-card anim" style="animation-delay:'+(i*55)+'ms"><span class="feat-ic">'+ic(f.icn)+'</span><h4>'+f.t+'</h4><p>'+f.d+'</p></div>').join('');
+ const why=LP_WHY.map(w=>'<div class="why-item">'+ic('badge-check')+'<span>'+w+'</span></div>').join('');
+ const jr=LP_JOURNEY.map((s,i)=>'<div class="jr-step"><span class="jr-ic">'+ic(s.icn)+'</span><span class="jr-t">'+s.t+'</span></div>'
+  +(i<LP_JOURNEY.length-1?'<span class="jr-sep">'+ic('chev')+'</span>':'')).join('');
+ const soon=LP_SOON.map(s=>'<div class="soon-card"><span class="soon-badge">قريباً</span>'+ic(s.icn)+'<b>'+s.t+'</b></div>').join('');
+ mount('<section class="view view-landing">'
+ +'<div class="lp-hero"><div class="container lp-hero-in">'
+ +'<div class="lp-hero-txt anim">'
+ +'<span class="hero-kicker">'+ic('sparkles')+' منصة تعليمية مدعومة بالذكاء الاصطناعي</span>'
+ +'<h1 class="lp-h1">تعلّم <span class="hl">بذكاء</span>، وافهم المنهج بطريقة أوضح.</h1>'
+ +'<p class="lp-desc">منصة تعليمية مدعومة بالذكاء الاصطناعي تساعدك على الوصول إلى أفضل الشروحات، وتلخيص الدروس، وإنشاء الملاحظات والاختبارات في تجربة تعلم واحدة.</p>'
+ +'<div class="lp-btns"><button class="btn" data-act="scroll" data-arg="lp-paths">ابدأ الآن '+ic('arrow')+'</button><button class="btn ghost" data-act="scroll" data-arg="lp-feats">استكشف المنصة</button></div>'
+ +'</div>'
+ +'<div class="lp-illu anim">'+lpIllu()+'</div>'
+ +'</div></div>'
+ +'<section class="lp-sec" id="lp-paths"><div class="container">'
+ +'<h2 class="lp-t">اختر كيف تريد البدء</h2><p class="lp-ts">مساران رئيسيان اليوم، ومسارات جديدة تنضم قريباً</p>'
+ +'<div class="path-grid">'+paths+'</div></div></section>'
+ +'<section class="lp-sec alt" id="lp-feats"><div class="container">'
+ +'<h2 class="lp-t">ماذا يقدم إيضاح؟</h2><p class="lp-ts">أدوات ذكية ترافقك في كل درس وكل ملف</p>'
+ +'<div class="feat4">'+feats+'</div></div></section>'
+ +'<section class="lp-sec"><div class="container">'
+ +'<h2 class="lp-t">لماذا إيضاح؟</h2>'
+ +'<div class="why-row anim">'+why+'</div></div></section>'
+ +'<section class="lp-sec alt"><div class="container">'
+ +'<h2 class="lp-t">رحلتك مع إيضاح</h2>'
+ +'<div class="jr anim">'+jr+'</div></div></section>'
+ +'<section class="lp-sec"><div class="container">'
+ +'<h2 class="lp-t">قريباً في إيضاح</h2><p class="lp-ts">نعمل باستمرار على توسيع المنصة بمزايا جديدة</p>'
+ +'<div class="soon-grid anim">'+soon+'</div></div></section>'
+ +'<section class="home-id"><div class="container"><div class="home-id-in anim">'
+ +'<span class="home-id-mark">إ</span>'
+ +'<h2 class="home-id-t">إيضاح</h2>'
+ +'<p class="home-id-d">فريق الذكاء الاصطناعي بنادي إنجاز</p>'
+ +'<p class="home-id-u">جامعة الإمام محمد بن سعود الإسلامية</p>'
+ +'<p class="home-id-s">طلبة طموحون يسعون لتوظيف الذكاء الاصطناعي لخدمة المعرفة.</p>'
+ +'<div class="home-id-btns"><button class="btn" data-act="about">'+ic('grad-cap')+' عن الفريق</button><button class="btn ghost" data-act="faq">'+ic('help')+' الأسئلة الشائعة</button></div>'
+ +'</div></div></section>'
+ +'</section>');
+}
+
+/* ---------- صفحة المراحل التعليمية (١٢ صفاً) ---------- */
+function gradeCard(s,i){
+ const num=STAGES.indexOf(s)+1;
+ return '<a class="card grade-card lv-'+s.lv+' anim" data-act="stage" data-arg="'+s.id+'" style="animation-delay:'+(i*45)+'ms">'
+ +'<span class="g-top"><span class="g-num">'+AR(String(num).padStart(2,'0'))+'</span></span>'
+ +'<h3 class="g-name">'+s.n+'</h3>'
+ +'<span class="g-sub">'+AR(subjectsFor(s).length)+' مواد دراسية</span>'
+ +'<span class="g-cta">ابدأ التعلّم '+ic('arrow')+'</span></a>';
+}
+function vStages(){
+ const groups=['primary','middle','high'].map(lv=>{
+  const cards=STAGES.filter(s=>s.lv===lv).map((s,i)=>gradeCard(s,i)).join('');
+  return '<section class="level-group"><h2 class="level-h"><span class="lv-chip lv-'+lv+'">'+LEVEL_NAMES[lv]+'</span><i class="lv-line"></i></h2><div class="grid grades">'+cards+'</div></section>';
+ }).join('');
+ mount('<section class="view view-stages"><div class="container">'
+ +'<div class="page-head anim">'+crumbs([{t:'الرئيسية',act:'home'},{t:'المراحل التعليمية'}])
+ +'<h1>اختر مرحلتك الدراسية</h1><p>تعلّم أسرع بالذكاء الاصطناعي، مصمم خصيصاً للمنهج السعودي</p></div>'
+ +groups
+ +'</div></section>');
+}
+
+/* ---------- ٢) المواد ---------- */
+function vSubjects(){
+ const st=state.stage;
+ const cards=subjectsFor(st).map((id,i)=>{const s=SUB_DEFS[id];
+ return '<a class="card subject-card anim" data-act="subject" data-arg="'+id+'" style="--c:'+s.c+';animation-delay:'+(i*45)+'ms">'
+ +'<span class="s-icon">'+ic(s.icn)+'</span>'
+ +'<div class="s-body"><h3>'+s.n+'</h3><p class="s-desc">'+s.d+'</p>'
+ +'<span class="s-meta">فصلان دراسيان · '+AR((LESSONS[id]||LESSONS.math).length)+' دروس لكل فصل</span></div>'
+ +'<span class="s-arrow">'+ic('arrow')+'</span></a>';}).join('');
+ mount('<section class="view view-subjects"><div class="container">'
+ +'<div class="page-head anim">'+crumbs([{t:'الرئيسية',act:'home'},{t:'المراحل التعليمية',act:'stages'},{t:st.n}])
+ +'<h1>مواد '+st.n+'</h1><p>اختر المادة التي تريد مذاكرتها اليوم، كل مادة معها مساعد ذكي خاص بها</p></div>'
+ +'<div class="grid subjects">'+cards+'</div></div></section>');
+}
+
+/* ---------- ٣) الفصول الدراسية ---------- */
+function vChapters(){
+ const st=state.stage,s=SUB_DEFS[state.subject];
+ const cards=CHAPTERS.map((c,i)=>'<a class="card chapter-card anim" data-act="chapter" data-arg="'+c.id+'" style="--c:'+s.c+';animation-delay:'+(i*60)+'ms">'
+ +'<span class="ch-num">'+AR('0'+c.id)+'</span>'
+ +'<div class="ch-body"><h3>'+c.n+'</h3><p class="ch-meta">٦ دروس · '+c.w+' · نحو ساعتين مذاكرة</p>'
+ +'<div class="ch-units">'+c.u.map(u=>'<span>'+u+'</span>').join('')+'</div></div>'
+ +'<span class="ch-badge">'+(c.id===1?'ابدأ من هنا':'متاح')+'</span></a>').join('');
+ mount('<section class="view view-chapters"><div class="container">'
+ +'<div class="page-head anim">'+crumbs([{t:'الرئيسية',act:'home'},{t:st.n,act:'stage',arg:st.id},{t:s.n}])
+ +'<h1><span class="h-ic" style="--c:'+s.c+'">'+ic(s.icn)+'</span>'+s.n+'، '+st.n+'</h1><p>اختر الفصل الدراسي لعرض وحداته ودروسه</p></div>'
+ +'<div class="grid chapters">'+cards+'</div></div></section>');
+}
+
+/* ---------- ٤) الدروس ---------- */
+function vLessons(){
+ const st=state.stage,s=SUB_DEFS[state.subject],c=CHAPTERS.find(x=>x.id===state.chapter);
+ const ls=lessonsFor(state.subject);
+ const rows=ls.map((l,i)=>'<a class="card lesson-card anim" data-act="lesson" data-arg="'+i+'" style="--c:'+s.c+';animation-delay:'+(i*40)+'ms">'
+ +'<span class="l-idx">'+AR(i+1)+'</span>'
+ +'<div class="l-body"><h3 dir="auto">'+l.t+'</h3>'
+ +'<div class="l-meta"><span class="meta-chip">'+ic('clock')+' '+AR(l.min)+' دقيقة</span><span class="diff '+l.diff.cls+'">'+l.diff.t+'</span><span class="meta-chip">'+ic('video')+' ٨ شروحات مقترحة</span></div></div>'
+ +'<span class="l-go">ادرس الآن</span></a>').join('');
+ mount('<section class="view view-lessons"><div class="container">'
+ +'<div class="page-head anim">'+crumbs([{t:'الرئيسية',act:'home'},{t:st.n,act:'stage',arg:st.id},{t:s.n,act:'subject',arg:state.subject},{t:c.n}])
+ +'<h1>دروس '+c.n+'</h1><p>رتّبنا لك الدروس بالتسلسل الأمثل للفهم، ابدأ بالأول وتقدّم خطوة خطوة</p></div>'
+ +'<div class="grid lessons">'+rows+'</div></div></section>');
+}
+
+/* ---------- ٥) صفحة الدرس ---------- */
+function mockVideos(L){
+ return VIDS_META.map((m,i)=>{const ch=CHANNELS[m.ch];
+ return {title:L.t+' | '+m.ty,ch:ch.n,init:ch.n.replace('أ. ','').charAt(0),nat:ch.nat,ver:ch.v,
+  durM:m.durM,dur:fmtDur(m.durM),views:m.views,viewsT:fmtViews(m.views),year:m.year,rate:m.rate,
+  match:MATCHES[m.match],reason:REASONS[m.reason],g:VID_GRADS[i%VID_GRADS.length]};});
+}
+function defaultFilters(){return {nat:'all',rec:'all',dur:'all',views:'all',rate:'all',ver:false}}
+function applyFilters(){
+ const f=state.filters;
+ return state.videos.map((v,i)=>({v,i})).filter(({v})=>{
+  if(f.nat!=='all'&&v.nat!==f.nat)return false;
+  if(f.rec==='y1'&&v.year<2026)return false;
+  if(f.rec==='y2'&&v.year<2025)return false;
+  if(f.dur==='lt5'&&!(v.durM<5))return false;
+  if(f.dur==='lt10'&&!(v.durM<10))return false;
+  if(f.dur==='d10_20'&&!(v.durM>=10&&v.durM<=20))return false;
+  if(f.dur==='d20_40'&&!(v.durM>20&&v.durM<=40))return false;
+  if(f.dur==='gt40'&&!(v.durM>40))return false;
+  if(f.views==='v5k'&&v.views<5000)return false;
+  if(f.views==='v15k'&&v.views<15000)return false;
+  if(f.views==='v50k'&&v.views<50000)return false;
+  if(f.rate==='r45'&&v.rate<4.5)return false;
+  if(f.rate==='r40'&&v.rate<4.0)return false;
+  if(f.ver&&!v.ver)return false;
+  return true;
+ });
+}
+function fsel(key,label,opts){
+ const f=state.filters;
+ return '<label class="fsel"><span>'+label+'</span><span class="fsel-w"><select data-f="'+key+'">'
+ +opts.map(o=>'<option value="'+o[0]+'"'+(f[key]===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')
+ +'</select>'+ic('chev','fsel-ic')+'</span></label>';
+}
+function filterBarHTML(){
+ const f=state.filters;
+ return '<div class="fbar card">'
+ +'<div class="fbar-head"><span class="fbar-t">'+ic('filter')+' تصفية الشروحات</span><button class="freset" data-act="freset">'+ic('refresh')+' إعادة تعيين</button></div>'
+ +'<div class="fbar-row">'
+ +fsel('nat','جنسية الشارح',[['all','الكل'],['sa','سعودي'],['gcc','خليجي'],['ar','عربي']])
+ +fsel('rec','حداثة المحتوى',[['all','أي وقت'],['y1','أحدث الشروحات'],['y2','آخر سنتين']])
+ +fsel('dur','مدة الشرح',[['all','الكل'],['lt5','أقل من ٥ دقائق'],['lt10','أقل من ١٠ دقائق'],['d10_20','١٠ – ٢٠ دقيقة'],['d20_40','٢٠ – ٤٠ دقيقة'],['gt40','أكثر من ٤٠ دقيقة']])
+ +fsel('views','عدد المشاهدات',[['all','الكل'],['v5k','أكثر من ٥٬٠٠٠ مشاهدة'],['v15k','أكثر من ١٥٬٠٠٠ مشاهدة'],['v50k','أكثر من ٥٠٬٠٠٠ مشاهدة']])
+ +fsel('rate','تقييم الفيديو',[['all','الكل'],['r40','٤٫٠ فأعلى'],['r45','٤٫٥ فأعلى']])
+ +'<button class="fchip'+(f.ver?' on':'')+'" data-act="fverified" aria-pressed="'+f.ver+'">'+ic('badge-check')+' قناة معتمدة</button>'
+ +'</div>'
+ +'<p class="fcount" id="fcount"></p>'
+ +'</div>';
+}
+function vidCard(v,origIdx,i){
+ return '<div class="vid-card card anim" style="animation-delay:'+(i*45)+'ms">'
+ +'<div class="thumb" style="background:linear-gradient(135deg,'+v.g[0]+','+v.g[1]+')">'
+ +'<span class="th-reason">'+ic('sparkles')+' '+v.reason+'</span>'
+ +'<span class="th-ic">'+ic(SUB_DEFS[state.subject].icn)+'</span>'
+ +'<button class="th-play" data-act="watch" data-arg="'+origIdx+'" aria-label="تشغيل الشرح">'+ic('play')+'</button>'
+ +'<span class="th-dur">'+v.dur+'</span></div>'
+ +'<div class="v-info"><h4 class="v-title" dir="auto">'+v.title+'</h4>'
+ +'<div class="v-ch"><span class="ch-ava">'+v.init+'</span><span class="ch-n">'+v.ch+'</span>'+(v.ver?'<span class="ver" title="قناة معتمدة">'+ic('badge-check')+'</span>':'')+'<span class="ch-nat">'+NAT_NAMES[v.nat]+'</span></div>'
+ +'<div class="v-stats"><span>'+ic('eye')+' '+v.viewsT+'</span><span>'+ic('calendar')+' '+AR(v.year)+'</span><span class="v-rate">'+icf('star')+' '+fmtRate(v.rate)+'</span></div>'
+ +'<div class="v-foot"><span class="match '+v.match.cls+'">مطابقة المنهج: '+v.match.t+'</span>'
+ +'<button class="v-watch" data-act="watch" data-arg="'+origIdx+'">'+ic('play')+' مشاهدة</button></div>'
+ +'</div></div>';
+}
+function renderVidGrid(){
+ const list=applyFilters();
+ const grid=$('#vidgrid');if(!grid)return;
+ grid.innerHTML=list.length
+  ?list.map(({v,i},j)=>vidCard(v,i,j)).join('')
+  :'<div class="v-empty">'+ic('filter')+'<p>لا توجد شروحات مطابقة للتصفية الحالية</p><button class="btn ghost" data-act="freset">'+ic('refresh')+' إعادة تعيين الفلاتر</button></div>';
+ const c=$('#fcount');if(c)c.textContent='عرض '+AR(list.length)+' من '+AR(state.videos.length)+' شرحاً مقترحاً';
+}
+function sideHTML(){
+ return '<div class="card prog-card"><h3>'+ic('chart')+' تقدمك في الدرس</h3>'
+ +'<div class="ring-wrap"><svg class="ring" viewBox="0 0 120 120"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#155043"/><stop offset="100%" stop-color="#125D64"/></linearGradient></defs>'
+ +'<circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring-fg" id="ringfg" cx="60" cy="60" r="52"/></svg>'
+ +'<div class="ring-txt"><b id="pct">٠٪</b><span>مكتمل</span></div></div>'
+ +'<p class="remain" id="remain"></p>'
+ +'<ul class="p-steps" id="psteps">'+STEPS.map(s=>'<li data-k="'+s.k+'"><i>'+ic(s.i)+'</i><span>'+s.t+'</span></li>').join('')+'</ul></div>'
+ +'<div class="card streak-card"><span class="st-fire">'+ic('flame')+'</span><div><b>٥ أيام متتالية</b><p>ذاكر اليوم للحفاظ على سلسلتك</p></div></div>'
+ +'<div class="card tip-card"><span class="tip-ic">'+ic('lightbulb')+'</span><p><b>نصيحة إيضاح:</b> شاهد الشرح أولاً، ثم اقرأ التلخيص، وأنهِ بالاختبار، هذا التسلسل يرسّخ المعلومة أطول.</p></div>';
+}
+function vLesson(){
+ const st=state.stage,sub=SUB_DEFS[state.subject],c=CHAPTERS.find(x=>x.id===state.chapter);
+ const ls=lessonsFor(state.subject),L=ls[state.lessonIdx];
+ state.prog={video:false,sum:false,ex:false,notes:false,quiz:false};
+ state.quiz={sel:[-1,-1,-1,-1,-1],done:false,warn:false};
+ state.celebrated=false;
+ state.videos=mockVideos(L);
+ state.filters=defaultFilters();
+ const ai=AIF.map(f=>'<div class="ai-card" id="aic-'+f.k+'"><button class="ai-toggle" data-act="ai" data-arg="'+f.k+'">'
+ +'<span class="ai-ico">'+ic(f.i)+'</span><span class="ai-tt"><b>'+f.t+'</b><small>'+f.d+'</small></span><span class="chev">'+ic('chev')+'</span></button>'
+ +'<div class="ai-body"><div class="ai-inner" id="ai-inner-'+f.k+'"></div></div></div>').join('');
+ mount('<section class="view view-lesson"><div class="container">'
+ +'<div class="lp-head anim">'
+ +crumbs([{t:'الرئيسية',act:'home'},{t:st.n,act:'stage',arg:st.id},{t:sub.n,act:'subject',arg:state.subject},{t:c.n,act:'chapter',arg:c.id},{t:L.t}])
+ +'<h1 dir="auto">'+L.t+'</h1>'
+ +'<div class="lp-meta"><span class="mchip">'+ic('grad-cap')+' '+st.n+'</span><span class="mchip mc-sub" style="--c:'+sub.c+'">'+ic(sub.icn)+' '+sub.n+'</span><span class="mchip">'+ic('clock')+' '+AR(L.min)+' دقيقة</span><span class="diff '+L.diff.cls+'">'+L.diff.t+'</span></div>'
+ +'<div class="mob-prog"><div class="mp-bar"><i id="mpfill"></i></div><b id="mppct">٠٪</b></div>'
+ +'</div>'
+ +'<div class="lesson-layout">'
+ +'<article class="lmain">'
+ +'<section class="vid-sec anim"><div class="sec-head"><h2>'+ic('video','h-ico')+' أفضل الشروحات المقترحة</h2><p>رشّحها لك محرك التوصيات من قنوات متنوعة: عين، ومعلمون بارزون بشرح المناهج، وقنوات مستقلة</p></div>'
+ +filterBarHTML()
+ +'<div class="grid vid-grid" id="vidgrid"></div></section>'
+ +'<section class="ai-sec anim"><div class="ai-head"><span class="ai-badge">'+ic('sparkles')+' مساعد إيضاح الذكي</span><h2>ذاكر الدرس بعمق مع الذكاء الاصطناعي</h2><p>أربع أدوات ذكية مبنية على محتوى المنهج السعودي، افتح أي بطاقة وسيولّد المساعد محتواها فوراً</p></div>'
+ +'<div class="ai-list">'+ai+'</div></section>'
+ +'<div class="next-cta anim"><div class="cta-txt"><h3>أنهيت «'+L.t+'»؟</h3><p>حافظ على وتيرتك، الدرس التالي جاهز لك</p></div><button class="btn cta-btn" data-act="next-lesson">ابدأ الدرس التالي '+ic('arrow')+'</button></div>'
+ +'</article>'
+ +'<aside class="side anim">'+sideHTML()+'</aside>'
+ +'</div></div></section>');
+ renderVidGrid();
+ updateProgress();
+}
+
+/* ---------- التقدّم ---------- */
+function updateProgress(){
+ const p=state.prog;if(!p)return;
+ const done=STEPS.filter(s=>p[s.k]).length,pct=Math.round(done/STEPS.length*100);
+ const L=lessonsFor(state.subject)[state.lessonIdx];
+ const rem=Math.max(0,Math.round(L.min*(1-done/STEPS.length)));
+ const C=2*Math.PI*52;
+ const fg=$('#ringfg');if(fg){fg.style.strokeDasharray=C;fg.style.strokeDashoffset=C*(1-pct/100)}
+ const pctEl=$('#pct');if(pctEl)pctEl.textContent=AR(pct)+'٪';
+ const remEl=$('#remain');if(remEl)remEl.textContent=(pct===100)?'أكملت الدرس بالكامل!':('الوقت المتبقي المقدّر: نحو '+AR(rem)+' دقيقة');
+ document.querySelectorAll('#psteps li').forEach(li=>{const k=li.dataset.k;const on=!!p[k];li.classList.toggle('done',on);li.querySelector('i').innerHTML=on?ic('check'):ic(STEPS.find(s=>s.k===k).i)});
+ const mp=$('#mpfill');if(mp)mp.style.width=pct+'%';
+ const mpp=$('#mppct');if(mpp)mpp.textContent=AR(pct)+'٪';
+ if(pct===100&&!state.celebrated){state.celebrated=true;toast('أحسنت! أكملت هذا الدرس بالكامل')}
+}
+function markStep(k){if(state.prog&&!state.prog[k]){state.prog[k]=true;updateProgress()}}
+
+/* ---------- محتوى المساعد الذكي ---------- */
+function loadingHTML(){return '<div class="ai-loading"><span class="dots"><i></i><i></i><i></i></span><span>يولّد مساعد إيضاح المحتوى الآن…</span></div>'}
+function buildAI(k){
+ const A=aic();const L=lessonsFor(state.subject)[state.lessonIdx].t;
+ if(k==='sum')return '<ul class="sum-list">'+A.sum(L).map(x=>'<li>'+x+'</li>').join('')+'</ul>'
+  +'<p class="ai-foot">'+ic('sparkles')+' وُلِّد هذا الملخص بالذكاء الاصطناعي استناداً إلى محتوى الدرس في المنهج السعودي</p>';
+ if(k==='ex')return '<div class="ex-card"><h4>'+ic('lightbulb')+' '+A.ex.h+'</h4>'+A.ex.p.map(x=>'<p>'+x.split('{L}').join(L)+'</p>').join('')
+  +'<p class="ai-foot">اربط دائماً ما تتعلمه بمواقف من حياتك، الفهم بالربط يدوم أطول</p></div>';
+ if(k==='notes')return '<div class="notes">'
+  +'<div class="note-block nb-law"><h4>'+ic('ruler')+' قوانين وقواعد مهمة</h4><ul>'+A.notes.laws.map(x=>'<li dir="auto">'+x+'</li>').join('')+'</ul></div>'
+  +'<div class="note-block nb-def"><h4>'+ic('book-open')+' تعريفات أساسية</h4><ul>'+A.notes.defs.map(x=>'<li dir="auto">'+x+'</li>').join('')+'</ul></div>'
+  +'<div class="note-block nb-exam"><h4>'+ic('alert')+' متوقّع في الاختبار</h4><ul>'+A.notes.exam.map(x=>'<li dir="auto">'+x+'</li>').join('')+'</ul></div></div>';
+ if(k==='quiz')return quizHTML();
+ return '';
+}
+
+/* ---------- الاختبار التفاعلي ---------- */
+function quizHTML(){
+ const qs=aic().quiz,z=state.quiz;
+ const unanswered=z.sel.filter(x=>x<0).length;
+ const items=qs.map((q,qi)=>{
+  const cls=z.done?(z.sel[qi]===q.a?'q-ok':'q-bad'):'';
+  const opts=q.o.map((o,oi)=>{
+   let oc='opt';
+   if(!z.done&&z.sel[qi]===oi)oc+=' sel';
+   if(z.done){if(oi===q.a)oc+=' correct';else if(z.sel[qi]===oi)oc+=' wrong'}
+   const mark=z.done?(oi===q.a?'<i class="om">'+ic('check')+'</i>':(z.sel[qi]===oi?'<i class="om">'+ic('x')+'</i>':'')):'';
+   return '<button class="'+oc+'" dir="auto" data-act="opt" data-arg="'+qi+':'+oi+'"'+(z.done?' disabled':'')+'>'+o+mark+'</button>';
+  }).join('');
+  return '<div class="q-item '+cls+'"><p class="q-text" dir="auto"><span class="q-n">'+AR(qi+1)+'</span>'+q.q+'</p><div class="q-opts">'+opts+'</div></div>';
+ }).join('');
+ let footer='';
+ if(z.done){
+  const score=qs.reduce((a,q,i)=>a+(z.sel[i]===q.a?1:0),0);
+  const msg=score===5?'ممتاز! فهمك للدرس رائع':score===4?'جيد جداً! راجع النقطة الفائتة وستُتقن الدرس':score===3?'جيد، أعد قراءة التلخيص وحاول مرة أخرى':'لا بأس أبداً! شاهد أحد الشروحات ثم أعد المحاولة';
+  footer='<div class="q-result"><div class="q-score"><b>'+AR(score)+'</b><span>من ٥</span></div><p class="q-fb">'+msg+'</p><button class="btn ghost" data-act="retry-quiz">'+ic('refresh')+' إعادة الاختبار</button></div>';
+ }else{
+  footer='<button class="btn q-submit" data-act="submit-quiz">'+ic('check')+' صحّح إجاباتي</button>'
+   +(z.warn?('<p class="q-hint">أجب عن جميع الأسئلة أولاً، بقي '+AR(unanswered)+(unanswered===1?' سؤال':' أسئلة')+'</p>'):'');
+ }
+ return '<div class="quiz">'+items+footer+'</div>';
+}
+function refreshQuiz(){const inner=$('#ai-inner-quiz');if(inner)inner.innerHTML=quizHTML()}
+
+/* ---------- فتح/إغلاق بطاقات المساعد ---------- */
+function toggleAI(k){
+ const card=$('#aic-'+k);if(!card)return;
+ if(card.classList.contains('open')){card.classList.remove('open');return}
+ card.classList.add('open');
+ if(!card.dataset.loaded){
+  const inner=$('#ai-inner-'+k);inner.innerHTML=loadingHTML();
+  setTimeout(()=>{inner.innerHTML=buildAI(k);card.dataset.loaded='1';if(k!=='quiz')markStep(k)},k==='quiz'?600:850);
+ }
+}
+
+/* ---------- المشغّل التجريبي ---------- */
+function openPlayer(i){
+ const v=state.videos[i];if(!v)return;markStep('video');
+ modalRoot.innerHTML='<div class="pm-back"><div class="pmodal">'
+ +'<button class="pm-x" data-act="close-modal" aria-label="إغلاق">'+ic('x')+'</button>'
+ +'<div class="p-screen" id="pscreen" style="background:linear-gradient(135deg,'+v.g[0]+','+v.g[1]+')">'
+ +'<span class="ps-ic">'+ic(SUB_DEFS[state.subject].icn)+'</span>'
+ +'<button class="p-play" data-act="play-toggle" data-on="0">'+ic('play')+'</button>'
+ +'<div class="p-bar"><i id="pbar"></i></div>'
+ +'<span class="p-proto">مشغّل تجريبي، في النسخة النهائية يُعرض فيديو YouTube الفعلي هنا</span></div>'
+ +'<div class="pm-info"><h4 dir="auto">'+v.title+'</h4><p><span class="ch-ava">'+v.init+'</span> '+v.ch+(v.ver?' <span class="ver">'+ic('badge-check')+'</span>':'')+' · '+v.viewsT+' مشاهدة · '+v.dur+' · تقييم '+fmtRate(v.rate)+'</p></div>'
+ +'</div></div>';
+ document.body.classList.add('locked');
+}
+function closeModal(){modalRoot.innerHTML='';document.body.classList.remove('locked')}
+function togglePlay(btn){const sc=$('#pscreen');if(!sc)return;const playing=sc.classList.toggle('playing');btn.innerHTML=playing?'<span class="pause-ic"><i></i><i></i></span>':ic('play')}
+
+/* ---------- الدرس التالي ---------- */
+function nextLesson(){
+ const ls=lessonsFor(state.subject);
+ if(state.lessonIdx+1<ls.length){state.lessonIdx++;vLesson();toast('انتقلت إلى الدرس التالي، بالتوفيق!')}
+ else{vChapters();toast('أكملت جميع دروس هذا الفصل! اختر فصلاً جديداً')}
+}
+
+/* ---------- صفحة: عن الفريق ---------- */
+function vAbout(){
+ const groups=TEAM.map((g,gi)=>{
+  const cards=g.members.map(m=>{
+   const init=m.trim().charAt(0);
+   return '<div class="tm-card"><span class="tm-ava">'+init+'</span><b class="tm-name">'+m+'</b></div>';
+  }).join('');
+  return '<section class="tm-group anim" style="animation-delay:'+(gi*55)+'ms">'
+   +'<div class="tm-role"><span class="tm-role-ic">'+ic(g.icn)+'</span><h3>'+g.role+'</h3></div>'
+   +'<div class="tm-cards'+(g.solo?' solo':'')+'">'+cards+'</div></section>';
+ }).join('');
+ const total=TEAM.reduce((a,g)=>a+g.members.length,0);
+ mount('<section class="view view-about"><div class="container">'
+ +'<div class="page-head anim">'+crumbs([{t:'الرئيسية',act:'home'},{t:'عن الفريق'}])
+ +'<h1><span class="h-ic" style="--c:var(--pri)">'+ic('users')+'</span>فريق إيضاح</h1>'
+ +'<p>فريق الذكاء الاصطناعي بنادي إنجاز، جامعة الإمام محمد بن سعود الإسلامية. '+AR(total)+' عضواً يعملون معاً لخدمة المعرفة بالذكاء الاصطناعي.</p></div>'
+ +'<div class="tm-wrap">'+groups+'</div>'
+ +'</div></section>');
+}
+
+/* ---------- صفحة: الأسئلة الشائعة ---------- */
+function vFaq(){
+ let idx=0;
+ const secs=FAQ.map(sec=>{
+  const items=sec.items.map(it=>{
+   const i=idx++;
+   const mail=it.mail?('<a class="faq-mail" href="mailto:'+it.mail+'">'+ic('mail')+' '+it.mail+'</a>'):'';
+   return '<div class="faq-item" id="faq-'+i+'"><button class="faq-q" data-act="faq-toggle" data-arg="'+i+'"><span>'+it.q+'</span><span class="faq-chev">'+ic('chev')+'</span></button>'
+    +'<div class="faq-a"><div class="faq-a-in"><p>'+it.a+'</p>'+mail+'</div></div></div>';
+  }).join('');
+  return '<section class="faq-sec anim"><h2 class="faq-sec-t">'+sec.sec+'</h2><div class="faq-list">'+items+'</div></section>';
+ }).join('');
+ mount('<section class="view view-faq"><div class="container faq-container">'
+ +'<div class="page-head anim">'+crumbs([{t:'الرئيسية',act:'home'},{t:'الأسئلة الشائعة'}])
+ +'<h1><span class="h-ic" style="--c:var(--pri)">'+ic('help')+'</span>الأسئلة الشائعة</h1>'
+ +'<p>كل ما تودّ معرفته عن منصة إيضاح، اضغط أي سؤال لعرض إجابته</p></div>'
+ +secs
+ +'</div></section>');
+}
+function toggleFaq(i){const el=$('#faq-'+i);if(el)el.classList.toggle('open')}
+
+/* ---------- الوضع الليلي/الفاتح (يُحفظ اختيار المستخدم) ---------- */
+function loadTheme(){try{return window.localStorage.getItem('eidaah-theme')}catch(e){return null}}
+function saveTheme(v){try{window.localStorage.setItem('eidaah-theme',v)}catch(e){}}
+function applyTheme(t){
+ document.body.dataset.theme=t;
+ const b=document.getElementById('themeBtn');
+ if(b){b.innerHTML=ic(t==='dark'?'sun':'crescent');b.setAttribute('aria-label',t==='dark'?'التبديل إلى الوضع الفاتح':'التبديل إلى الوضع الليلي');b.title=b.getAttribute('aria-label')}
+}
+function toggleTheme(){const t=document.body.dataset.theme==='dark'?'light':'dark';applyTheme(t);saveTheme(t)}
+
+/* ---------- صفحة: تحليل الملفات التعليمية ---------- */
+function fmtSize(b){const kb=b/1024;return kb>=1024?AR((kb/1024).toFixed(1)).replace('.','٫')+' م.ب':AR(Math.max(1,Math.round(kb)))+' ك.ب'}
+function setUpFile(f){state.upload={name:f.name,size:fmtSize(f.size||0),done:false};vUpload()}
+function uploadResultsHTML(u){
+ return '<div class="card upfile done">'+ic('file-text')
+ +'<div class="upf-b"><b dir="auto">'+u.name+'</b><small>'+u.size+' · اكتمل التحليل</small></div>'
+ +'<div class="upf-a"><button class="btn ghost" data-act="upload-reset">'+ic('refresh')+' تحليل ملف آخر</button></div></div>'
+ +'<h2 class="up-t">'+ic('sparkles')+' نتائج التحليل (معاينة تجريبية)</h2>'
+ +'<div class="card up-block"><h3>'+ic('file-text')+' تلخيص المحتوى</h3><ul class="sum-list">'
+ +'<li>يتناول ملف «'+u.name+'» موضوعه الرئيس عبر تسلسل منطقي من التعريف إلى التطبيق.</li>'
+ +'<li>أبرز المحاور: المفهوم الأساسي، الأمثلة التوضيحية، ثم الخلاصة والتوصيات.</li>'
+ +'<li>يحتوي الملف على نقاط قابلة للتحويل إلى بطاقات مذاكرة وأسئلة تدريبية.</li>'
+ +'<li>مستوى الصعوبة العام: متوسط، ويناسب المراجعة قبل الاختبار.</li></ul></div>'
+ +'<div class="card up-block"><div class="ex-card"><h4>'+ic('lightbulb')+' مثال تطبيقي مقترح</h4>'
+ +'<p>اربط الفكرة المحورية في الملف بموقف من يومك الدراسي: كيف ستشرحها لزميل في دقيقة واحدة؟ صياغتك للشرح بنفسك هي أسرع اختبار حقيقي لفهمك.</p></div></div>'
+ +'<div class="card up-block"><h3>'+ic('note')+' ملاحظات للمذاكرة</h3><div class="notes">'
+ +'<div class="note-block nb-law"><h4>'+ic('ruler')+' أبرز النقاط</h4><ul><li>ركز على التعريفات الواردة في مقدمة الملف.</li><li>الأشكال والجداول تلخص المحتوى، أعد رسمها بنفسك.</li></ul></div>'
+ +'<div class="note-block nb-exam"><h4>'+ic('alert')+' متوقع في الاختبار</h4><ul><li>الأسئلة المقارنة بين المفاهيم المتقاربة.</li><li>سؤال تطبيقي مباشر على الفكرة الرئيسة.</li></ul></div></div></div>'
+ +'<div class="card up-block"><h3>'+ic('target')+' أسئلة مولدة من الملف</h3><ol class="up-qs">'
+ +'<li>عرّف المفهوم الرئيس الذي يتناوله الملف بأسلوبك.</li>'
+ +'<li>قارن بين المحورين الأولين من حيث الاستخدام.</li>'
+ +'<li>اذكر تطبيقاً واقعياً واحداً لما ورد في الخلاصة.</li></ol>'
+ +'<p class="ai-foot">'+ic('sparkles')+' الأسئلة التفاعلية بتصحيح فوري متاحة في مسار المناهج، وستتوفر للملفات في النسخة النهائية</p></div>'
+ +'<p class="ai-foot up-disc">محتوى تجريبي لعرض التجربة، وتتم المعالجة الفعلية للملفات في النسخة النهائية</p>';
+}
+function vUpload(){
+ const u=state.upload;
+ let body='';
+ if(!u){
+  body='<div class="upz" id="upz" data-act="pick-file">'+ic('upload')
+   +'<b>اسحب ملفك هنا أو اضغط للاختيار</b>'
+   +'<small>PDF · PPTX · DOCX، حتى ٢٠ م.ب (نموذج أولي)</small></div>';
+ }else if(!u.done){
+  body='<div class="card upfile">'+ic('file-text')
+   +'<div class="upf-b"><b dir="auto">'+u.name+'</b><small>'+u.size+'</small></div>'
+   +'<div class="upf-a"><button class="btn" data-act="analyze">'+ic('sparkles')+' حلّل بالذكاء الاصطناعي</button><button class="btn ghost" data-act="pick-file">تغيير الملف</button></div></div>'
+   +'<div id="upres"></div>';
+ }else{body=uploadResultsHTML(u)}
+ mount('<section class="view view-upload"><div class="container up-container">'
+ +'<div class="page-head anim">'+crumbs([{t:'الرئيسية',act:'home'},{t:'تحليل الملفات'}])
+ +'<h1><span class="h-ic" style="--c:var(--pri)">'+ic('upload')+'</span>حلّل ملفاتك التعليمية</h1>'
+ +'<p>ارفع عرضاً تقديمياً أو ملفاً تعليمياً، وسيساعدك إيضاح في فهم المحتوى وتلخيصه وإنشاء أسئلة وملاحظات للمذاكرة.</p></div>'
+ +'<div class="anim up-body">'+body+'</div>'
+ +'<input type="file" id="upInput" hidden accept=".pdf,.ppt,.pptx,.doc,.docx">'
+ +'</div></section>');
+ bindDropzone();
+}
+function bindDropzone(){
+ const z=document.getElementById('upz');if(!z)return;
+ ['dragover','dragenter'].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.add('drag')}));
+ ['dragleave','dragend'].forEach(ev=>z.addEventListener(ev,()=>z.classList.remove('drag')));
+ z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('drag');const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)setUpFile(f)});
+}
+function runAnalyze(){
+ const res=document.getElementById('upres');if(!res||!state.upload)return;
+ res.innerHTML=loadingHTML();
+ setTimeout(()=>{state.upload.done=true;vUpload();toast('اكتمل تحليل الملف')},1200);
+}
+
+/* ---------- تفويض الأحداث ---------- */
+document.addEventListener('click',e=>{
+ if(e.target.classList&&e.target.classList.contains('pm-back')){closeModal();return}
+ const el=e.target.closest('[data-act]');if(!el)return;
+ const act=el.dataset.act,arg=el.dataset.arg;
+ if(act==='home'){vHome()}
+ else if(act==='stages'){vStages()}
+ else if(act==='upload'){state.upload=null;vUpload()}
+ else if(act==='theme'){toggleTheme()}
+ else if(act==='scroll'){const t=document.getElementById(arg);if(t&&t.scrollIntoView){try{t.scrollIntoView({behavior:'smooth'})}catch(err){t.scrollIntoView()}}}
+ else if(act==='pick-file'){const inp=document.getElementById('upInput');if(inp)inp.click()}
+ else if(act==='analyze'){runAnalyze()}
+ else if(act==='upload-reset'){state.upload=null;vUpload()}
+ else if(act==='about'){vAbout()}
+ else if(act==='faq'){vFaq()}
+ else if(act==='faq-toggle'){toggleFaq(+arg)}
+ else if(act==='stage'){state.stage=stageById(arg);vSubjects()}
+ else if(act==='subject'){state.subject=arg;vChapters()}
+ else if(act==='chapter'){state.chapter=+arg;vLessons()}
+ else if(act==='lesson'){state.lessonIdx=+arg;vLesson()}
+ else if(act==='ai'){toggleAI(arg)}
+ else if(act==='watch'){openPlayer(+arg)}
+ else if(act==='close-modal'){closeModal()}
+ else if(act==='play-toggle'){togglePlay(el)}
+ else if(act==='fverified'){state.filters.ver=!state.filters.ver;el.classList.toggle('on',state.filters.ver);el.setAttribute('aria-pressed',state.filters.ver);renderVidGrid()}
+ else if(act==='freset'){state.filters=defaultFilters();document.querySelectorAll('.fsel select').forEach(s=>s.value='all');const vc=document.querySelector('.fchip');if(vc){vc.classList.remove('on');vc.setAttribute('aria-pressed','false')}renderVidGrid()}
+ else if(act==='opt'){const parts=arg.split(':');const q=+parts[0],o=+parts[1];if(!state.quiz.done){state.quiz.sel[q]=o;state.quiz.warn=false;refreshQuiz()}}
+ else if(act==='submit-quiz'){
+  if(state.quiz.sel.some(x=>x<0)){state.quiz.warn=true;refreshQuiz()}
+  else{state.quiz.done=true;markStep('quiz');refreshQuiz();toast('تم تصحيح اختبارك، شاهد نتيجتك')}
+ }
+ else if(act==='retry-quiz'){state.quiz={sel:[-1,-1,-1,-1,-1],done:false,warn:false};refreshQuiz()}
+ else if(act==='next-lesson'){nextLesson()}
+});
+document.addEventListener('change',e=>{
+ if(e.target&&e.target.id==='upInput'&&e.target.files&&e.target.files[0]){setUpFile(e.target.files[0]);return}
+ const s=e.target.closest('.fsel select');if(!s)return;
+ state.filters[s.dataset.f]=s.value;renderVidGrid();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+state.upload=null;
+applyTheme(loadTheme()==='dark'?'dark':'light');
+vHome();
+
+</script>
+</body>
+</html>

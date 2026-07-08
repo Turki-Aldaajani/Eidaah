@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
+import Footer from "../Footer";
 
 export default function LandingPage() {
   return (
@@ -14,9 +15,12 @@ export default function LandingPage() {
               <Icon name="sparkles" /> منصة تعلّم بالذكاء الاصطناعي
             </span>
             <h1 className="hero-title">
-              كيف تحب أن <span className="hl">تتعلّم اليوم؟</span>
+              تعلّم <span className="hl">بذكاء</span>، وافهم المنهج بطريقة أوضح.
             </h1>
-            <p className="hero-sub">اختر الطريقة التي تناسبك — منهج جاهز أو ملفك الخاص</p>
+            <p className="hero-sub">
+              منصة تعليمية مدعومة بالذكاء الاصطناعي تساعدك على الوصول إلى أفضل الشروحات، وتلخيص الدروس، وإنشاء الملاحظات
+              والاختبارات في تجربة تعلم واحدة.
+            </p>
           </div>
         </div>
         <div className="container" style={{ paddingBottom: 80 }}>
@@ -26,7 +30,7 @@ export default function LandingPage() {
                 <Icon name="grad-cap" />
               </span>
               <h3>المناهج التعليمية</h3>
-              <p>تصفّح مراحلك الدراسية ومواد المنهج السعودي، وذاكر كل درس بمساعدة الذكاء الاصطناعي</p>
+              <p>استعرض المناهج السعودية حسب المرحلة والصف والمادة، وشاهد أفضل الشروحات المدعومة بالذكاء الاصطناعي.</p>
               <span className="entry-tag">١٢ صفاً دراسياً</span>
             </Link>
             <Link to="/analyze" className="entry-card alt anim">
@@ -34,12 +38,13 @@ export default function LandingPage() {
                 <Icon name="file-text" />
               </span>
               <h3>حلّل ملفاتك التعليمية</h3>
-              <p>ارفع عرضك التقديمي أو ملف PDF، ودع الذكاء الاصطناعي يشرح لك شريحة بشريحة</p>
+              <p>ارفع عرضاً تقديمياً أو ملفاً تعليمياً، ودع إيضاح يساعدك في فهم المحتوى وتلخيصه وإنشاء أسئلة وملاحظات للمذاكرة.</p>
               <span className="entry-tag">PDF / PPTX</span>
             </Link>
           </div>
         </div>
       </section>
+      <Footer />
     </>
   );
 }

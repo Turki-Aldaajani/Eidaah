@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Icon from "../../components/Icon";
 import TopNav from "../../components/TopNav";
+import Footer from "../../Footer";
 import VideoGrid from "./VideoGrid";
 import AiToolsPanel from "./AiToolsPanel";
 import { stageById, SUB_DEFS, CHAPTERS, lessonsFor, mockVideos, STEPS, toArabicDigits } from "../../data/curriculum";
@@ -188,6 +189,7 @@ export default function Lesson() {
           </div>
         </div>
       </section>
+      <Footer />
 
       {playingVideo && (
         <div className="pm-back" onClick={() => setPlayingVideo(null)}>
