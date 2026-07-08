@@ -4,37 +4,37 @@ import TopNav from './components/TopNav';
 import Icon from './components/Icon';
 import Footer from './Footer';
 
+const SUPPORT_EMAIL = "eidaah.injaz@imamu.edu.sa";
+
 const faqData = {
   ar: {
     project: [
-      { q: "ما هو مشروع إيضاح؟", a: "إيضاح هو أداة ذكية لتحليل العروض التقديمية باستخدام الذكاء الاصطناعي، بهدف تسهيل الفهم على الطلاب ودعم المقدمين." },
-      { q: "ما الهدف الرئيسي من المشروع؟", a: "الهدف هو جعل المحتوى التعليمي أكثر وضوحًا وسهولة، ومساعدة المقدمين على شرح أفكارهم بفعالية أكبر." }
+      { q: "ما هو مشروع إيضاح؟", a: "إيضاح هو منصة تعليمية ذكية تعتمد على الذكاء الاصطناعي لمساعدة طلاب التعليم العام في المملكة العربية السعودية على فهم المناهج الدراسية بسهولة، من خلال اقتراح أفضل الشروحات وربطها بمساعد ذكي يقدم ملخصات، وأمثلة، وملاحظات للمذاكرة، واختبارات تفاعلية." },
+      { q: "ما الهدف الرئيسي من المشروع؟", a: "تسهيل الوصول إلى أفضل مصادر تعلم المنهج السعودي، وتحويل مشاهدة الشروحات إلى تجربة تعلم تفاعلية وشخصية مدعومة بالذكاء الاصطناعي." }
     ],
     features: [
-      { q: "ما هي الميزات الحالية؟", a: "النسخة الحالية تركز على تقديم شرح تحليلي للمحتوى مع أمثلة واقعية." },
-      { q: "ما هي صيغ الملفات المدعومة؟", a: "يدعم الموقع حاليًا ملفات PDF و PPTX." },
-      { q: "ما هي الميزات القادمة؟", a: "نخطط لإضافة ميزات مثل تلخيص الشرائح، إنشاء أسئلة للمراجعة، وتوليد ملاحظات للمتحدث." }
+      { q: "ما هي الميزات الحالية؟", a: "يوفر إيضاح حالياً: تصفح المنهج من المرحلة حتى الدرس، واقتراح أفضل الشروحات من قنوات متنوعة مع فلاتر ذكية، ومساعداً ذكياً لكل درس يقدم تلخيصاً، وشرحاً بمثال من الواقع، وملاحظات للمذاكرة، واختباراً تفاعلياً بتصحيح فوري، إضافة إلى متابعة تقدمك في الدرس." },
+      { q: "ما هي المميزات القادمة؟", a: "نعمل على توصيات أكثر دقة مبنية على مستوى الطالب، وخطط مذاكرة شخصية، وتتبّع للتقدم عبر المواد، ولوحة أداء للمعلم وولي الأمر، ودعم مزيد من الصفوف والمواد تدريجياً." }
     ],
     support: [
-      { q: "هل الموقع مجاني؟", a: "نعم، المشروع حاليًا مجاني بالكامل كونه مبادرة طلابية." },
-      { q: "هل ملفاتي آمنة؟", a: "نحن نحترم خصوصيتك. يتم تحليل الملفات ثم حذفها من خوادمنا ولا يتم تخزينها." },
-      { q: "وجدت مشكلة، كيف أبلغ عنها؟", a: "نسعد بتواصلك معنا عبر (ضع هنا إيميل أو رابط)." }
+      { q: "هل الموقع مجاني؟", a: "نعم، المشروع حالياً مجاني بالكامل كونه مبادرة طلابية." },
+      { q: "هل بياناتي آمنة؟", a: "نحترم خصوصية المستخدمين، ولا يتم الاحتفاظ بالبيانات الشخصية أو استخدامها خارج نطاق تشغيل الخدمة." },
+      { q: "وجدت مشكلة، كيف أبلغ عنها؟", a: "يسعدنا تواصلك معنا عبر البريد أدناه، وسنعمل على معالجة الملاحظة في أقرب وقت.", mail: SUPPORT_EMAIL }
     ]
   },
   en: {
     project: [
-      { q: "What is Eidaah?", a: "Eidaah is an intelligent tool for analyzing presentations using AI, aiming to simplify understanding for students and support presenters." },
-      { q: "What is the main goal?", a: "The goal is to make educational content clearer and more accessible, helping presenters explain their ideas effectively." }
+      { q: "What is Eidaah?", a: "Eidaah is a smart, AI-powered learning platform that helps K-12 students in Saudi Arabia understand their curriculum with ease, by surfacing the best explanations and pairing them with an AI assistant that provides summaries, real-world examples, study notes, and interactive quizzes." },
+      { q: "What is the main goal?", a: "To make the best learning resources for the Saudi curriculum easy to reach, and turn watching explanations into an interactive, personalized, AI-powered learning experience." }
     ],
     features: [
-      { q: "What are the current features?", a: "The current version focuses on providing analytical explanations of content with real-world examples." },
-      { q: "What file formats are supported?", a: "The site currently supports PDF and PPTX files." },
-      { q: "What are the upcoming features?", a: "We plan to add features like summarization, review question generation, and speaker notes." }
+      { q: "What are the current features?", a: "Eidaah currently offers: browsing the curriculum from stage to lesson, recommending the best explanations from a variety of channels with smart filters, an AI assistant for every lesson that provides a summary, a real-world example, study notes, and an interactive quiz with instant grading, plus tracking your progress within the lesson." },
+      { q: "What features are coming next?", a: "We're working on more accurate recommendations based on the student's level, personal study plans, progress tracking across subjects, a performance dashboard for teachers and parents, and gradually expanding support to more grades and subjects." }
     ],
     support: [
       { q: "Is this site free?", a: "Yes, as a student-led initiative, the project is currently completely free." },
-      { q: "Is my data secure?", a: "We respect your privacy. Files are analyzed and then deleted from our servers; they are not stored." },
-      { q: "I found a bug, how do I report it?", a: "We appreciate your feedback! Please contact us at (insert email or link here)." }
+      { q: "Is my data secure?", a: "We respect our users' privacy, and personal data is never retained or used beyond operating the service." },
+      { q: "I found a bug, how do I report it?", a: "We'd love to hear from you at the email below, and we'll work on addressing it as soon as possible.", mail: SUPPORT_EMAIL }
     ]
   }
 };
@@ -105,6 +105,11 @@ export default function FAQ() {
                       <div className="faq-a">
                         <div className="faq-a-in">
                           <p>{item.a}</p>
+                          {item.mail && (
+                            <a className="faq-mail" href={`mailto:${item.mail}`}>
+                              <Icon name="mail" /> {item.mail}
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
