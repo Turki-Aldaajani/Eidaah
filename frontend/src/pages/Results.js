@@ -419,7 +419,7 @@ export default function Results() {
           </div>
         </div>
       </section>
-      <Footer language={language} />
+      <Footer />
     </>
   );
 }

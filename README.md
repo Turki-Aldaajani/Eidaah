@@ -1,150 +1,168 @@
-# (Eidaah) إيضاح  - AI Presentation Explainer
+# إيضاح (Eidaah)
 
-An intelligent tool for analyzing presentations using AI, designed to simplify understanding.
+**منصة تعليمية تجريبية مدعومة بالذكاء الاصطناعي** — مشروع طلابي من فريق الذكاء الاصطناعي بنادي إنجاز، جامعة الإمام محمد بن سعود الإسلامية.
 
+<img width="939" height="921" alt="Eidaah screenshot" src="https://github.com/user-attachments/assets/b250704e-da85-4861-9149-9d1a20507e81" />
 
-<img width="939" height="921" alt="Screenshot 2026-01-22 001844" src="https://github.com/user-attachments/assets/b250704e-da85-4861-9149-9d1a20507e81" />
+> ⚠️ **نموذج أولي (Prototype):** هذا المشروع ما يزال في طور التطوير. جميع البيانات الدراسية (المناهج، الفصول، الدروس، الفيديوهات المقترحة) بيانات تجريبية وهمية لغرض العرض فقط، وليست محتوى تعليمياً معتمداً.
 
+## نبذة عن المشروع
 
-## Features
+إيضاح منصة تعليمية ذكية تهدف إلى تسهيل فهم المناهج الدراسية السعودية على الطلاب، من خلال دمج تجربتين تكميليتين في مكان واحد:
 
-* **File Support**: Upload PDF and PPTX presentations
-* **AI Analysis**: Get analytical explanations for each slide
-* **Topic Detection**: Automatically detects 2–6 main topics from the presentation using LLM
-* **Real Examples**: Receive practical, real-world examples per slide or topic
-* **Presentation Summary**: Global AI-generated summary of the full presentation
-* **Bilingual**: Full Arabic and English support
-* **Fast Processing**: Powered by Llama 3.3 70B via Groq API
+1. **تصفّح المنهج الدراسي** من المرحلة إلى الصف إلى المادة إلى الفصل إلى الدرس، مع أدوات ذكاء اصطناعي لكل درس (تلخيص، مثال واقعي، ملاحظات مذاكرة، اختبار تفاعلي).
+2. **تحليل الملفات التعليمية**: رفع عرض تقديمي (PDF/PPTX) والحصول على شرح تحليلي، اكتشاف مواضيع تلقائي، وملخص شامل بواسطة نموذج لغوي كبير.
 
-## Project Structure
+## الهدف من المنصة
+
+تسهيل الوصول إلى أفضل مصادر تعلّم المنهج السعودي، وتحويل المذاكرة إلى تجربة تفاعلية وشخصية مدعومة بالذكاء الاصطناعي، بدلاً من الاعتماد على البحث اليدوي المشتت بين مصادر متعددة.
+
+## أهم المميزات الحالية
+
+### تصفّح المنهج (`/learn`)
+- تصفّح هرمي: المرحلة الدراسية ← الصف ← المادة ← الفصل ← الدرس.
+- شبكة فيديوهات مقترحة لكل درس مع فلاتر ذكية.
+- لوحة أدوات ذكاء اصطناعي لكل درس: تلخيص، مثال من الواقع، ملاحظات للمذاكرة، واختبار تفاعلي بتصحيح فوري.
+- تتبّع تقدّم الطالب داخل الدرس (Progress Ring).
+- مسارات تنقّل (Breadcrumbs) على كل صفحة فرعية.
+
+### تحليل الملفات (`/analyze`)
+- رفع ملفات PDF و PPTX.
+- شرح تحليلي لكل شريحة بواسطة الذكاء الاصطناعي.
+- اكتشاف تلقائي لمواضيع العرض التقديمي (٢–٦ مواضيع رئيسية).
+- أمثلة واقعية وملخص عام للعرض التقديمي بالكامل.
+- دعم ثنائي اللغة (عربي / إنجليزي) في هذا المسار تحديداً.
+
+### تجربة عامة
+- نظام تصميم موحّد (مداد) بواجهة عربية RTL كاملة.
+- وضع ليلي/نهاري (Dark/Light Mode) مع حفظ التفضيل محلياً.
+- تصميم متجاوب بالكامل مع الجوال وسطح المكتب.
+- صفحات "عن الفريق" و"الأسئلة الشائعة".
+
+## التقنيات المستخدمة
+
+**الواجهة الأمامية (Frontend)**
+- React 18 + React Router 6 (Create React App)
+- نظام تصميم CSS مخصص (متغيرات CSS، بدون مكتبة UI خارجية)
+- خط Cairo للطباعة العربية
+- Testing Library / Jest للاختبارات
+
+**الواجهة الخلفية (Backend)**
+- FastAPI (Python)
+- Groq API (نموذج Llama 3.3 70B) عبر عميل متوافق مع OpenAI
+- pdfplumber و python-pptx و PyMuPDF لاستخراج نصوص الشرائح
+- pytest للاختبارات
+
+## طريقة التشغيل المحلية
+
+### المتطلبات
+- Python 3.9+
+- Node.js 16+ و npm
+- مفتاح Groq API مجاني ([احصل عليه من هنا](https://console.groq.com/keys))
+
+### 1) تشغيل الخادم الخلفي (Backend)
+
+```bash
+cd backend
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+# انسخ ملف البيئة وعدّل المفتاح
+copy .env.example .env      # Windows
+cp .env.example .env        # Mac/Linux
+# ثم افتح .env وضع: GROQ_API_KEY=your_api_key_here
+
+uvicorn main:app --reload --port 8000
+```
+
+الخادم يعمل على `http://localhost:8000` (توثيق تفاعلي على `/docs`).
+
+### 2) تشغيل الواجهة الأمامية (Frontend)
+
+في نافذة طرفية أخرى:
+
+```bash
+cd frontend
+echo REACT_APP_API_URL=http://localhost:8000 > .env.local
+
+npm install
+npm start
+```
+
+الواجهة تعمل على `http://localhost:3000`.
+
+### تشغيل الاختبارات
+
+```bash
+cd frontend && npm test
+cd backend && pytest
+```
+
+## هيكل المشروع
 
 ```
 eidaah/
 ├── backend/
-│   ├── main.py             # API endpoints & background pipeline
-│   ├── ai_logic.py         # File validation & text extraction (PDF/PPTX)
-│   ├── Model.py            # Groq API client (call_groq)
-│   ├── session_store.py    # In-memory session management
-│   ├── chunker.py          # Slide text chunking
-│   ├── topic_detector.py   # LLM-based topic detection
-│   ├── rag_generator.py    # Topic & summary generation
-│   ├── slide_renderer.py   # Slide-to-image rendering (PDF/PPTX)
-│   ├── requirements.txt
-│   ├── .env.example
-│   └── Dockerfile
+│   ├── main.py              # نقاط الوصول (API) وخط أنابيب المعالجة
+│   ├── ai_logic.py           # التحقق من الملفات واستخراج النصوص (PDF/PPTX)
+│   ├── Model.py               # عميل Groq API
+│   ├── lesson_tool.py         # نقطة وصول أدوات الذكاء الاصطناعي لكل درس
+│   ├── rag_generator.py       # توليد التلخيص وتحليل المواضيع
+│   ├── topic_detector.py      # اكتشاف المواضيع الرئيسية بالذكاء الاصطناعي
+│   ├── chunker.py             # تقسيم نصوص الشرائح
+│   ├── slide_renderer.py      # تحويل الشرائح إلى صور
+│   ├── session_store.py       # إدارة الجلسات في الذاكرة
+│   └── requirements.txt
 │
 └── frontend/
-    ├── src/
-    │   ├── pages/          # Upload & Results pages
-    │   ├── App.js
-    │   ├── Footer.js
-    │   ├── About.js
-    │   └── FAQ.js
-    └── package.json
+    └── src/
+        ├── App.js                     # تعريف المسارات (Routes)
+        ├── Footer.js / FAQ.js / About.js
+        ├── components/                # TopNav, Icon
+        ├── theme/                      # ThemeContext (وضع ليلي/نهاري)
+        ├── styles/                     # theme.css (نظام التصميم "مداد")
+        ├── data/curriculum.js          # بيانات المنهج التجريبية
+        └── pages/
+            ├── LandingPage.js
+            ├── Upload.js / Results.js  # مسار تحليل الملفات
+            └── curriculum/              # CurriculumHome, Subjects, Chapters, Lessons, Lesson
 ```
 
-## Local Setup
+## آلية المساهمة
 
-### Prerequisites
+المشروع مفتوح للمساهمة من فريق العمل والمهتمين:
 
-* Python 3.9+
-* Node.js 16+
-* npm
-* A free Groq API key ([get one here](https://console.groq.com/keys))
+1. أنشئ Branch جديد بوصف واضح لما ستعمل عليه (مثال: `feature/quiz-scoring`).
+2. التزم بأسلوب الكود الحالي (تسمية الأصناف، نظام التصميم في `theme.css`، عدم إضافة مكتبات جديدة إلا عند الحاجة الفعلية).
+3. تأكد من تشغيل الاختبارات محلياً قبل فتح Pull Request.
+4. اكتب وصفاً واضحاً للتغييرات في الـ Pull Request، مع خطوات لاختبارها يدوياً إن أمكن.
+5. لأي فكرة أو تغيير كبير، يُفضّل فتح نقاش (Issue) قبل البدء بالتنفيذ.
 
-### Step 1: Clone the Repository
+## ملاحظة ختامية
 
-```bash
-git clone https://github.com/Rayan-Al-Harbi/Eidaah.git
-cd Eidaah
-```
-
-### Step 2: Backend Setup
-
-```bash
-cd backend
-
-# Create and activate virtual environment
-python -m venv venv
-
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables
-# Windows:
-copy .env.example .env
-# Mac/Linux:
-cp .env.example .env
-# Then open .env and set: GROQ_API_KEY=your_api_key_here
-
-# Run server
-uvicorn main:app --reload --port 8000
-```
-
-The backend will be available at `http://localhost:8000`
-
-Expected output:
-```
-✅ Groq AI model configured successfully! (using llama-3.3-70b-versatile)
-✅ Model.py imported successfully!
-🚀 Eidaah server starting...
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
-### Step 3: Frontend Setup
-
-Open another terminal (keep backend running):
-
-```bash
-cd frontend
-
-# Create environment file
-echo REACT_APP_API_URL=http://localhost:8000 > .env.local
-
-# Install dependencies
-npm install
-
-# Start development server
-npm start
-```
-
-The frontend will be available at `http://localhost:3000`
-
-## Tech Stack
-
-### Backend
-
-* FastAPI — web framework
-* Llama 3.3 70B — AI language model (via Groq API)
-* pdfplumber — PDF text extraction
-* python-pptx — PowerPoint text extraction
-* pdf2image + poppler — slide image rendering (optional)
-* LibreOffice headless — PPTX-to-image conversion (optional)
-
-### Frontend
-
-* React — UI framework
-* React Router — navigation
-* Cairo Font — Arabic typography
-
-## 👥 Team
-
-*Enjaz Club - AI Team — Imam Muhammad ibn Saud Islamic University*
-
-* **Club Leader**: Layan Al-Mutaiwie
-* **Team Lead & AI/NLP**: Rayan Al-Harbi
-* **Project Manager & Product Idea**: Turki Al-Dajani
-* **UI/UX Design**: Nahed Al-Mutairi, Layan Al-Qabbani
-* **Frontend**: Abdulaziz Al-Dhaif, Raseel Al-Samaani
-* **Backend**: Abdulaziz Al-Qahtani, Sultan Al-Rajeh
-* **AI/NLP Engineers**: Ziyad Al-Moneef, Yasser Al-Shareef
-* **QA**: Faisal Al-Tuwaijri
+هذا المشروع **نموذج أولي (Prototype)** ضمن مبادرة طلابية، وما يزال قيد التطوير المستمر. جميع البيانات الدراسية المعروضة تجريبية، ولا تُعتمد كمصدر رسمي للمنهج السعودي. الهدف الحالي هو إثبات الفكرة (Proof of Concept) وتجربة تجربة المستخدم قبل أي تطوير أو اعتماد أوسع.
 
 ---
 
-*Made by ambitious students leveraging AI to serve knowledge*
+## 👥 فريق العمل
+
+*فريق الذكاء الاصطناعي بنادي إنجاز — جامعة الإمام محمد بن سعود الإسلامية*
+
+* **قائدة نادي إنجاز**: ليان المطيويع
+* **قائد الفريق ومهندس AI/NLP**: ريان الحربي
+* **مدير المشروع**: تركي الدعجاني
+* **تصميم واجهة المستخدم (UI/UX)**: ناهد المطيري، ليان القباني
+* **الواجهة الأمامية (Frontend)**: عبدالعزيز الضيف، رسيل الصمعاني
+* **الواجهة الخلفية (Backend)**: عبدالعزيز القحطاني، سلطان الراجح
+* **الذكاء الاصطناعي (AI/NLP)**: زياد المنيف، ياسر الشريف
+* **اختبار الجودة (QA)**: فيصل التويجري
+
+---
+
+*صُنع بأيدي طلبة طموحين يسعون لتوظيف الذكاء الاصطناعي في خدمة المعرفة.*

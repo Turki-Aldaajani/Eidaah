@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import Icon from './components/Icon';
+import Footer from './Footer';
 
 const team = {
   ar: {
     clubLead: { name: "ليان المطيويع", role: "قائدة نادي إنجاز" },
-    projectManager: { name: "تركي الدعجاني", role: "مدير المشروع وصاحب الفكرة" },
     teamLead: { name: "ريان الحربي", role: "قائد الفريق ومهندس AI/NLP" },
+    projectManager: { name: "تركي الدعجاني", role: "مدير المشروع" },
     ui_ux: [
       { name: "ناهد المطيري", role: "تصميم واجهة المستخدم (UI/UX)" },
       { name: "ليان القباني", role: "تصميم واجهة المستخدم (UI/UX)" }
@@ -28,8 +29,8 @@ const team = {
   },
   en: {
     clubLead: { name: "Layan Al-Mutaiwie", role: "Enjaz Club Leader" },
-    projectManager: { name: "Turki Al-Dajani", role: "Project Manager (Initiator)" },
     teamLead: { name: "Rayan Al-Harbi", role: "Team Lead & AI/NLP Engineer" },
+    projectManager: { name: "Turki Al-Dajani", role: "Project Manager" },
     ui_ux: [
       { name: "Nahid Al-Mutairi", role: "UI/UX Design" },
       { name: "Layan Al-Qabbani", role: "UI/UX Design" }
@@ -69,8 +70,8 @@ export default function About() {
 
   const groups = [
     { role: currentTeam.clubLead.role, icon: "crown", members: [currentTeam.clubLead.name] },
-    { role: currentTeam.projectManager.role, icon: "sparkles", members: [currentTeam.projectManager.name] },
     { role: currentTeam.teamLead.role, icon: "sparkles", members: [currentTeam.teamLead.name] },
+    { role: currentTeam.projectManager.role, icon: "sparkles", members: [currentTeam.projectManager.name] },
     { role: t.ui_title, icon: "pen", members: currentTeam.ui_ux.map((m) => m.name) },
     { role: t.fe_title, icon: "code", members: currentTeam.frontend.map((m) => m.name) },
     { role: t.be_title, icon: "server", members: currentTeam.backend.map((m) => m.name) },
@@ -122,6 +123,7 @@ export default function About() {
           </div>
         </div>
       </section>
+      <Footer />
     </>
   );
 }

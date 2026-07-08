@@ -18,5 +18,4 @@ export const LP_SOON = [
   { icn: "target", t: "الاختبارات التكيفية" },
   { icn: "calendar", t: "خطط المذاكرة" },
   { icn: "chart", t: "لوحة متابعة التقدم" },
-  { icn: "users", t: "المساعد الدراسي الشخصي" },
 ];

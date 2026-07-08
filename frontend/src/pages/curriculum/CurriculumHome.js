@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
+import Footer from "../../Footer";
 import { STAGES, LEVEL_NAMES, subjectsForStage, stageById } from "../../data/curriculum";
 
 const LEVELS = ["primary", "middle", "high"];
@@ -26,6 +27,11 @@ export default function CurriculumHome() {
       <section className="view view-home">
         <div className="hero">
           <div className="container hero-in anim">
+            <nav className="crumbs">
+              <Link to="/">الرئيسية</Link>
+              <i className="sep">‹</i>
+              <span className="cur">المناهج التعليمية</span>
+            </nav>
             <span className="hero-kicker">
               <Icon name="sparkles" /> منصة تعلّم بالذكاء الاصطناعي
             </span>
@@ -51,6 +57,7 @@ export default function CurriculumHome() {
           ))}
         </div>
       </section>
+      <Footer />
     </>
   );
 }

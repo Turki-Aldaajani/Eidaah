@@ -2,6 +2,7 @@ import React from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
+import Footer from "../../Footer";
 import { stageById, SUB_DEFS, CHAPTERS, lessonsFor, toArabicDigits } from "../../data/curriculum";
 
 export default function Lessons() {
@@ -58,6 +59,7 @@ export default function Lessons() {
           </div>
         </div>
       </section>
+      <Footer />
     </>
   );
 }

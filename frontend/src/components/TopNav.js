@@ -14,11 +14,10 @@ export default function TopNav() {
           <span className="brand-mark">إ</span>
           <span className="brand-txt">
             <b>إيضاح</b>
-            <i>نادي إنجاز · جامعة الإمام</i>
+            <i>مَن جَعَلَ الإيضَاحَ سِرَاجَه، نَال في الدَّرْبِ حَاجَه</i>
           </span>
         </Link>
         <div className="nav-side">
-          <span className="proto-chip">نموذج أولي</span>
           <button
             type="button"
             className="theme-toggle"

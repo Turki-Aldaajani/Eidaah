@@ -2,6 +2,7 @@ import React from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
+import Footer from "../../Footer";
 import { stageById, subjectsForStage, SUB_DEFS, LESSONS } from "../../data/curriculum";
 
 export default function Subjects() {
@@ -48,6 +49,7 @@ export default function Subjects() {
           </div>
         </div>
       </section>
+      <Footer />
     </>
   );
 }
