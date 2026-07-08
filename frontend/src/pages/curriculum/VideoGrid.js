@@ -3,7 +3,11 @@ import Icon from "../../components/Icon";
 import { defaultFilters, applyFilters, NAT_NAMES, toArabicDigits, fmtRate } from "../../data/curriculum";
 
 const FILTER_FIELDS = [
-  { key: "nat", label: "جنسية الشارح", opts: [["all", "الكل"], ["sa", "سعودي"], ["gcc", "خليجي"], ["ar", "عربي"]] },
+  {
+    key: "nat",
+    label: "جنسية الشارح",
+    opts: [["all", "الكل"], ["sa", "سعودي"], ["jo", "أردني"], ["eg", "مصري"], ["kw", "كويتي"]],
+  },
   { key: "rec", label: "حداثة المحتوى", opts: [["all", "أي وقت"], ["y1", "أحدث الشروحات"], ["y2", "آخر سنتين"]] },
   {
     key: "dur",
