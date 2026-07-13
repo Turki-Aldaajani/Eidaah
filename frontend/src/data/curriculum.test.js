@@ -79,12 +79,12 @@ test("applyFilters with defaultFilters returns every video unfiltered", () => {
   expect(result).toHaveLength(videos.length);
 });
 
-test("applyFilters narrows by nationality", () => {
+test("applyFilters narrows by duration", () => {
   const lesson = lessonsFor("math")[0];
   const videos = mockVideos(lesson, "math");
-  const filters = { ...defaultFilters(), nat: "sa" };
+  const filters = { ...defaultFilters(), dur: "lt10" };
   const result = applyFilters(videos, filters);
-  expect(result.every((v) => v.nat === "sa")).toBe(true);
+  expect(result.every((v) => v.durM < 10)).toBe(true);
   expect(result.length).toBeLessThan(videos.length);
 });
 

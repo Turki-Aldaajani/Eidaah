@@ -1,3 +1,7 @@
+import { buildSearchQuery } from "../lib/youtube/queryBuilder";
+import { defaultYouTubeFilters, searchYouTubeVideos, fetchVideoDetails } from "../lib/youtube/youtubeApi";
+import { DEFAULT_TTL_MS, buildCacheKey, readCache, writeCache } from "../lib/youtube/cache";
+
 export const STAGES = [
   { id: "p1", n: "الصف الأول الابتدائي", lv: "primary" },
   { id: "p2", n: "الصف الثاني الابتدائي", lv: "primary" },
@@ -153,10 +157,26 @@ export function toArabicDigits(n) {
   return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
 }
 
+// MOCK-ONLY: fabricates fake seconds from minutes for demo videos (`m * 7`
+// has no real meaning). Do not use for real YouTube data — see fmtDuration
+// below for the real formatter.
 export function fmtDur(m) {
   const mm = Math.floor(m);
   const ss = (m * 7) % 60 | 0;
   return `${toArabicDigits(String(mm).padStart(2, "0"))}:${toArabicDigits(String(ss).padStart(2, "0"))}`;
+}
+
+// Real formatter: total seconds -> Arabic-digit "mm:ss" (or "h:mm:ss" past an hour).
+export function fmtDuration(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const core =
+    h > 0
+      ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+      : `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  return toArabicDigits(core);
 }
 
 export function fmtViews(v) {
@@ -193,13 +213,12 @@ export function mockVideos(lesson, subjectId) {
 }
 
 export function defaultFilters() {
-  return { nat: "all", rec: "all", dur: "all", views: "all", rate: "all", ver: false };
+  return { rec: "all", dur: "all", views: "all" };
 }
 
 export function applyFilters(videos, filters) {
   const f = filters;
   return videos.filter((v) => {
-    if (f.nat !== "all" && v.nat !== f.nat) return false;
     if (f.rec === "y1" && v.year < 2026) return false;
     if (f.rec === "y2" && v.year < 2025) return false;
     if (f.dur === "lt5" && !(v.durM < 5)) return false;
@@ -210,9 +229,58 @@ export function applyFilters(videos, filters) {
     if (f.views === "v5k" && v.views < 5000) return false;
     if (f.views === "v15k" && v.views < 15000) return false;
     if (f.views === "v50k" && v.views < 50000) return false;
-    if (f.rate === "r45" && v.rate < 4.5) return false;
-    if (f.rate === "r40" && v.rate < 4.0) return false;
-    if (f.ver && !v.ver) return false;
     return true;
   });
+}
+
+function mapYouTubeItemToVideo(item, details, subjectId) {
+  const videoId = item?.id?.videoId;
+  const snippet = item?.snippet || {};
+  const det = details.get(videoId) || {};
+  const durationSeconds = det.durationSeconds || 0;
+  const views = det.viewCount || 0;
+
+  return {
+    videoId,
+    title: snippet.title || "",
+    ch: snippet.channelTitle || "",
+    init: (snippet.channelTitle || "؟").charAt(0),
+    thumbnail: snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || null,
+    durM: durationSeconds / 60,
+    dur: fmtDuration(durationSeconds),
+    views,
+    viewsT: fmtViews(views),
+    year: snippet.publishedAt ? new Date(snippet.publishedAt).getFullYear() : null,
+    icn: (SUB_DEFS[subjectId] || SUB_DEFS.math).icn,
+    // no match / reason / rate / ver / nat / g — no honest real-data
+    // equivalent exists; VideoCard renders these conditionally.
+  };
+}
+
+const LESSON_VIDEOS_CACHE_NAMESPACE = "eidaah:lesson-videos:v1";
+
+// Real counterpart to mockVideos(): fetches actual YouTube videos for a
+// lesson. `filters` is YouTube-API-shaped (see defaultYouTubeFilters()), not
+// the UI's defaultFilters() shape - callers pass none for now (no live
+// filter-UI wiring yet). Caches its own merged/mapped result (search +
+// per-video details), since fetchVideoDetails isn't cached by youtubeApi.js
+// itself. Throws on failure (missing/invalid key, quota, network) rather than
+// falling back to mock data - callers are expected to show an error state.
+export async function fetchLessonVideos(lesson, subjectId, stageId, filters = {}) {
+  const subject = SUB_DEFS[subjectId] || SUB_DEFS.math;
+  const stage = stageById(stageId);
+  const query = buildSearchQuery(lesson.t, subject.n, stage ? stage.n : "");
+  const ytFilters = { ...defaultYouTubeFilters(), ...filters };
+
+  const cacheKey = buildCacheKey(LESSON_VIDEOS_CACHE_NAMESPACE, query, ytFilters);
+  const cached = readCache(cacheKey);
+  if (cached) return cached;
+
+  const rawItems = await searchYouTubeVideos(query, ytFilters, { relevanceKeywords: [lesson.t, subject.n] });
+  const videoIds = rawItems.map((it) => it?.id?.videoId).filter(Boolean);
+  const details = await fetchVideoDetails(videoIds);
+  const videos = rawItems.filter((it) => it?.id?.videoId).map((it) => mapYouTubeItemToVideo(it, details, subjectId));
+
+  writeCache(cacheKey, videos, DEFAULT_TTL_MS);
+  return videos;
 }

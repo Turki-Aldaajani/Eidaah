@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Icon from "../../components/Icon";
 import TopNav from "../../components/TopNav";
 import Footer from "../../Footer";
 import VideoGrid from "./VideoGrid";
 import AiToolsPanel from "./AiToolsPanel";
-import { stageById, SUB_DEFS, CHAPTERS, lessonsFor, mockVideos, STEPS, toArabicDigits } from "../../data/curriculum";
+import { stageById, SUB_DEFS, CHAPTERS, lessonsFor, fetchLessonVideos, STEPS, toArabicDigits } from "../../data/curriculum";
 
 function emptyProgress() {
   return { video: false, sum: false, ex: false, notes: false, quiz: false };
@@ -72,17 +72,43 @@ export default function Lesson() {
 
   const [progress, setProgress] = useState(emptyProgress());
   const [playingVideo, setPlayingVideo] = useState(null);
+  const [videos, setVideos] = useState([]);
+  const [videosLoading, setVideosLoading] = useState(true);
+  const [videosError, setVideosError] = useState(null);
+  const requestKeyRef = useRef(null);
 
   const lessonKey = `${stageId}/${subjectId}/${chapterId}/${lessonIdx}`;
+
+  const fetchVideosForLesson = useCallback(async () => {
+    if (!lesson || !subject || !stage) return;
+    const requestKey = lessonKey;
+    requestKeyRef.current = requestKey;
+    setVideosLoading(true);
+    setVideosError(null);
+    try {
+      const results = await fetchLessonVideos(lesson, subjectId, stageId);
+      if (requestKeyRef.current === requestKey) setVideos(results);
+    } catch (err) {
+      if (requestKeyRef.current === requestKey) {
+        setVideosError(err?.message || "تعذّر تحميل الشروحات الآن");
+        setVideos([]);
+      }
+    } finally {
+      if (requestKeyRef.current === requestKey) setVideosLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonKey, subjectId, stageId]);
+
   useEffect(() => {
     setProgress(emptyProgress());
     setPlayingVideo(null);
+    fetchVideosForLesson();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonKey]);
 
   if (!stage || !subject || !chapter || !lesson) return <Navigate to="/learn" replace />;
 
   const markStep = (key) => setProgress((p) => (p[key] ? p : { ...p, [key]: true }));
-  const videos = mockVideos(lesson, subjectId);
   const done = STEPS.filter((s) => progress[s.k]).length;
   const pct = Math.round((done / STEPS.length) * 100);
 
@@ -140,6 +166,9 @@ export default function Lesson() {
                 </div>
                 <VideoGrid
                   videos={videos}
+                  loading={videosLoading}
+                  error={videosError}
+                  onRetry={fetchVideosForLesson}
                   onWatch={(video) => {
                     markStep("video");
                     setPlayingVideo(video);
@@ -197,15 +226,26 @@ export default function Lesson() {
             <button type="button" className="pm-x" aria-label="إغلاق" onClick={() => setPlayingVideo(null)}>
               <Icon name="x" />
             </button>
-            <div className="p-screen" style={{ background: `linear-gradient(135deg,${playingVideo.g[0]},${playingVideo.g[1]})` }}>
-              <span className="ps-ic">
-                <Icon name={playingVideo.icn} />
-              </span>
-              <button type="button" className="p-play" aria-label="تشغيل">
-                <Icon name="play" />
-              </button>
-              <span className="p-proto">مشغّل تجريبي · في النسخة النهائية يُعرض فيديو YouTube الفعلي هنا</span>
-            </div>
+            {playingVideo.videoId ? (
+              <div className="p-screen p-screen-real">
+                <iframe
+                  src={`https://www.youtube.com/embed/${playingVideo.videoId}?autoplay=1`}
+                  title={playingVideo.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div className="p-screen" style={{ background: `linear-gradient(135deg,${playingVideo.g[0]},${playingVideo.g[1]})` }}>
+                <span className="ps-ic">
+                  <Icon name={playingVideo.icn} />
+                </span>
+                <button type="button" className="p-play" aria-label="تشغيل">
+                  <Icon name="play" />
+                </button>
+                <span className="p-proto">مشغّل تجريبي · في النسخة النهائية يُعرض فيديو YouTube الفعلي هنا</span>
+              </div>
+            )}
             <div className="pm-info">
               <h4 dir="auto">{playingVideo.title}</h4>
               <p>

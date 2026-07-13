@@ -3,11 +3,6 @@ import Icon from "../../components/Icon";
 import { defaultFilters, applyFilters, NAT_NAMES, toArabicDigits, fmtRate } from "../../data/curriculum";
 
 const FILTER_FIELDS = [
-  {
-    key: "nat",
-    label: "جنسية الشارح",
-    opts: [["all", "الكل"], ["sa", "سعودي"], ["jo", "أردني"], ["eg", "مصري"], ["kw", "كويتي"]],
-  },
   { key: "rec", label: "حداثة المحتوى", opts: [["all", "أي وقت"], ["y1", "أحدث الشروحات"], ["y2", "آخر سنتين"]] },
   {
     key: "dur",
@@ -19,19 +14,35 @@ const FILTER_FIELDS = [
     label: "عدد المشاهدات",
     opts: [["all", "الكل"], ["v5k", "أكثر من ٥٬٠٠٠ مشاهدة"], ["v15k", "أكثر من ١٥٬٠٠٠ مشاهدة"], ["v50k", "أكثر من ٥٠٬٠٠٠ مشاهدة"]],
   },
-  { key: "rate", label: "تقييم الفيديو", opts: [["all", "الكل"], ["r40", "٤٫٠ فأعلى"], ["r45", "٤٫٥ فأعلى"]] },
 ];
 
 function VideoCard({ video, onWatch }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = Boolean(video.thumbnail) && !imgFailed;
+  const [gradA, gradB] = video.g || ["#125D64", "#0F3E34"];
+
   return (
     <div className="vid-card card anim">
-      <div className="thumb" style={{ background: `linear-gradient(135deg,${video.g[0]},${video.g[1]})` }}>
-        <span className="th-reason">
-          <Icon name="sparkles" /> {video.reason}
-        </span>
-        <span className="th-ic">
-          <Icon name={video.icn} />
-        </span>
+      <div className="thumb" style={showImage ? undefined : { background: `linear-gradient(135deg,${gradA},${gradB})` }}>
+        {showImage && (
+          <img
+            className="thumb-img"
+            src={video.thumbnail}
+            alt={video.title}
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        )}
+        {video.reason && (
+          <span className="th-reason">
+            <Icon name="sparkles" /> {video.reason}
+          </span>
+        )}
+        {!showImage && (
+          <span className="th-ic">
+            <Icon name={video.icn} />
+          </span>
+        )}
         <button type="button" className="th-play" aria-label="تشغيل الشرح" onClick={() => onWatch(video)}>
           <Icon name="play" />
         </button>
@@ -49,21 +60,25 @@ function VideoCard({ video, onWatch }) {
               <Icon name="badge-check" />
             </span>
           )}
-          <span className="ch-nat">{NAT_NAMES[video.nat]}</span>
+          {video.nat && NAT_NAMES[video.nat] && <span className="ch-nat">{NAT_NAMES[video.nat]}</span>}
         </div>
         <div className="v-stats">
           <span>
             <Icon name="eye" /> {video.viewsT}
           </span>
-          <span>
-            <Icon name="calendar" /> {toArabicDigits(video.year)}
-          </span>
-          <span className="v-rate">
-            <Icon name="star" filled /> {fmtRate(video.rate)}
-          </span>
+          {video.year != null && (
+            <span>
+              <Icon name="calendar" /> {toArabicDigits(video.year)}
+            </span>
+          )}
+          {typeof video.rate === "number" && (
+            <span className="v-rate">
+              <Icon name="star" filled /> {fmtRate(video.rate)}
+            </span>
+          )}
         </div>
         <div className="v-foot">
-          <span className={`match ${video.match.cls}`}>مطابقة المنهج: {video.match.t}</span>
+          {video.match && <span className={`match ${video.match.cls}`}>مطابقة المنهج: {video.match.t}</span>}
           <button type="button" className="v-watch" onClick={() => onWatch(video)}>
             <Icon name="play" /> مشاهدة
           </button>
@@ -73,12 +88,56 @@ function VideoCard({ video, onWatch }) {
   );
 }
 
-export default function VideoGrid({ videos, onWatch }) {
+export default function VideoGrid({ videos, loading = false, error = null, onRetry, onWatch }) {
   const [filters, setFilters] = useState(defaultFilters());
-  const visible = applyFilters(videos, filters);
 
   const setField = (key, value) => setFilters((f) => ({ ...f, [key]: value }));
   const resetFilters = () => setFilters(defaultFilters());
+
+  if (loading) {
+    return (
+      <div className="grid vid-grid">
+        <div className="v-empty">
+          <Icon name="refresh" />
+          <p>جارٍ البحث عن أفضل الشروحات لهذا الدرس…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid vid-grid">
+        <div className="v-empty">
+          <Icon name="alert" />
+          <p>{error}</p>
+          {onRetry && (
+            <button type="button" className="btn ghost" onClick={onRetry}>
+              <Icon name="refresh" /> إعادة المحاولة
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!videos.length) {
+    return (
+      <div className="grid vid-grid">
+        <div className="v-empty">
+          <Icon name="video" />
+          <p>لم نجد شروحات مناسبة لهذا الدرس حالياً</p>
+          {onRetry && (
+            <button type="button" className="btn ghost" onClick={onRetry}>
+              <Icon name="refresh" /> إعادة المحاولة
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const visible = applyFilters(videos, filters);
 
   return (
     <>
@@ -111,14 +170,6 @@ export default function VideoGrid({ videos, onWatch }) {
               </span>
             </label>
           ))}
-          <button
-            type="button"
-            className={`fchip${filters.ver ? " on" : ""}`}
-            aria-pressed={filters.ver}
-            onClick={() => setField("ver", !filters.ver)}
-          >
-            <Icon name="badge-check" /> قناة معتمدة
-          </button>
         </div>
         <p className="fcount">
           عرض {toArabicDigits(visible.length)} من {toArabicDigits(videos.length)} شرحاً مقترحاً

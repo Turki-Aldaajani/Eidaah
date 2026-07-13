@@ -11,15 +11,15 @@ test("renders one card per video and a result count", () => {
   expect(screen.getByText(/عرض ٨ من ٨ شرحاً مقترحاً/)).toBeInTheDocument();
 });
 
-test("filtering by nationality narrows the visible cards and updates the count", () => {
+test("filtering by duration narrows the visible cards and updates the count", () => {
   render(<VideoGrid videos={sampleVideos()} subjectIcon="calculator" onWatch={() => {}} />);
-  fireEvent.change(screen.getByLabelText("جنسية الشارح"), { target: { value: "sa" } });
-  expect(screen.getByText(/عرض ٤ من ٨ شرحاً مقترحاً/)).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("مدة الشرح"), { target: { value: "lt10" } });
+  expect(screen.getByText(/عرض ٣ من ٨ شرحاً مقترحاً/)).toBeInTheDocument();
 });
 
 test("resetting filters restores every card", () => {
   render(<VideoGrid videos={sampleVideos()} subjectIcon="calculator" onWatch={() => {}} />);
-  fireEvent.change(screen.getByLabelText("جنسية الشارح"), { target: { value: "sa" } });
+  fireEvent.change(screen.getByLabelText("مدة الشرح"), { target: { value: "lt10" } });
   fireEvent.click(screen.getByText("إعادة تعيين"));
   expect(screen.getByText(/عرض ٨ من ٨ شرحاً مقترحاً/)).toBeInTheDocument();
 });
