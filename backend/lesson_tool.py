@@ -114,7 +114,7 @@ def generate_lesson_tool_content(stage: str, subject: str, lesson_title: str, to
     try:
         raw = call_groq_fn(
             prompt=prompt,
-            max_tokens=700 if tool == "quiz" else 400,
+            max_tokens=900 if tool == "quiz" else 550,
             temperature=0.4,
             system_prompt=system,
         )
