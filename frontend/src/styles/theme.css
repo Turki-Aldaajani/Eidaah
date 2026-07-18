@@ -618,3 +618,10 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 [data-theme="dark"] .nav-auth{background:var(--bg-h);border-color:var(--line)}
 [data-theme="dark"] .auth-input{background:var(--bg-h);border-color:var(--line)}
 @media (max-width:560px){.nav-auth-email{display:none}}
+
+/* ── C1: POC — حالات «قريباً» (مقفلة) ─────────────────────────────────────── */
+.grade-card--locked{opacity:.55;cursor:not-allowed;pointer-events:none;position:relative}
+.grade-card--locked .g-sub--muted{color:var(--faint)}
+.g-soon-badge{position:absolute;top:10px;inset-inline-end:10px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px}
+.chapter-card--locked{opacity:.55;cursor:not-allowed;pointer-events:none}
+.ch-badge--soon{background:var(--accent-soft);color:var(--accent);font-size:.75rem}
