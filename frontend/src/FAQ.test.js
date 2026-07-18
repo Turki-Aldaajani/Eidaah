@@ -2,12 +2,15 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import FAQ from "./FAQ";
 import { ThemeProvider } from "./theme/ThemeContext";
+import { LanguageProvider } from "./i18n/LanguageContext";
 
 function renderFaq() {
   return render(
     <MemoryRouter>
       <ThemeProvider>
-        <FAQ />
+        <LanguageProvider>
+          <FAQ />
+        </LanguageProvider>
       </ThemeProvider>
     </MemoryRouter>
   );

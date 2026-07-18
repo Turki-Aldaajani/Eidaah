@@ -34,6 +34,7 @@ ALLOWED_PPTX_TYPES = [
     "application/vnd.ms-powerpoint",
 ]
 MAX_SLIDES = 100  # Safety limit
+MAX_ANALYZE_CHARS = 6000  # Per-slide char cap for the Explain/analyze call
 
 
 # ---------------------------------------------------------
@@ -161,8 +162,20 @@ async def process_text_directly(text: str, language: str = None):
             "examples": ["Please select a slide containing text."]
         }
 
-    # Truncate very long texts to avoid excessive API usage
-    truncated_text = text[:3000] if len(text) > 3000 else text
+    # Truncate very long texts to avoid excessive API usage.
+    # Limit raised from 3000 to give more headroom; if we still have to cut,
+    # tell the user via a `warning` in the response instead of failing silently.
+    warning = None
+    if len(text) > MAX_ANALYZE_CHARS:
+        truncated_text = text[:MAX_ANALYZE_CHARS]
+        print(f"⚠️  Text truncated from {len(text)} to {MAX_ANALYZE_CHARS} chars")
+        warning = (
+            f"تم تحليل أول {MAX_ANALYZE_CHARS} حرف فقط من هذه الشريحة لأنها طويلة جداً؛ قد لا يشمل الشرح كامل المحتوى."
+            if language == "ar"
+            else f"Only the first {MAX_ANALYZE_CHARS} characters of this slide were analyzed because it is very long; the explanation may not cover all of the content."
+        )
+    else:
+        truncated_text = text
 
     try:
         print("🤖 Calling AI model...")
@@ -181,6 +194,8 @@ async def process_text_directly(text: str, language: str = None):
         "analysis": explanation,
         "examples": [example] if example else []
     }
+    if warning:
+        result["warning"] = warning
 
     print(f"{'='*60}\n")
     return result

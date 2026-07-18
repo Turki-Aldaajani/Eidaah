@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./theme/ThemeContext";
+import { LanguageProvider } from "./i18n/LanguageContext";
 import { AuthProvider } from "./auth/AuthContext";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
@@ -18,6 +19,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+      <LanguageProvider>
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -34,6 +36,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </LanguageProvider>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import Icon from './components/Icon';
 import Footer from './Footer';
+import { useLanguage } from './i18n/LanguageContext';
 
-const SUPPORT_EMAIL = "eidaah.injaz@imamu.edu.sa";
+const SUPPORT_EMAIL = "eidaah.team@gmail.com";
 
 const faqData = {
   ar: {
@@ -45,14 +46,8 @@ const staticTranslations = {
 };
 
 export default function FAQ() {
-  const [language, setLanguage] = useState(localStorage.getItem("language") || "ar");
+  const { language, toggleLanguage } = useLanguage();
   const [openKey, setOpenKey] = useState(null);
-
-  const toggleLanguage = () => {
-    const newLang = language === 'ar' ? 'en' : 'ar';
-    setLanguage(newLang);
-    localStorage.setItem("language", newLang);
-  };
 
   const toggleFAQ = (key) => setOpenKey((prev) => (prev === key ? null : key));
 

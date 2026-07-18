@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
+import { useLanguage } from "../i18n/LanguageContext";
 import "../styles/analyzer.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
@@ -68,12 +69,13 @@ function SlideCard({ slide, label }) {
 export default function Results() {
   const navigate = useNavigate();
 
-  const [language, setLanguage] = useState(localStorage.getItem("language") || "ar");
+  const { language, toggleLanguage } = useLanguage();
   const [slides, setSlides] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
 
   const [sessionId] = useState(() => localStorage.getItem("session_id") || "");
   const [topics, setTopics] = useState([]);
@@ -145,15 +147,6 @@ export default function Results() {
     };
   }, [sessionId]);
 
-  const toggleLanguage = () => {
-    const newLang = language === "ar" ? "en" : "ar";
-    setLanguage(newLang);
-    localStorage.setItem("language", newLang);
-    if (showSummary && sessionId) {
-      fetchSummary(newLang);
-    }
-  };
-
   const fetchSummary = async (lang) => {
     if (!sessionId) return;
     setSummaryLoading(true);
@@ -179,10 +172,25 @@ export default function Results() {
     await fetchSummary(language);
   };
 
+  // When the shared language changes (from any page), refetch the summary in
+  // the new language if it is currently displayed. Skips the initial mount.
+  const didMountLangRef = useRef(false);
+  useEffect(() => {
+    if (!didMountLangRef.current) {
+      didMountLangRef.current = true;
+      return;
+    }
+    if (showSummary && sessionId) {
+      fetchSummary(language);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
   const handleExplain = async () => {
     if (!slides[currentSlide]) return;
     setLoading(true);
     setError("");
+    setWarning("");
     setAnalysis(null);
 
     try {
@@ -194,6 +202,7 @@ export default function Results() {
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setAnalysis(data);
+      setWarning(data.warning || "");
 
       const updatedSlides = [...slides];
       updatedSlides[currentSlide].explanation = data.analysis;
@@ -320,6 +329,7 @@ export default function Results() {
 
               {!topicLoading && !loading && !error && !topicAnalysis && analysis && (
                 <div className="result-explain-box">
+                  {warning && <p className="upload-warning">{warning}</p>}
                   <h3>{t.analytical_explanation}</h3>
                   <p>{analysis.analysis}</p>
                   <h3>{t.real_world_example}</h3>
