@@ -594,3 +594,27 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .soon-card .ic{width:22px;height:22px;color:var(--pri)}
 .soon-card b{font-size:.88rem;font-weight:600}
 .soon-badge{position:absolute;top:10px;inset-inline-start:10px;font-size:.62rem;font-weight:700;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-line);padding:2px 9px;border-radius:999px}
+
+/* ---------- auth (I1: تسجيل الدخول OTP) ---------- */
+.nav-auth{display:inline-flex;align-items:center;gap:7px;font-size:.85rem;font-weight:500;color:var(--mut);padding:6px 12px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--bg-h);transition:.2s}
+.nav-auth:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-soft)}
+.nav-auth .ic{width:15px;height:15px}
+.nav-auth-email{direction:ltr;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-auth-chip{font-size:.62rem;font-weight:700;color:var(--pri);background:var(--pri-soft);border:1px solid var(--pri-line);padding:1px 8px;border-radius:999px}
+.auth-wrap{display:flex;justify-content:center;padding:56px 16px}
+.auth-card{width:100%;max-width:440px;padding:32px 28px;display:flex;flex-direction:column;gap:14px}
+.auth-title{font-size:1.5rem;font-weight:700}
+.auth-sub{color:var(--mut);font-size:.92rem;line-height:1.7}
+.auth-note{color:var(--pri);font-size:.85rem}
+.auth-form{display:flex;flex-direction:column;gap:12px}
+.auth-label{font-size:.85rem;font-weight:600}
+.auth-input{width:100%;padding:11px 14px;font-size:.95rem;font-family:inherit;color:inherit;background:var(--bg-h);border:1px solid var(--line);border-radius:var(--r-s);transition:border-color .2s}
+.auth-input:focus{outline:none;border-color:var(--pri)}
+.auth-code{letter-spacing:6px;font-weight:700;text-align:center}
+.auth-error{color:var(--warn,#b45309);background:var(--warn-bg,#fef3c7);border:1px solid var(--warn-line,#fcd34d);font-size:.85rem;padding:8px 12px;border-radius:var(--r-s)}
+.auth-notice{color:var(--pri);font-size:.85rem}
+.auth-submit{justify-content:center}
+.auth-actions{display:flex;gap:10px;flex-wrap:wrap}
+[data-theme="dark"] .nav-auth{background:var(--bg-h);border-color:var(--line)}
+[data-theme="dark"] .auth-input{background:var(--bg-h);border-color:var(--line)}
+@media (max-width:560px){.nav-auth-email{display:none}}
