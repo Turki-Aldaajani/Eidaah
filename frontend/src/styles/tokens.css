@@ -1,0 +1,76 @@
+/* ============================================================
+   إيضاح · توكنز الهوية البصرية (Design Tokens)
+   نظام ألوان نادي إنجاز — مصدر واحد للحقيقة لكل صفحات المنصة
+   ------------------------------------------------------------
+   ملاحظة: theme.css (المجاور) يحمل نفس قيم الألوان مطبّقة فعلياً
+   على المنصة الحية + مئات الأنماط الخاصة بالمكوّنات. هذا الملف هو
+   طبقة التوكنز النقية فقط (بلا أنماط مكوّنات)، مضافة كمرجع مستقل
+   لمهمة G2 دون المساس بـ theme.css الحيّ. أي توحيد بينهما لاحقاً
+   يحتاج مهمة تنظيف منفصلة (refactor) وخارج نطاق هذا الـ PR.
+   ------------------------------------------------------------
+   الاستخدام:  <link rel="stylesheet" href="tokens.css">
+   الوضع الليلي يعمل بطريقتين:
+     1) تلقائياً حسب تفضيل نظام المستخدم (prefers-color-scheme)
+     2) يدوياً عبر  <html data-theme="dark">  أو  data-theme="light"
+   الاختيار اليدوي (data-theme) يتغلّب دائماً على تفضيل النظام.
+   ============================================================ */
+
+/* ---------- الوضع النهاري (الافتراضي) ---------- */
+:root{
+ /* الأساسية */
+ --pri:#155043;--pri-h:#125D64;--pri-a:#0F3E34;--pri-soft:#E7EFEC;--pri-line:#B9CFC8;
+ --accent:#869200;--accent-soft:#F2F4E0;
+
+ /* الثانوية (الحالات والشارات فقط) */
+ --suc:#3CA45D;--suc-bg:#EAF6EE;--suc-line:#BFE3CB;
+ --warn:#B57A0A;--warn-bg:#FDF6E3;--warn-line:#F3C43C;
+ --err:#FB4C3C;--err-bg:#FEECEA;--err-line:#FBC3BD;
+ --info:#3CA6EB;--info-bg:#E8F4FC;--info-line:#B5DDF6;
+ --pink:#EB3C87;
+
+ /* المحايدة (خلفيات ونصوص وحدود) */
+ --ink:#2B2B2B;--mut:#5A5A54;--faint:#9A968A;
+ --line:#E7E3D6;--line2:#D8D2BF;
+ --bg-h:#FAFAFA;--bg-2:#E3D8B3;
+ --card:#fff;
+
+ /* أنصاف الأقطار */
+ --r-s:6px;--r:10px;--r-l:14px;
+
+ /* الظلال */
+ --sh:0 1px 2px rgba(21,80,67,.05);
+ --sh-m:0 4px 12px rgba(21,80,67,.09);
+}
+
+/* ---------- 1) تلقائي: حسب تفضيل النظام ----------
+   يُطبّق فقط عندما لا يكون هناك اختيار يدوي صريح للنهاري.
+   بهذا لا يتغلّب النظام على مستخدم اختار "نهاري" بنفسه. */
+@media (prefers-color-scheme: dark){
+ :root:not([data-theme="light"]){
+  --card:#1B2622;--bg-h:#131C18;--bg-2:#232B20;
+  --ink:#E9EBE4;--mut:#B4BCAE;--faint:#7F887A;
+  --line:#2B372F;--line2:#3B4941;
+  --pri:#57B893;--pri-h:#74C7A7;--pri-a:#3E9C79;--pri-soft:#1B2F27;--pri-line:#2F4A3E;
+  --accent:#B9C63A;--accent-soft:#262C14;
+  --suc:#5FC786;--suc-bg:#17281D;--suc-line:#2E5A3D;
+  --warn:#E6B84C;--warn-bg:#2B2414;--warn-line:#5C4A1E;
+  --err:#F2766B;--err-bg:#2C1A17;--err-line:#5C2B25;
+  --info:#6BBDF2;--info-bg:#152430;--info-line:#28455C;
+  --sh:0 1px 2px rgba(0,0,0,.35);--sh-m:0 6px 16px rgba(0,0,0,.45);
+ }
+}
+
+/* ---------- 2) يدوي: عبر  data-theme="dark" ----------
+   يعمل في كل الحالات ويتغلّب على تفضيل النظام. */
+[data-theme="dark"]{
+ --card:#1B2622;--bg-h:#131C18;--bg-2:#232B20;
+ --ink:#E9EBE4;--mut:#B4BCAE;--faint:#7F887A;
+ --line:#2B372F;--line2:#3B4941;
+ --pri:#57B893;--pri-h:#74C7A7;--pri-a:#3E9C79;--pri-soft:#1B2F27;--pri-line:#2F4A3E;
+ --accent:#B9C63A;--accent-soft:#262C14;
+ --suc:#5FC786;--suc-bg:#17281D;--suc-line:#2E5A3D;
+ --warn:#E6B84C;--warn-bg:#2B2414;--warn-line:#5C4A1E;
+ --err:#F2766B;--err-bg:#2C1A17;--err-line:#5C2B25;
+ --info:#6BBDF2;--info-bg:#152430;--info-line:#28455C;
+ --sh:0 1px 2px rgba(0,0,0,.35);--sh-m:0 6px 16px rgba(0,0,0,.45);
+}

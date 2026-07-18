@@ -2,7 +2,9 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./theme/ThemeContext";
 import { LanguageProvider } from "./i18n/LanguageContext";
+import { AuthProvider } from "./auth/AuthContext";
 import LandingPage from "./pages/LandingPage";
+import Login from "./pages/Login";
 import Upload from "./pages/Upload";
 import Results from "./pages/Results";
 import About from "./About";
@@ -16,10 +18,12 @@ import Lesson from "./pages/curriculum/Lesson";
 function App() {
   return (
     <ThemeProvider>
+      <AuthProvider>
       <LanguageProvider>
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/learn" element={<CurriculumHome />} />
           <Route path="/learn/:stageId" element={<Subjects />} />
           <Route path="/learn/:stageId/:subjectId" element={<Chapters />} />
@@ -33,6 +37,7 @@ function App() {
         </Routes>
       </Router>
       </LanguageProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

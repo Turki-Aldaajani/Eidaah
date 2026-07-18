@@ -2,9 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import { useTheme } from "../theme/ThemeContext";
+import { useAuth } from "../auth/AuthContext";
 
 export default function TopNav() {
   const { theme, toggleTheme } = useTheme();
+  const { session, account } = useAuth();
   const isDark = theme === "dark";
 
   return (
@@ -18,6 +20,18 @@ export default function TopNav() {
           </span>
         </Link>
         <div className="nav-side">
+          {session ? (
+            <Link className="nav-auth signed" to="/login" title={session.user?.email}>
+              <Icon name="mail" />
+              <span className="nav-auth-email">{session.user?.email}</span>
+              {account?.type === "university" && <span className="nav-auth-chip">جامعي</span>}
+            </Link>
+          ) : (
+            <Link className="nav-auth" to="/login">
+              <Icon name="mail" />
+              <span>تسجيل الدخول</span>
+            </Link>
+          )}
           <button
             type="button"
             className="theme-toggle"
