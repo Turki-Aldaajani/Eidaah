@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import Footer from "../Footer";
+import { useLanguage } from "../i18n/LanguageContext";
 import "../styles/analyzer.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
@@ -48,22 +49,18 @@ export default function Upload() {
   const navigate = useNavigate();
   const [fileName, setFileName] = useState("");
   const [progress, setProgress] = useState(0);
-  const [language, setLanguage] = useState(localStorage.getItem("language") || "ar");
+  const { language, toggleLanguage } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [dragActive, setDragActive] = useState(false);
 
   const t = translations[language];
 
-  const toggleLanguage = () => {
-    const newLang = language === "ar" ? "en" : "ar";
-    setLanguage(newLang);
-    localStorage.setItem("language", newLang);
-  };
+  const ACCEPTED = [".pdf", ".pptx"];
+  const isAccepted = (file) =>
+    ACCEPTED.some((ext) => file.name.toLowerCase().endsWith(ext));
 
-  const handleFileChange = async (e) => {
-    if (e.target.files.length === 0) return;
-
-    const file = e.target.files[0];
+  const uploadFile = async (file) => {
     setFileName(file.name);
     setProgress(10);
     setUploading(true);
@@ -115,6 +112,35 @@ export default function Upload() {
     }
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files.length === 0) return;
+    uploadFile(e.target.files[0]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    if (!uploading) setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    if (uploading) return;
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    if (!isAccepted(file)) {
+      setFileName(file.name);
+      setError(t.error);
+      return;
+    }
+    uploadFile(file);
+  };
+
   return (
     <>
       <TopNav />
@@ -142,7 +168,13 @@ export default function Upload() {
             </div>
           </div>
 
-          <div className="upload-drop card">
+          <div
+            className={`upload-drop card${dragActive ? " drag-over" : ""}`}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <p>{t.drop_text}</p>
             <label className="btn" style={{ opacity: uploading ? 0.6 : 1 }}>
               <Icon name="file-text" /> {t.choose_file}

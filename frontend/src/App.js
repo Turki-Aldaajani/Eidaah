@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./theme/ThemeContext";
+import { LanguageProvider } from "./i18n/LanguageContext";
 import LandingPage from "./pages/LandingPage";
 import Upload from "./pages/Upload";
 import Results from "./pages/Results";
@@ -15,6 +16,7 @@ import Lesson from "./pages/curriculum/Lesson";
 function App() {
   return (
     <ThemeProvider>
+      <LanguageProvider>
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -30,6 +32,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

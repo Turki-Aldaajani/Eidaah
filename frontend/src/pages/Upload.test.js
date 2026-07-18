@@ -2,15 +2,18 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import Upload from "./Upload";
 import { ThemeProvider } from "../theme/ThemeContext";
+import { LanguageProvider } from "../i18n/LanguageContext";
 
 function renderUpload() {
   return render(
     <MemoryRouter initialEntries={["/analyze"]}>
       <ThemeProvider>
-        <Routes>
-          <Route path="/analyze" element={<Upload />} />
-          <Route path="/analyze/results" element={<div>results page</div>} />
-        </Routes>
+        <LanguageProvider>
+          <Routes>
+            <Route path="/analyze" element={<Upload />} />
+            <Route path="/analyze/results" element={<div>results page</div>} />
+          </Routes>
+        </LanguageProvider>
       </ThemeProvider>
     </MemoryRouter>
   );

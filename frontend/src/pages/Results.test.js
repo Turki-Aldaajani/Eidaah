@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Results from "./Results";
 import { ThemeProvider } from "../theme/ThemeContext";
+import { LanguageProvider } from "../i18n/LanguageContext";
 
 const baseSlides = [
   { slide_number: 1, text: "عنوان الشريحة الأولى\nمحتوى الشريحة الأولى", explanation: null, example: null },
@@ -11,7 +12,9 @@ function renderResults() {
   return render(
     <MemoryRouter>
       <ThemeProvider>
-        <Results />
+        <LanguageProvider>
+          <Results />
+        </LanguageProvider>
       </ThemeProvider>
     </MemoryRouter>
   );

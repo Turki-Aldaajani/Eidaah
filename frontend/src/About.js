@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import Icon from './components/Icon';
 import Footer from './Footer';
+import { useLanguage } from './i18n/LanguageContext';
 
 const team = {
   ar: {
@@ -57,13 +58,7 @@ const staticTranslations = {
 };
 
 export default function About() {
-  const [language, setLanguage] = useState(localStorage.getItem("language") || "ar");
-
-  const toggleLanguage = () => {
-    const newLang = language === 'ar' ? 'en' : 'ar';
-    setLanguage(newLang);
-    localStorage.setItem("language", newLang);
-  };
+  const { language, toggleLanguage } = useLanguage();
 
   const currentTeam = team[language];
   const t = staticTranslations[language];

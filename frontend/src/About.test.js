@@ -2,12 +2,15 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import About from "./About";
 import { ThemeProvider } from "./theme/ThemeContext";
+import { LanguageProvider } from "./i18n/LanguageContext";
 
 function renderAbout() {
   return render(
     <MemoryRouter>
       <ThemeProvider>
-        <About />
+        <LanguageProvider>
+          <About />
+        </LanguageProvider>
       </ThemeProvider>
     </MemoryRouter>
   );
