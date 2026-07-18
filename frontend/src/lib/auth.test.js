@@ -82,6 +82,13 @@ describe('sendOtpCode — إرسال الرمز', () => {
 
     await expect(sendOtpCode('a@b.co')).rejects.toThrow(/تعذّر إرسال رمز التحقق: rate limit/);
   });
+
+  test('خطأ السيرفر برسالة فارغة "{}" (مثل فشل SMTP) يظهر بوصف مفهوم', async () => {
+    const signInWithOtp = jest.fn().mockResolvedValue({ error: { message: '{}', status: 500 } });
+    getSupabaseClient.mockReturnValue({ auth: { signInWithOtp } });
+
+    await expect(sendOtpCode('a@b.co')).rejects.toThrow(/خطأ من الخادم \(500\)/);
+  });
 });
 
 describe('verifyOtpCode — التحقق من الرمز', () => {

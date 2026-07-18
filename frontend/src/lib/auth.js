@@ -11,6 +11,13 @@ const UNIVERSITY_DOMAINS = {
   'pnu.edu.sa': 'جامعة الأميرة نورة',
 };
 
+// أخطاء Supabase قد تصل برسالة فارغة أو "{}" (مثل فشل SMTP بخطأ 500)
+function describeAuthError(error) {
+  const message = String(error?.message || '').trim();
+  if (message && message !== '{}') return message;
+  return `خطأ من الخادم${error?.status ? ` (${error.status})` : ''} — جرّب لاحقاً أو راجع إعدادات الإرسال`;
+}
+
 export function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
 }
@@ -45,7 +52,7 @@ export async function sendOtpCode(email) {
     options: { shouldCreateUser: true },
   });
   if (error) {
-    throw new Error(`تعذّر إرسال رمز التحقق: ${error.message}`);
+    throw new Error(`تعذّر إرسال رمز التحقق: ${describeAuthError(error)}`);
   }
   return { email: normalized };
 }
@@ -65,7 +72,7 @@ export async function verifyOtpCode(email, code) {
     type: 'email',
   });
   if (error) {
-    throw new Error(`رمز غير صحيح أو منتهي: ${error.message}`);
+    throw new Error(`رمز غير صحيح أو منتهي: ${describeAuthError(error)}`);
   }
   return data.session;
 }
