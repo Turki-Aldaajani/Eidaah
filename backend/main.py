@@ -18,6 +18,11 @@ load_dotenv()
 import ai_logic
 from concurrency import executor
 from Model import call_groq
+from slowapi.errors import RateLimitExceeded
+
+from rate_limit import (
+    limiter, rate_limit_handler, UPLOAD_LIMIT, ANALYZE_LIMIT,
+)
 from session_store import (
     create_session, get_session, cleanup_expired, active_session_count
 )
@@ -53,6 +58,11 @@ app = FastAPI(
     version="3.1.0",
     lifespan=lifespan,
 )
+
+# Rate limiting (see rate_limit.py). The decorators on individual endpoints do
+# the enforcing; this registers the shared limiter and the Arabic 429 response.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
 
 # ---------------------------------------------------------
@@ -149,7 +159,9 @@ def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, f
 # ENDPOINT: Upload File
 # ---------------------------------------------------------
 @app.post("/api/upload_file", tags=["Step 1: Upload"])
+@limiter.limit(UPLOAD_LIMIT)
 async def upload_file(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="PDF or PPTX file"),
 ):
@@ -236,7 +248,8 @@ class AnalyzeTopicRequest(BaseModel):
 
 
 @app.post("/api/analyze_topic", tags=["Step 2: Analyze"])
-async def analyze_topic(payload: AnalyzeTopicRequest):
+@limiter.limit(ANALYZE_LIMIT)
+async def analyze_topic(request: Request, payload: AnalyzeTopicRequest):
     """Generate explanation and example for a topic."""
     session = get_session(payload.session_id)
     if not session:
@@ -279,7 +292,8 @@ class SummaryRequest(BaseModel):
 
 
 @app.post("/api/session/{session_id}/summary", tags=["Step 2: Analyze"])
-async def get_summary(session_id: str, payload: SummaryRequest):
+@limiter.limit(ANALYZE_LIMIT)
+async def get_summary(request: Request, session_id: str, payload: SummaryRequest):
     """Generate (or regenerate) the presentation summary in the requested language."""
     session = get_session(session_id)
     if not session:
@@ -314,7 +328,8 @@ class AnalyzeRequest(BaseModel):
 
 
 @app.post("/api/analyze_slide", tags=["Step 2: Analyze (Legacy)"])
-async def analyze_slide(payload: AnalyzeRequest):
+@limiter.limit(ANALYZE_LIMIT)
+async def analyze_slide(request: Request, payload: AnalyzeRequest):
     result = await ai_logic.process_text_directly(payload.text, language=payload.language)
     return result
 
@@ -334,7 +349,8 @@ class LessonToolRequest(BaseModel):
 
 
 @app.post("/api/lesson_tool", tags=["Curriculum: AI Tools"])
-async def lesson_tool_endpoint(payload: LessonToolRequest):
+@limiter.limit(ANALYZE_LIMIT)
+async def lesson_tool_endpoint(request: Request, payload: LessonToolRequest):
     """Generate one of the four curriculum AI-tool panels, or the lesson quiz."""
     if payload.tool not in LESSON_TOOLS:
         raise HTTPException(400, f"Invalid tool '{payload.tool}'. Must be one of: {sorted(LESSON_TOOLS)}.")
@@ -372,7 +388,8 @@ class GenerateQuestionsRequest(BaseModel):
 
 
 @app.post("/api/generate_questions", tags=["AI: Review Questions"])
-async def generate_questions_endpoint(payload: GenerateQuestionsRequest):
+@limiter.limit(ANALYZE_LIMIT)
+async def generate_questions_endpoint(request: Request, payload: GenerateQuestionsRequest):
     """
     Generate 3–5 multiple-choice review questions from slide/document content.
 
