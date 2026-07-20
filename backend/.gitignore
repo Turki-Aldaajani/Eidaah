@@ -20,6 +20,10 @@ models/
 # Session temp files
 eidaah_sessions/
 
+# Curriculum source books (large; uploaded to Supabase Storage, not committed) — C2/#50
+data/Books/
+data/**/*.pdf
+
 # IDE
 .vscode/
 .idea/
