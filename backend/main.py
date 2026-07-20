@@ -11,12 +11,12 @@ import asyncio
 import io
 import os
 import re
-from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 
 load_dotenv()
 
 import ai_logic
+from concurrency import executor
 from Model import call_groq
 from session_store import (
     create_session, get_session, cleanup_expired, active_session_count
@@ -27,9 +27,6 @@ from topic_detector import detect_topics
 from rag_generator import generate_summary, generate_topic_analysis  # noqa: F401 (generate_summary used in endpoint)
 from lesson_tool import generate_lesson_tool_content
 from question_generator import generate_review_questions
-
-# Thread pool for blocking work
-executor = ThreadPoolExecutor(max_workers=3)
 
 
 # ---------------------------------------------------------
