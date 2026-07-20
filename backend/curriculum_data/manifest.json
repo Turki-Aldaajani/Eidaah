@@ -1,0 +1,36 @@
+{
+  "_comment": "C2/#50 · المواد التسعة المستهدفة (رياضيات + عربي + مهارات رقمية × م١/م٢/م٣ · الفصل الأول). أسماء الوحدات/الدروس ونطاقات صفحاتها تُعبّأ من فهرس الكتاب الحقيقي ثم يشغَّل backend/curriculum_ingest.py. لا تُكتب أسماء وهمية. راجع backend/curriculum_data/README.md لحالة كل مصدر.",
+  "_schema": {
+    "subject": "math | arabic | digital_skills",
+    "stage": "m1 | m2 | m3",
+    "semester": 1,
+    "source_pdf": "مسار الكتاب نسبةً لهذا المجلد، أو null إن لم يتوفر",
+    "source_status": "text_ok | needs_ocr | encoded_glyphs | missing_source",
+    "units": [
+      {"unit_name": "اسم الوحدة كما في الكتاب", "unit_order": 0,
+       "lessons": [{"lesson_title": "عنوان الدرس كما في الكتاب", "lesson_order": 0, "pages": [12, 18]}]}
+    ]
+  },
+  "target_subjects": [
+    {"subject": "math", "subject_ar": "رياضيات", "stage": "m1", "semester": 1,
+     "source_pdf": "../data/Books/book-riadiaat-1mm.pdf", "source_status": "needs_ocr", "units": []},
+    {"subject": "math", "subject_ar": "رياضيات", "stage": "m2", "semester": 1,
+     "source_pdf": "../data/Books/riadiaat-2mutawasit.pdf", "source_status": "encoded_glyphs", "units": []},
+    {"subject": "math", "subject_ar": "رياضيات", "stage": "m3", "semester": 1,
+     "source_pdf": "../data/Books/book-riadiaat-3mm.pdf", "source_status": "needs_ocr", "units": []},
+
+    {"subject": "arabic", "subject_ar": "لغتي", "stage": "m1", "semester": 1,
+     "source_pdf": "../data/Books/book-lughti-1mm.pdf", "source_status": "needs_ocr", "units": []},
+    {"subject": "arabic", "subject_ar": "لغتي", "stage": "m2", "semester": 1,
+     "source_pdf": "../data/Books/lughati-2mm.pdf", "source_status": "needs_ocr", "units": []},
+    {"subject": "arabic", "subject_ar": "لغتي", "stage": "m3", "semester": 1,
+     "source_pdf": "../data/Books/book-lughti-3mm.pdf", "source_status": "needs_ocr", "units": []},
+
+    {"subject": "digital_skills", "subject_ar": "مهارات رقمية", "stage": "m1", "semester": 1,
+     "source_pdf": "../data/Books/book-raqmia-1mm.pdf", "source_status": "needs_ocr", "units": []},
+    {"subject": "digital_skills", "subject_ar": "مهارات رقمية", "stage": "m2", "semester": 1,
+     "source_pdf": null, "source_status": "missing_source", "units": []},
+    {"subject": "digital_skills", "subject_ar": "مهارات رقمية", "stage": "m3", "semester": 1,
+     "source_pdf": "../data/Books/book-raqmia-3mm.pdf", "source_status": "needs_ocr", "units": []}
+  ]
+}
