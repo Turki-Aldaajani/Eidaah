@@ -5,6 +5,7 @@ from fastapi import FastAPI, File, UploadFile, Request, HTTPException, Backgroun
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
+from typing import Optional
 from contextlib import asynccontextmanager
 import asyncio
 import io
@@ -25,6 +26,7 @@ from chunker import chunk_slides
 from topic_detector import detect_topics
 from rag_generator import generate_summary, generate_topic_analysis  # noqa: F401 (generate_summary used in endpoint)
 from lesson_tool import generate_lesson_tool_content
+from question_generator import generate_review_questions
 
 # Thread pool for blocking work
 executor = ThreadPoolExecutor(max_workers=3)
@@ -361,6 +363,54 @@ async def lesson_tool_endpoint(payload: LessonToolRequest):
     if payload.tool == "quiz":
         return {"tool": "quiz", "questions": result}
     return {"tool": payload.tool, **result}
+
+
+# ---------------------------------------------------------
+# ENDPOINT: Generate Review Questions (A2)
+# ---------------------------------------------------------
+class GenerateQuestionsRequest(BaseModel):
+    session_id: Optional[str] = None
+    content: Optional[str] = None
+    language: str = "ar"
+
+
+@app.post("/api/generate_questions", tags=["AI: Review Questions"])
+async def generate_questions_endpoint(payload: GenerateQuestionsRequest):
+    """
+    Generate 3–5 multiple-choice review questions from slide/document content.
+
+    Provide either `content` (raw text) or a `session_id` (uses the session's
+    slide text). Returns a fixed JSON shape consumed by the frontend Quiz
+    component and the study agent (A1):
+        {"questions": [{"q", "o": [4], "a": index, "e": explanation}, ...]}
+    """
+    content = (payload.content or "").strip()
+
+    if not content and payload.session_id:
+        session = get_session(payload.session_id)
+        if not session:
+            raise HTTPException(404, "Session not found or expired.")
+        content = "\n\n".join(s["text"] for s in session.slides).strip()
+
+    if not content:
+        raise HTTPException(400, "Provide either 'content' or a valid 'session_id' with slide text.")
+
+    loop = asyncio.get_event_loop()
+    questions = await loop.run_in_executor(
+        executor,
+        generate_review_questions,
+        content,
+        call_groq,
+        payload.language,
+    )
+
+    if questions is None:
+        return JSONResponse(
+            status_code=502,
+            content={"detail": "تعذّر توليد الأسئلة الآن، حاول مرة أخرى."},
+        )
+
+    return {"questions": questions}
 
 
 # ---------------------------------------------------------
