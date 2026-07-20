@@ -1,3 +1,11 @@
+// ─── C1: نطاق إثبات المفهوم (Proof of Concept) ───────────────────────────────
+// الصفوف والمواد والفصول المتاحة حالياً — لا تُحذف البيانات الأصلية بل تُقيَّد
+// هنا فقط. لتوسيع النطاق لاحقاً: أضف المعرّف للقوائم أدناه فقط.
+export const POC_STAGES   = ["m1", "m2", "m3"];          // الصفوف المتوسطة فقط
+export const POC_SUBJECTS = ["math", "ar", "dig"];        // رياضيات · عربي · مهارات رقمية
+export const POC_CHAPTERS = [1];                          // الفصل الدراسي الأول فقط
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const STAGES = [
   { id: "p1", n: "الصف الأول الابتدائي", lv: "primary" },
   { id: "p2", n: "الصف الثاني الابتدائي", lv: "primary" },
@@ -47,17 +55,17 @@ export const STAGE_SUBJECTS = {
   p4: ["lgty", "math", "sci", "en", "isl", "soc", "dig", "art", "pe"],
   p5: ["lgty", "math", "sci", "en", "isl", "soc", "dig", "art", "pe"],
   p6: ["lgty", "math", "sci", "en", "isl", "soc", "dig", "art", "pe"],
-  m1: ["ar", "math", "sci", "en", "isl", "soc", "dig"],
-  m2: ["ar", "math", "sci", "en", "isl", "soc", "dig"],
-  m3: ["ar", "math", "sci", "en", "isl", "soc", "dig"],
+  m1: ["math", "ar", "dig"], // C1: POC — رياضيات · عربي · مهارات رقمية فقط
+  m2: ["math", "ar", "dig"], // C1: POC
+  m3: ["math", "ar", "dig"], // C1: POC
   h1: ["ar", "math", "phy", "chem", "bio", "en", "isl", "digtech"],
   h2: ["ar", "math", "phy", "chem", "bio", "en", "isl", "digtech"],
   h3: ["ar", "math", "phy", "chem", "bio", "en", "isl", "digtech", "bus"],
 };
 
 export const CHAPTERS = [
-  { id: 1, n: "الفصل الدراسي الأول", w: "١٣ أسبوعاً", u: ["التأسيس", "المفاهيم الأساسية"] },
-  { id: 2, n: "الفصل الدراسي الثاني", w: "١٣ أسبوعاً", u: ["التوسع", "مهارات التطبيق"] },
+  { id: 1, n: "الفصل الدراسي الأول", w: "١٣ أسبوعاً", u: ["التأسيس", "المفاهيم الأساسية"], poc: true },
+  { id: 2, n: "الفصل الدراسي الثاني", w: "١٣ أسبوعاً", u: ["التوسع", "مهارات التطبيق"], poc: false },
 ];
 
 export const LESSONS = {
