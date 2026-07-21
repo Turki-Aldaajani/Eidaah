@@ -14,6 +14,7 @@ from curriculum_ingest import (  # noqa: E402
     is_placeholder,
     assert_no_placeholders,
     _source_from_pages,
+    normalize_ar_text,
     process_lesson_content,
     ingest_entry,
     upsert_curriculum,
@@ -126,6 +127,25 @@ def test_assert_no_placeholders_rejects_fake_and_accepts_real():
 # ============================================================
 # استخراج نص نطاق الصفحات
 # ============================================================
+def test_normalize_ar_reverses_visual_arabic():
+    # النص المستخرج بترتيب معكوس -> الترتيب المنطقي الصحيح
+    assert normalize_ar_text("سرهفلا") == "الفهرس"
+    assert normalize_ar_text("بلاطلا") == "الطالب"
+
+
+def test_normalize_ar_keeps_numbers_and_latin_readable():
+    # مقاطع الأرقام/اللاتيني تُقرأ طبيعية بعد التطبيع (لا تنعكس)
+    assert normalize_ar_text("12 نوثياب") == "بايثون 12"
+    assert normalize_ar_text("3 نوثياب") == "بايثون 3"
+    # يعالج كل سطر على حدة
+    assert normalize_ar_text("سرهفلا\nبلاطلا") == "الفهرس\nالطالب"
+
+
+def test_normalize_ar_handles_empty():
+    assert normalize_ar_text("") == ""
+    assert normalize_ar_text(None) is None
+
+
 def test_source_from_pages_joins_range_inclusive():
     pages = [
         {"page": 9, "text": "قبل"}, {"page": 10, "text": "أ"},

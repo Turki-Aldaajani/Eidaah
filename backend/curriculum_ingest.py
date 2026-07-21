@@ -18,10 +18,31 @@
 import argparse
 import json
 import os
+import re
 import sys
 
 from chunker import chunk_slides
 from rag_generator import generate_summary, generate_topic_analysis
+
+# مقاطع تُقرأ يساراً-لليمين (أرقام لاتينية/عربية-هندية + لاتيني) داخل نص عربي معكوس
+_LTR_RUN = re.compile(r"[0-9A-Za-z٠-٩]+")
+
+
+def normalize_ar_text(text):
+    """
+    نص العربية في هذه الكتب يُستخرج بترتيب حروف معكوس (RTL بصري): pdfplumber
+    يخرج الحروف بترتيب مواضعها يساراً-لليمين. نعيد الترتيب المنطقي بعكس كل
+    سطر، ثم نعيد عكس مقاطع الأرقام/اللاتيني (فهي مخزَّنة LTR أصلاً) كي تُقرأ
+    طبيعية. تطبيع best-effort بلا اعتماديات؛ قد تبقى مصنوعات ربط حروف نادرة.
+    """
+    if not text:
+        return text
+    out = []
+    for line in text.split("\n"):
+        rev = line[::-1]
+        rev = _LTR_RUN.sub(lambda m: m.group(0)[::-1], rev)
+        out.append(rev)
+    return "\n".join(out)
 
 # المواد المستهدفة (مفاتيح ثابتة — الأسماء العربية تعيش في unit_name/lesson_title)
 SUBJECTS = ("math", "arabic", "digital_skills")
@@ -80,13 +101,20 @@ def _source_from_pages(pages, page_start, page_end):
     return "\n\n".join(parts).strip()
 
 
-def extract_book_pages(pdf_path):
-    """يستخرج نص كل صفحة من PDF عبر pdfplumber. يرجع [{"page","text"}]."""
+def extract_book_pages(pdf_path, normalize=True):
+    """
+    يستخرج نص كل صفحة من PDF عبر pdfplumber. يرجع [{"page","text"}].
+    normalize=True يعيد ترتيب النص العربي المعكوس (انظر normalize_ar_text) —
+    كتب هذا المشروع كلها مستخرَجة بترتيب معكوس، فالتطبيع مفعّل افتراضياً.
+    """
     import pdfplumber  # lazy — لا حاجة له في الاختبارات
     pages = []
     with pdfplumber.open(pdf_path) as pdf:
         for i, page in enumerate(pdf.pages):
-            pages.append({"page": i + 1, "text": (page.extract_text() or "").strip()})
+            text = (page.extract_text() or "").strip()
+            if normalize:
+                text = normalize_ar_text(text)
+            pages.append({"page": i + 1, "text": text})
     return pages
 
 
