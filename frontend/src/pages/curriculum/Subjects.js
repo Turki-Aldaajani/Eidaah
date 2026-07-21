@@ -3,14 +3,17 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
 import Footer from "../../Footer";
-import { stageById, subjectsForStage, SUB_DEFS, LESSONS } from "../../data/curriculum";
+import { stageById, subjectsForStage, isSubjectAvailable, SUB_DEFS, LESSONS } from "../../data/curriculum";
 
 export default function Subjects() {
   const { stageId } = useParams();
   const stage = stageById(stageId);
   if (!stage) return <Navigate to="/learn" replace />;
 
-  const subjectIds = subjectsForStage(stage);
+  // نعرض جميع مواد المرحلة، والمتاحة أولاً ثم القادمة قريباً.
+  const subjectIds = [...subjectsForStage(stage)].sort(
+    (a, b) => Number(isSubjectAvailable(stage.id, b)) - Number(isSubjectAvailable(stage.id, a))
+  );
 
   return (
     <>
@@ -30,6 +33,29 @@ export default function Subjects() {
             {subjectIds.map((id) => {
               const s = SUB_DEFS[id];
               const lessonCount = (LESSONS[id] || LESSONS.math).length;
+
+              if (!isSubjectAvailable(stage.id, id)) {
+                return (
+                  <div
+                    className="card subject-card subject-card--locked anim"
+                    style={{ "--c": s.c }}
+                    key={id}
+                    aria-disabled="true"
+                    data-testid="coming-soon-subject"
+                  >
+                    <span className="s-soon-badge">قريباً</span>
+                    <span className="s-icon">
+                      <Icon name={s.icn} />
+                    </span>
+                    <div className="s-body">
+                      <h3>{s.n}</h3>
+                      <p className="s-desc">{s.d}</p>
+                      <span className="s-meta s-meta--muted">سيُتاح قريباً</span>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <Link className="card subject-card anim" style={{ "--c": s.c }} to={`/learn/${stage.id}/${id}`} key={id}>
                   <span className="s-icon">
