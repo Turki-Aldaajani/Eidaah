@@ -28,6 +28,11 @@ class Session:
     chunks: list = field(default_factory=list)   # [{chunk_id, text, slides}]
     topics: list = field(default_factory=list)
     summary: str = ""
+    # A4 (#25): auto-generated title + short description, produced once by the
+    # background pipeline and served from /status without any further LLM call.
+    title: str = ""
+    description: str = ""
+    metadata_auto: bool = False                 # True when the LLM produced them
     indexing_complete: bool = False
     created_at: float = field(default_factory=time.time)
 
