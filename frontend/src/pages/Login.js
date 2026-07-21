@@ -7,6 +7,7 @@ import Footer from '../Footer';
 import Icon from '../components/Icon';
 import { useAuth } from '../auth/AuthContext';
 import { sendOtpCode, verifyOtpCode, accountTypeFor, signOut } from '../lib/auth';
+import { fetchProfile, isProfileComplete, hasSkippedOnboarding } from '../lib/profile';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,8 +40,20 @@ export default function Login() {
     setError('');
     setBusy(true);
     try {
-      await verifyOtpCode(email, code);
-      navigate('/');
+      const authedSession = await verifyOtpCode(email, code);
+      // بعد أول دخول: وجّه للأونبوردنق ما لم يكن الملف مكتملاً أو سبق تخطيه
+      let profile = null;
+      try {
+        profile = await fetchProfile();
+      } catch {
+        profile = null;
+      }
+      const userId = authedSession?.user?.id;
+      if (isProfileComplete(profile) || hasSkippedOnboarding(userId)) {
+        navigate('/');
+      } else {
+        navigate('/onboarding');
+      }
     } catch (err) {
       setError(err.message);
       setBusy(false);

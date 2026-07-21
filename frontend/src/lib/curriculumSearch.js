@@ -14,7 +14,9 @@
 //
 // كل الأنماط الحسّاسة (حركات/نطاقات يونيكود) بترميز \uXXXX تفادياً للبس المحارف.
 
-import { STAGE_SUBJECTS, SUB_DEFS, LESSONS, POC_STAGES, stageById } from "../data/curriculum";
+import {
+  STAGE_SUBJECTS, SUB_DEFS, LESSONS, POC_STAGES, stageById, isSubjectAvailable,
+} from "../data/curriculum";
 
 const CHAPTER_POC = 1; // C1: الفصل الدراسي الأول فقط
 const AL = "ال"; // "ال" التعريفية
@@ -100,9 +102,10 @@ function detectStage(norm, fallback) {
   return fallback;
 }
 
-// المواد القابلة للتنقل لمرحلة (نقطة التوافق مع #63 — انظر الترويسة)
+// المواد القابلة للتنقل لمرحلة: المتاحة فعلياً فقط (تحترم حالة #63 —
+// STAGES[].status + POC_SUBJECTS). الدروس "قريباً" لا يُوجَّه إليها.
 export function routableSubjects(stageId) {
-  return STAGE_SUBJECTS[stageId] || [];
+  return (STAGE_SUBJECTS[stageId] || []).filter((s) => isSubjectAvailable(stageId, s));
 }
 
 function entriesForStages(stageIds) {
