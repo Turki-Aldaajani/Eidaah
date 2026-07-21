@@ -1,11 +1,11 @@
 {
-  "_comment": "C2/#50 · مقصور على المادتين المعتمدتين: رياضيات (math) + مهارات رقمية (digital_skills=dig في الواجهة) × م١/م٢/م٣ · الفصل الأول. عبّئ أسماء الوحدات/الدروس ونطاقات صفحاتها من فهرس الكتاب الحقيقي ثم شغّل backend/curriculum_ingest.py. لا تُكتب أسماء وهمية. راجع backend/curriculum_data/README.md لحالة كل مصدر.",
+  "_comment": "C2/#50 · مقصور على المادتين المعتمدتين: رياضيات (math) + مهارات رقمية (digital_skills=dig في الواجهة) × م١/م٢/م٣ · الفصل الأول. الكتب الستة الآن نصّها قابل للاستخراج. عبّئ أسماء الوحدات/الدروس ونطاقات صفحاتها من فهرس الكتاب ثم شغّل backend/curriculum_ingest.py. لا أسماء وهمية. راجع README. ملاحظة: كتب الرياضيات فيها ~٥٪ رموز خطّ خاصة (معادلات) لا تؤثر على أسماء الوحدات/الدروس النصية؛ والنص المُستخرَج بترتيب حروف معكوس (RTL بصري).",
   "_schema": {
     "subject": "math | digital_skills",
     "stage": "m1 | m2 | m3",
     "semester": 1,
-    "source_pdf": "مسار الكتاب نسبةً لهذا المجلد، أو null إن لم يتوفر",
-    "source_status": "text_ok = نص قابل للاستخراج جاهز للمعالجة | needs_ocr = سكان صور يحتاج OCR أولاً",
+    "source_pdf": "مسار الكتاب نسبةً لهذا المجلد",
+    "source_status": "text_ok = نص قابل للاستخراج | needs_ocr = سكان صور يحتاج OCR",
     "pages": "[بداية, نهاية] بترقيم صفحات PDF (لا ترقيم الكتاب المطبوع) — النطاق الذي يُستخرَج منه نص الدرس للمعالجة",
     "units": [
       {"unit_name": "اسم الوحدة كما في الكتاب", "unit_order": 0,
@@ -14,17 +14,17 @@
   },
   "target_subjects": [
     {"subject": "math", "subject_ar": "رياضيات", "stage": "m1", "semester": 1,
-     "source_pdf": "../data/Books/book-riadiaat-1mm.pdf", "source_status": "needs_ocr", "units": []},
+     "source_pdf": "../data/Books/كتاب-الرياضيات-الاول-متوسط-الجزء-الأول-من-المقرر.pdf", "source_status": "text_ok", "units": []},
     {"subject": "math", "subject_ar": "رياضيات", "stage": "m2", "semester": 1,
-     "source_pdf": "../data/Books/الرياضيات-ثاني-متوسط.pdf", "source_status": "needs_ocr", "units": []},
+     "source_pdf": "../data/Books/كتاب-الرياضيات-ثاني-متسوط-الجزء-الاول-من-المقرر.pdf", "source_status": "text_ok", "units": []},
     {"subject": "math", "subject_ar": "رياضيات", "stage": "m3", "semester": 1,
-     "source_pdf": "../data/Books/book-riadiaat-3mm.pdf", "source_status": "needs_ocr", "units": []},
+     "source_pdf": "../data/Books/كتاب-الرياضيات-ثالث-متوسط-الجزء-الاول-من-المقرر.pdf", "source_status": "text_ok", "units": []},
 
     {"subject": "digital_skills", "subject_ar": "مهارات رقمية", "stage": "m1", "semester": 1,
-     "source_pdf": "../data/Books/book-raqmia-1mm.pdf", "source_status": "needs_ocr", "units": []},
+     "source_pdf": "../data/Books/كتاب-مهارات-رقمية-اول-متوسط-1.pdf", "source_status": "text_ok", "units": []},
     {"subject": "digital_skills", "subject_ar": "مهارات رقمية", "stage": "m2", "semester": 1,
      "source_pdf": "../data/Books/مهارات-رقمية-ثاني-متوسط.pdf", "source_status": "text_ok", "units": []},
     {"subject": "digital_skills", "subject_ar": "مهارات رقمية", "stage": "m3", "semester": 1,
-     "source_pdf": "../data/Books/book-raqmia-3mm.pdf", "source_status": "needs_ocr", "units": []}
+     "source_pdf": "../data/Books/كتاب-مهارات-رقمية-ثالث-متوسط-1.pdf", "source_status": "text_ok", "units": []}
   ]
 }
