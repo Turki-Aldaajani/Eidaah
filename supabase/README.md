@@ -11,6 +11,8 @@
 | `materials` | المواد **المعتمدة** + حالة المعالجة (`pending / processing / processed / failed`) | I3 · F2 |
 | `material_requests` | طلبات رفع المواد بحالة `pending / approved / rejected` (الحوكمة) | I2 |
 | `points_ledger` | سجل النقاط وأسبابها — الرصيد = مجموع `points` للمستخدم | F6 |
+| `material_content` | ناتج معالجة المادة (تلخيص) — صف لكل مادة (1:1) | I3 · F2 |
+| `material_topics` | مواضيع المادة المعالجة (شرح + مثال لكل موضوع) | I3 · F2 |
 
 ## سياسة RLS المبدئية (قرار الفريق)
 
@@ -79,4 +81,43 @@ npm run supabase:smoke
 ```bash
 cd frontend && npm test -- --watchAll=false supabaseClient   # عميل الواجهة
 cd backend && python -m pytest tests/test_supabase_schema.py  # اكتمال السكيما وسياسات RLS
+```
+
+## المعالجة المسبقة لمواد المكتبة (مهمة I3 — أساس التوسع)
+
+المادة المعتمدة تُعالَج **مرة واحدة** عبر خط التحليل الحالي (نفس خط صفحة النتائج:
+`chunk_slides → detect_topics → generate_summary → generate_topic_analysis`)،
+ويُخزَّن الناتج في `material_content` + `material_topics`. بعدها أي فتح للمادة
+يقرأ المخزَّن فقط **بلا أي استدعاء لـ Groq** — وهذا ما يخلّي المشروع يتوسّع بلا
+حرق رصيد الـ API.
+
+### التطبيق (مرة واحدة)
+
+1. طبّق سكيما I3: الصق [`migrations/20260721000000_i3_material_content.sql`](migrations/20260721000000_i3_material_content.sql)
+   في **SQL Editor** وشغّله (يضيف جدولي `material_content` و`material_topics`).
+2. تأكد أن `backend/.env` فيه `SUPABASE_URL` و`SUPABASE_SERVICE_ROLE_KEY` و`GROQ_API_KEY`
+   (نفس مفاتيح C2 التي تعمل عندك أصلاً).
+
+### بذر مادتي الديمو الحقيقيتين
+
+```bash
+cd backend
+python material_ingest.py --dry-run   # عالج واطبع الناتج بلا كتابة (تحقّق سريع)
+python material_ingest.py             # يعالج ويخزّن المادتين في Supabase
+```
+
+المادتان في [`backend/demo_materials/`](../backend/demo_materials/): «مقدمة في قواعد
+البيانات العلائقية» و«أساسيات التفاضل: المشتقات» — نصّان تعليميّان حقيقيّان.
+التشغيل idempotent (يعيد الاستخدام بلا تكرار).
+
+### التحقق من معيار القبول
+
+- **فتح مادة معالجة لا يستدعي Groq إطلاقاً:** مسار القراءة
+  (`GET /api/materials/{id}/content` عبر `material_service.py`) لا يستورد ولا يستدعي
+  Groq. الاختبار `test_opening_processed_material_calls_groq_zero_times` يثبت أن
+  عدد استدعاءات Groq **لا يزيد** عند الفتح بعد المعالجة.
+- **مادتان حقيقيتان جاهزتان للديمو:** بعد البذر أعلاه.
+
+```bash
+cd backend && python -m pytest tests/test_material_pipeline.py   # خط I3 كاملاً
 ```
