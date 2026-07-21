@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
 import Footer from "../../Footer";
+import CurriculumChatbot from "../../components/CurriculumChatbot";
 import { STAGES, LEVEL_NAMES, subjectsForStage, stageById, POC_STAGES } from "../../data/curriculum";
 
 const LEVELS = ["primary", "middle", "high"];
@@ -51,6 +52,7 @@ export default function CurriculumHome() {
               اختر <span className="hl">مرحلتك الدراسية</span>
             </h1>
             <p className="hero-sub">تعلّم أسرع بالذكاء الاصطناعي، مصمم خصيصاً للمنهج السعودي</p>
+            <CurriculumChatbot />
           </div>
         </div>
         <div className="container home-groups">
