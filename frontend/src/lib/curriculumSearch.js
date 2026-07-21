@@ -14,7 +14,7 @@
 //
 // كل الأنماط الحسّاسة (حركات/نطاقات يونيكود) بترميز \uXXXX تفادياً للبس المحارف.
 
-import { STAGE_SUBJECTS, SUB_DEFS, LESSONS } from "../data/curriculum";
+import { STAGE_SUBJECTS, SUB_DEFS, LESSONS, POC_STAGES, stageById } from "../data/curriculum";
 
 const CHAPTER_POC = 1; // C1: الفصل الدراسي الأول فقط
 const AL = "ال"; // "ال" التعريفية
@@ -105,23 +105,31 @@ export function routableSubjects(stageId) {
   return STAGE_SUBJECTS[stageId] || [];
 }
 
-function entriesForStage(stageId) {
+function entriesForStages(stageIds) {
   const out = [];
-  for (const subId of routableSubjects(stageId)) {
-    (LESSONS[subId] || []).forEach((title, idx) => {
-      out.push({
-        stageId,
-        subjectId: subId,
-        subjectName: (SUB_DEFS[subId] || {}).n || subId,
-        lessonTitle: title,
-        lessonIdx: idx,
-        chapterId: CHAPTER_POC,
-        url: `/learn/${stageId}/${subId}/${CHAPTER_POC}/${idx}`,
-        _tokens: titleTokens(title),
+  for (const stageId of stageIds) {
+    for (const subId of routableSubjects(stageId)) {
+      (LESSONS[subId] || []).forEach((title, idx) => {
+        out.push({
+          stageId,
+          stageName: (stageById(stageId) || {}).n || stageId,
+          subjectId: subId,
+          subjectName: (SUB_DEFS[subId] || {}).n || subId,
+          lessonTitle: title,
+          lessonIdx: idx,
+          chapterId: CHAPTER_POC,
+          url: `/learn/${stageId}/${subId}/${CHAPTER_POC}/${idx}`,
+          _tokens: titleTokens(title),
+        });
       });
-    });
+    }
   }
   return out;
+}
+
+// هل الدخلان يشيران لنفس الدرس (نفس المادة والترتيب) في صفوف مختلفة؟
+function sameLesson(a, b) {
+  return a.subjectId === b.subjectId && a.lessonIdx === b.lessonIdx;
 }
 
 // مسافة ليفنشتاين (تحرير) بين نصّين — لتسامح الأخطاء الإملائية
@@ -191,14 +199,21 @@ function availableSubjectsMessage(stageId) {
   return `عذراً، لم أجد هذا ضمن المتاح حالياً. المواد المتوفرة: ${names}. جرّب اسم الدرس أو المادة.`;
 }
 
-function subjectBrowse(base, entries, subjectHint, stage, confidence) {
-  const results = entries
+function subjectBrowse(base, browseStage, subjectHint, confidence) {
+  const results = entriesForStages([browseStage])
     .filter((e) => e.subjectId === subjectHint)
     .slice(0, 4)
     .map(pick);
   return {
     ...base, status: "multiple", action: "show_options", confidence, results,
     message: `اختر درساً من مادة ${(SUB_DEFS[subjectHint] || {}).n || subjectHint}:`,
+  };
+}
+
+function noMatch(base, stageForMessage) {
+  return {
+    ...base, status: "no_match", action: "explain",
+    confidence: 0, results: [], message: availableSubjectsMessage(stageForMessage),
   };
 }
 
@@ -210,49 +225,73 @@ function pick(entry) {
 // ------------------------------------------------------------
 // الواجهة الرئيسية
 // ------------------------------------------------------------
-export function searchCurriculum(query, stageId = "m1") {
+// stageId: الصف المحدَّد سياقاً (اختياري). إن ذُكر صف صراحةً في السؤال فهو
+// يتغلّب. حين لا يوجد صف محدَّد نبحث عبر كل صفوف POC، فإذا كان الدرس متوفّراً
+// في أكثر من صف نعرض خيارات الصفوف بدل التوجيه العشوائي لصفٍّ واحد.
+export function searchCurriculum(query, stageId = null) {
   const norm = normalizeAr(query || "");
-  const stage = detectStage(norm, stageId);
+  const explicitStage = detectStage(norm, null);
+  const scopeStage = explicitStage || stageId; // السؤال يتغلّب على السياق
+  const stages = scopeStage ? [scopeStage] : POC_STAGES;
+
   const tokens = rawTokens(query || "");
   const subjectHint = detectSubject(tokens);
   const contentTokens = tokens.filter(
     (t) => !STOPWORDS.has(t) && !isSubjectKeyword(t)
   );
 
-  const base = { query: query || "", stageId: stage, subjectHint };
-  const entries = entriesForStage(stage);
-  const subjectAvailable = subjectHint && routableSubjects(stage).includes(subjectHint);
+  const base = { query: query || "", stageId: scopeStage, subjectHint };
+  const entries = entriesForStages(stages);
+  const subjectAvailable =
+    subjectHint && stages.some((s) => routableSubjects(s).includes(subjectHint));
+  const browseStage = scopeStage || stages[0];
 
   // مادة مذكورة بلا اسم درس محدد → تصفّح دروس تلك المادة (حتى 4)
   if (contentTokens.length === 0) {
-    if (subjectAvailable) return subjectBrowse(base, entries, subjectHint, stage, 0.5);
-    return {
-      ...base, status: "no_match", action: "explain",
-      confidence: 0, results: [], message: availableSubjectsMessage(stage),
-    };
+    if (subjectAvailable) return subjectBrowse(base, browseStage, subjectHint, 0.5);
+    return noMatch(base, browseStage);
   }
 
   const scored = entries
     .map((e) => ({ entry: e, ...scoreEntry(e, contentTokens, subjectHint) }))
     .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || a.entry.lessonIdx - b.entry.lessonIdx);
+    .sort((a, b) =>
+      b.score - a.score ||
+      a.entry.lessonIdx - b.entry.lessonIdx ||
+      a.entry.stageId.localeCompare(b.entry.stageId));
 
   // لا تطابق إطلاقاً (ولا حتى تقريبي) → عندئذٍ فقط نعتذر
   if (scored.length === 0) {
-    if (subjectAvailable) return subjectBrowse(base, entries, subjectHint, stage, 0.4);
-    return {
-      ...base, status: "no_match", action: "explain",
-      confidence: 0, results: [], message: availableSubjectsMessage(stage),
-    };
+    if (subjectAvailable) return subjectBrowse(base, browseStage, subjectHint, 0.4);
+    return noMatch(base, browseStage);
   }
 
   const top = scored[0];
-  const gap = scored[1] ? top.score - scored[1].score : Infinity;
   const confidence = Math.max(0, Math.min(1, top.score / (contentTokens.length + 0.5)));
 
-  // exact/redirect فقط لتطابق نظيف مهيمن (كل كلمات الاستعلام طوبقت بلا تقريب)
+  // نفس الدرس (نفس المادة/الترتيب) متصدّراً في أكثر من صف → توضيح الصف
+  const acrossStages = scored.filter(
+    (s) => s.score === top.score && sameLesson(s.entry, top.entry)
+  );
+  if (acrossStages.length > 1) {
+    const anyFuzzy = acrossStages.some((s) => s.fuzzy);
+    return {
+      ...base, status: "multiple", action: "show_options",
+      confidence: Math.max(confidence, 0.6),
+      results: acrossStages.slice(0, 4).map((s) => pick(s.entry)),
+      message: anyFuzzy
+        ? "هل تقصد هذا الدرس؟ اختر الصف:"
+        : "هذا الدرس متوفّر في أكثر من صف، اختر الصف:",
+    };
+  }
+
+  // أفضل مرشّح مختلف (درس آخر) لقياس الهيمنة
+  const other = scored.find((s) => !sameLesson(s.entry, top.entry));
+  const gap = other ? top.score - other.score : Infinity;
+
+  // exact/redirect فقط لتطابق نظيف مهيمن في صف واحد (بلا تقريب)
   const exactGrade = !top.fuzzy && top.cleanCount === contentTokens.length;
-  if (exactGrade && (scored.length === 1 || gap >= 1.0)) {
+  if (exactGrade && gap >= 1.0) {
     return {
       ...base, status: "exact", action: "redirect",
       confidence: Math.max(confidence, 0.7),
@@ -261,7 +300,7 @@ export function searchCurriculum(query, stageId = "m1") {
     };
   }
 
-  // غير ذلك → اقتراحات "هل تقصد؟" (بما فيها الأخطاء الإملائية) — حتى 4 أزرار
+  // غير ذلك → اقتراحات "هل تقصد؟" (بما فيها الأخطاء الإملائية) حتى 4 أزرار
   const results = scored.slice(0, 4);
   const anyFuzzy = results.some((s) => s.fuzzy);
   return {
@@ -269,6 +308,6 @@ export function searchCurriculum(query, stageId = "m1") {
     results: results.map((s) => pick(s.entry)),
     message: anyFuzzy
       ? "هل تقصد أحد هذه الدروس؟"
-      : "وجدت عدة دروس محتملة — أيّها تقصد؟",
+      : "وجدت عدة دروس محتملة، أيّها تقصد؟",
   };
 }

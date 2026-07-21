@@ -15,11 +15,13 @@ function ask(text) {
   fireEvent.click(screen.getByRole("button", { name: "أرسل" }));
 }
 
-test("يعرض حقل الإدخال وزر الإرسال ورسالة ترحيب", () => {
-  render(<CurriculumChatbot />);
+test("يعرض حقل الإدخال وزر الإرسال والعنوان الرئيسي (بلا رسالة مكررة)", () => {
+  const { container } = render(<CurriculumChatbot />);
   expect(screen.getByLabelText("سؤالك")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "أرسل" })).toBeInTheDocument();
-  expect(screen.getByText(/اكتب سؤالك/)).toBeInTheDocument();
+  expect(screen.getByText(/اكتب اسم درس/)).toBeInTheDocument();
+  // لا سجل محادثة (ولا رسالة ترحيب مكررة) قبل أول سؤال
+  expect(container.querySelector(".cbot-log")).toBeNull();
 });
 
 test("حقل الإدخال قابل للكتابة", () => {
@@ -29,11 +31,29 @@ test("حقل الإدخال قابل للكتابة", () => {
   expect(input.value).toBe("الأعداد النسبية");
 });
 
-test("الحالة 1: سؤال واضح → تنقّل مباشر لصفحة الدرس", () => {
+test("الحالة 1: سؤال يحدّد الصف → تنقّل مباشر لصفحة الدرس", () => {
   render(<CurriculumChatbot />);
-  ask("أريد درس الأعداد النسبية");
+  ask("أريد درس الأعداد النسبية أول متوسط");
   expect(mockNavigate).toHaveBeenCalledTimes(1);
   expect(mockNavigate).toHaveBeenCalledWith("/learn/m1/math/1/0");
+});
+
+test("درس مكرر عبر الصفوف → خيارات الصفوف بلا تنقّل تلقائي", () => {
+  render(<CurriculumChatbot />);
+  ask("أريد درس الأعداد النسبية");
+  // لا توجيه عشوائي لصف
+  expect(mockNavigate).not.toHaveBeenCalled();
+  const opts = screen
+    .getAllByRole("button")
+    .filter((b) => b.className.includes("chat-option"));
+  expect(opts.length).toBeGreaterThan(1);
+  expect(opts.length).toBeLessThanOrEqual(4);
+  // كل خيار يذكر صفه
+  expect(screen.getByText(/الأول المتوسط/)).toBeInTheDocument();
+  // النقر على خيار ينقل لصفحته
+  fireEvent.click(opts[0]);
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
+  expect(mockNavigate.mock.calls[0][0]).toMatch(/^\/learn\/m[123]\/math\/1\/0$/);
 });
 
 test("الحالة 2: سؤال غامض → أزرار خيارات (≤4) بلا تنقّل تلقائي", () => {

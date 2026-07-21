@@ -51,7 +51,7 @@ export default function CurriculumHome() {
             <h1 className="hero-title">
               اعثر على <span className="hl">درسك</span> بسؤال واحد
             </h1>
-            <p className="hero-sub">اسأل بالذكاء الاصطناعي وننقلك مباشرة للدرس — أو تصفّح المناهج بنفسك أدناه</p>
+            <p className="hero-sub">اسأل بالذكاء الاصطناعي وننقلك مباشرة للدرس، أو تصفّح المناهج بنفسك أدناه</p>
             <CurriculumChatbot />
           </div>
         </div>

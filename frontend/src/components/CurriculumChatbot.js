@@ -1,11 +1,11 @@
 // ─── C3 (#52): شات بوت التنقل الذكي في المناهج ────────────────────────────────
-// واجهة محادثة بارزة (Hero Search) تختصر التنقّل الهرمي (المرحلة → المادة →
-// الفصل → الوحدة → الدرس) إلى خطوة واحدة: يكتب الطالب نيّته بلغة حرة، فنبحث في
+// واجهة محادثة بارزة (Hero Search) تختصر التنقّل الهرمي (المرحلة، المادة،
+// الفصل، الوحدة، الدرس) إلى خطوة واحدة: يكتب الطالب نيّته بلغة حرة، فنبحث في
 // فهرس المناهج المحلي (بلا توليد، بلا شبكة) وننقله مباشرة أو نعرض اقتراحات.
 //
 // ثلاث حالات (من searchCurriculum):
-//   exact    → رسالة + تنقّل مباشر لصفحة الدرس
-//   multiple → أزرار اقتراحات (≤4) "هل تقصد؟" + تلميح "وضّح أكثر"
+//   exact    → رسالة + تنقّل مباشر لصفحة الدرس (عند تحديد الصف)
+//   multiple → أزرار اقتراحات (≤4): "هل تقصد؟" أو "اختر الصف" للدروس المكررة
 //   no_match → رد لطيف يذكر المتاح، بلا كسر للواجهة
 
 import React, { useState } from "react";
@@ -13,13 +13,10 @@ import { useNavigate } from "react-router-dom";
 import Icon from "./Icon";
 import { searchCurriculum } from "../lib/curriculumSearch";
 
-const GREETING =
-  "اكتب سؤالك وسأنقلك مباشرة للدرس المناسب. مثال: أريد درس الأعداد النسبية.";
-
-export default function CurriculumChatbot({ stageId = "m1" }) {
+export default function CurriculumChatbot({ stageId = null }) {
   const navigate = useNavigate();
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([{ role: "bot", text: GREETING }]);
+  const [messages, setMessages] = useState([]);
 
   function goTo(result) {
     navigate(result.url);
@@ -56,44 +53,46 @@ export default function CurriculumChatbot({ stageId = "m1" }) {
         <span className="cbot-kicker">
           <Icon name="sparkles" /> بحث ذكي في المناهج
         </span>
-        <h2 className="cbot-title">اكتب ما تريد تعلّمه، ونأخذك للدرس مباشرة</h2>
+        <h2 className="cbot-title">اكتب اسم درس تريد تعلّمه، ونأخذك للدرس مباشرة</h2>
         <p className="cbot-lead">
-          بدل التنقّل بين المرحلة والمادة والفصل — اسأل بلغتك، مثل: «أريد درس
-          الأعداد النسبية» أو «سكراتش».
+          بدل التنقّل بين المرحلة والمادة والفصل، اسأل بلغتك، مثل: «الأعداد
+          النسبية» أو «سكراتش».
         </p>
       </div>
 
-      <div className="cbot-log" role="log" aria-live="polite">
-        {messages.map((m, i) => (
-          <div key={i} className={`chat-row chat-row-${m.role}`}>
-            <div className={`chat-msg chat-${m.role}`}>
-              <p className="chat-text">{m.text}</p>
+      {messages.length > 0 && (
+        <div className="cbot-log" role="log" aria-live="polite">
+          {messages.map((m, i) => (
+            <div key={i} className={`chat-row chat-row-${m.role}`}>
+              <div className={`chat-msg chat-${m.role}`}>
+                <p className="chat-text">{m.text}</p>
 
-              {m.options && m.options.length > 0 && (
-                <div className="chat-options">
-                  {m.options.map((opt) => (
-                    <button
-                      type="button"
-                      key={opt.url}
-                      className="chat-option"
-                      onClick={() => goTo(opt)}
-                    >
-                      <span className="chat-option-t">{opt.lessonTitle}</span>
-                      <span className="chat-option-s">{opt.subjectName}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+                {m.options && m.options.length > 0 && (
+                  <div className="chat-options">
+                    {m.options.map((opt) => (
+                      <button
+                        type="button"
+                        key={opt.url}
+                        className="chat-option"
+                        onClick={() => goTo(opt)}
+                      >
+                        <span className="chat-option-t">{opt.lessonTitle}</span>
+                        <span className="chat-option-s">{opt.stageName}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-              {m.hint && (
-                <p className="chat-hint">
-                  للانتقال المباشر، اكتب اسم الدرس بدقة أكبر (وضّح أكثر).
-                </p>
-              )}
+                {m.hint && (
+                  <p className="chat-hint">
+                    للانتقال المباشر، اكتب اسم الدرس مع الصف (وضّح أكثر).
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <form className="cbot-form" onSubmit={handleSubmit}>
         <input
@@ -101,7 +100,7 @@ export default function CurriculumChatbot({ stageId = "m1" }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="اكتب سؤالك... مثال: أريد درس الأعداد النسبية"
+          placeholder="اكتب اسم الدرس... مثال: الأعداد النسبية"
           aria-label="سؤالك"
         />
         <button className="cbot-send" type="submit">

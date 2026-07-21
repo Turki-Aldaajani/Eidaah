@@ -1,6 +1,6 @@
 // اختبار منطق بحث المناهج C3 (#52) — دوال نقية، بلا تصيير.
 import { searchCurriculum, normalizeAr, routableSubjects, levenshtein } from "./curriculumSearch";
-import { LESSONS, STAGE_SUBJECTS } from "../data/curriculum";
+import { LESSONS, STAGE_SUBJECTS, POC_STAGES } from "../data/curriculum";
 
 describe("normalizeAr", () => {
   test("يزيل الحركات (harakat)", () => {
@@ -22,9 +22,9 @@ describe("normalizeAr", () => {
   });
 });
 
-describe("searchCurriculum — الحالة 1: تطابق واضح (exact → redirect)", () => {
-  test("سؤال واضح ينتقل مباشرة لصفحة الدرس الصحيحة", () => {
-    const r = searchCurriculum("أريد درس الأعداد النسبية");
+describe("searchCurriculum — الحالة 1: تطابق واضح مع تحديد الصف (exact → redirect)", () => {
+  test("سؤال واضح مع ذكر الصف ينتقل مباشرة لصفحة الدرس", () => {
+    const r = searchCurriculum("أريد درس الأعداد النسبية أول متوسط");
     expect(r.status).toBe("exact");
     expect(r.action).toBe("redirect");
     expect(r.results).toHaveLength(1);
@@ -32,30 +32,57 @@ describe("searchCurriculum — الحالة 1: تطابق واضح (exact → re
     expect(r.results[0].lessonTitle).toBe("الأعداد النسبية");
   });
 
-  test("اسم درس + مادة → تطابق دقيق", () => {
-    const r = searchCurriculum("أعداد نسبية رياضيات");
+  test("اسم درس + مادة + صف → تطابق دقيق", () => {
+    const r = searchCurriculum("أعداد نسبية رياضيات ثاني متوسط");
     expect(r.status).toBe("exact");
     expect(r.results[0].subjectId).toBe("math");
-    expect(r.results[0].url).toBe("/learn/m1/math/1/0");
+    expect(r.results[0].url).toBe("/learn/m2/math/1/0");
   });
 
-  test("درس من مادة العربية", () => {
-    const r = searchCurriculum("المبتدأ والخبر");
+  test("درس من العربية عبر تمرير الصف كوسيط", () => {
+    const r = searchCurriculum("المبتدأ والخبر", "m1");
     expect(r.status).toBe("exact");
     expect(r.results[0].subjectId).toBe("ar");
     expect(r.results[0].lessonTitle).toBe("المبتدأ والخبر");
+    expect(r.results[0].url).toBe("/learn/m1/ar/1/1");
   });
 
-  test("درس من مهارات رقمية (سكراتش)", () => {
-    const r = searchCurriculum("سكراتش");
+  test("درس مهارات رقمية مع الصف (سكراتش، ثالث متوسط)", () => {
+    const r = searchCurriculum("سكراتش ثالث متوسط");
     expect(r.status).toBe("exact");
     expect(r.results[0].subjectId).toBe("dig");
+    expect(r.results[0].url).toBe("/learn/m3/dig/1/3");
   });
 
   test("كشف المرحلة من النص يغيّر مسار التنقّل", () => {
     const r = searchCurriculum("درس الأعداد النسبية ثاني متوسط");
     expect(r.stageId).toBe("m2");
     expect(r.results[0].url).toBe("/learn/m2/math/1/0");
+  });
+});
+
+describe("معالجة الدروس المكررة عبر الصفوف (Disambiguation)", () => {
+  test("درس عام بلا تحديد صف → خيارات الصفوف بلا توجيه عشوائي", () => {
+    const r = searchCurriculum("الأعداد النسبية");
+    expect(r.status).toBe("multiple");
+    expect(r.action).toBe("show_options");
+    expect(r.status).not.toBe("exact");
+    // نتيجة لكل صف من صفوف POC
+    expect(r.results).toHaveLength(POC_STAGES.length);
+    expect(r.results.every((x) => x.lessonTitle === "الأعداد النسبية")).toBe(true);
+    const stages = r.results.map((x) => x.stageId).sort();
+    expect(stages).toEqual([...POC_STAGES].sort());
+  });
+
+  test("كل خيار يوضّح صفه (stageName) ورابطه الصحيح", () => {
+    const r = searchCurriculum("الأعداد النسبية");
+    for (const res of r.results) {
+      expect(typeof res.stageName).toBe("string");
+      expect(res.stageName).toContain("متوسط");
+      expect(res.url).toBe(`/learn/${res.stageId}/math/1/0`);
+    }
+    const names = r.results.map((x) => x.stageName);
+    expect(new Set(names).size).toBe(r.results.length); // أسماء صفوف مختلفة
   });
 });
 
