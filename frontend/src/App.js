@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./theme/ThemeContext";
+import { LanguageProvider } from "./i18n/LanguageContext";
 import { AuthProvider } from "./auth/AuthContext";
 import { ProfileProvider } from "./profile/ProfileContext";
 import LandingPage from "./pages/LandingPage";
@@ -22,6 +23,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
       <ProfileProvider>
+      <LanguageProvider>
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -40,6 +42,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </LanguageProvider>
       </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>

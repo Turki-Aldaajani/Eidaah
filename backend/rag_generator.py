@@ -55,7 +55,7 @@ def generate_summary(all_text: str, call_groq_fn, language: str = None) -> str:
     try:
         return call_groq_fn(
             SUMMARY_PROMPT.format(text=truncated),
-            max_tokens=250,
+            max_tokens=400,
             temperature=0.2,
             system_prompt=system,
         )
@@ -91,7 +91,7 @@ def generate_topic_analysis(
     try:
         raw = call_groq_fn(
             prompt=prompt,
-            max_tokens=600,
+            max_tokens=800,
             temperature=0.3,
             system_prompt=system,
         )

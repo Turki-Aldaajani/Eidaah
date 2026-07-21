@@ -3,12 +3,24 @@ import { Link } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
 import Footer from "../../Footer";
-import { STAGES, LEVEL_NAMES, subjectsForStage, stageById } from "../../data/curriculum";
+import { STAGES, LEVEL_NAMES, subjectsForStage, stageById, POC_STAGES } from "../../data/curriculum";
 
 const LEVELS = ["primary", "middle", "high"];
 
 function GradeCard({ stage }) {
+  const isAvailable = POC_STAGES.includes(stage.id);
   const count = subjectsForStage(stage).length;
+
+  if (!isAvailable) {
+    return (
+      <div className={`card grade-card lv-${stage.lv} grade-card--locked`} aria-disabled="true">
+        <span className="g-soon-badge">قريباً</span>
+        <h3 className="g-name">{stage.n}</h3>
+        <span className="g-sub g-sub--muted">سيُتاح قريباً</span>
+      </div>
+    );
+  }
+
   return (
     <Link className={`card grade-card lv-${stage.lv}`} to={`/learn/${stage.id}`}>
       <h3 className="g-name">{stage.n}</h3>

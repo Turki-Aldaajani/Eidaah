@@ -1,5 +1,5 @@
 # Model.py
-# AI Model Integration - Groq API (Llama 3.3 70B)
+# AI Model Integration - Groq API (GPT-OSS 120B)
 # Extended for Phase 3: RAG + topic analysis
 
 import os
@@ -12,7 +12,7 @@ load_dotenv()
 # Configuration
 # ---------------------
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL_NAME = "meta-llama/llama-4-scout-17b-16e-instruct"
+MODEL_NAME = "openai/gpt-oss-120b"
 
 if not GROQ_API_KEY:
     print("⚠️  WARNING: GROQ_API_KEY not found in .env file!")
@@ -62,7 +62,13 @@ Slide content:
 # ---------------------
 # Core: Call Groq API (shared utility)
 # ---------------------
-def call_groq(prompt: str, max_tokens: int = 300, temperature: float = 0.3, system_prompt: str = None) -> str:
+def call_groq(
+    prompt: str,
+    max_tokens: int = 300,
+    temperature: float = 0.3,
+    system_prompt: str = None,
+    reasoning_effort: str = "medium",
+) -> str:
     """Make a single call to the Groq API. Used by all modules."""
     if not client:
         return "AI model is not configured. Please add GROQ_API_KEY to .env."
@@ -75,6 +81,11 @@ def call_groq(prompt: str, max_tokens: int = 300, temperature: float = 0.3, syst
         ],
         max_tokens=max_tokens,
         temperature=temperature,
+        reasoning_effort=reasoning_effort,
+        # reasoning_format is a Groq-only extension (not in the OpenAI SDK's
+        # typed params), so it must go through extra_body. Without it, gpt-oss's
+        # chain-of-thought leaks into message.content and breaks every json.loads().
+        extra_body={"reasoning_format": "hidden"},
     )
     return response.choices[0].message.content.strip()
 
@@ -108,12 +119,12 @@ def generate_explanation_and_example(text: str, language: str = None):
     try:
         explanation = call_groq(
             EXPLANATION_PROMPT.format(text=text),
-            max_tokens=300, temperature=0.3,
+            max_tokens=450, temperature=0.3,
             system_prompt=system,
         )
         example = call_groq(
             EXAMPLE_PROMPT.format(text=text[:500]),
-            max_tokens=200, temperature=0.5,
+            max_tokens=300, temperature=0.5,
             system_prompt=system,
         )
         return explanation, example

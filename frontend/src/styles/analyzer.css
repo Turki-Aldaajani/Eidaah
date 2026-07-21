@@ -1,11 +1,13 @@
 /* حلّل ملفاتك: حالة الرفع */
 .upload-drop{border:2px dashed var(--pri-line);border-radius:var(--r);padding:34px 20px;text-align:center;background:var(--bg-h);max-width:520px;margin:18px auto 0;transition:border-color .2s,background .2s}
 .upload-drop:hover{border-color:var(--pri);background:var(--pri-soft)}
+.upload-drop.drag-over{border-color:var(--pri);background:var(--pri-soft);border-style:solid}
 .upload-drop p{color:var(--mut);font-size:.85rem;margin-bottom:12px}
 .upload-progress{width:100%;background:var(--line);border-radius:99px;height:6px;margin-top:16px;overflow:hidden}
 .upload-progress i{display:block;height:100%;background:var(--pri);transition:width .3s ease}
 .upload-filename{margin-top:12px;color:var(--mut);font-size:.82rem;font-style:italic}
 .upload-error{color:var(--err);margin-top:10px;font-weight:600;font-size:.85rem}
+.upload-warning{color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;font-size:.82rem;line-height:1.7}
 .upload-features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
 @media(max-width:720px){.upload-features{grid-template-columns:1fr}}
 .upload-feature{border:1px solid var(--line);border-radius:var(--r);padding:18px;background:var(--card)}

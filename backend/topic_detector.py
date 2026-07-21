@@ -34,7 +34,7 @@ def detect_topics(chunks: list, call_groq_fn) -> list:
     try:
         raw = call_groq_fn(
             prompt=prompt,
-            max_tokens=200,
+            max_tokens=400,
             temperature=0.2,
         )
 

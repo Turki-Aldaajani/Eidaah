@@ -3,13 +3,15 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
 import Footer from "../../Footer";
-import { stageById, SUB_DEFS, CHAPTERS, toArabicDigits } from "../../data/curriculum";
+import { stageById, isSubjectAvailable, SUB_DEFS, CHAPTERS, toArabicDigits } from "../../data/curriculum";
 
 export default function Chapters() {
   const { stageId, subjectId } = useParams();
   const stage = stageById(stageId);
   const subject = SUB_DEFS[subjectId];
   if (!stage || !subject) return <Navigate to="/learn" replace />;
+  // المواد بحالة "coming_soon" مقفولة حتى عبر الرابط المباشر — نعيد التوجيه لقائمة مواد المرحلة.
+  if (!isSubjectAvailable(stageId, subjectId)) return <Navigate to={`/learn/${stageId}`} replace />;
 
   return (
     <>
@@ -33,26 +35,47 @@ export default function Chapters() {
             <p>اختر الفصل الدراسي لعرض وحداته ودروسه</p>
           </div>
           <div className="grid chapters">
-            {CHAPTERS.map((c) => (
-              <Link
-                className="card chapter-card anim"
-                style={{ "--c": subject.c }}
-                to={`/learn/${stage.id}/${subjectId}/${c.id}`}
-                key={c.id}
-              >
-                <span className="ch-num">{toArabicDigits(`0${c.id}`)}</span>
-                <div className="ch-body">
-                  <h3>{c.n}</h3>
-                  <p className="ch-meta">٦ دروس · {c.w} · نحو ساعتين مذاكرة</p>
-                  <div className="ch-units">
-                    {c.u.map((u) => (
-                      <span key={u}>{u}</span>
-                    ))}
+            {CHAPTERS.map((c) =>
+              c.poc ? (
+                <Link
+                  className="card chapter-card anim"
+                  style={{ "--c": subject.c }}
+                  to={`/learn/${stage.id}/${subjectId}/${c.id}`}
+                  key={c.id}
+                >
+                  <span className="ch-num">{toArabicDigits(`0${c.id}`)}</span>
+                  <div className="ch-body">
+                    <h3>{c.n}</h3>
+                    <p className="ch-meta">٦ دروس · {c.w} · نحو ساعتين مذاكرة</p>
+                    <div className="ch-units">
+                      {c.u.map((u) => (
+                        <span key={u}>{u}</span>
+                      ))}
+                    </div>
                   </div>
+                  <span className="ch-badge">ابدأ من هنا</span>
+                </Link>
+              ) : (
+                <div
+                  className="card chapter-card chapter-card--locked anim"
+                  style={{ "--c": subject.c }}
+                  key={c.id}
+                  aria-disabled="true"
+                >
+                  <span className="ch-num">{toArabicDigits(`0${c.id}`)}</span>
+                  <div className="ch-body">
+                    <h3>{c.n}</h3>
+                    <p className="ch-meta">٦ دروس · {c.w}</p>
+                    <div className="ch-units">
+                      {c.u.map((u) => (
+                        <span key={u}>{u}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <span className="ch-badge ch-badge--soon">قريباً</span>
                 </div>
-                <span className="ch-badge">{c.id === 1 ? "ابدأ من هنا" : "متاح"}</span>
-              </Link>
-            ))}
+              )
+            )}
           </div>
         </div>
       </section>
