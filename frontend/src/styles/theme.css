@@ -625,3 +625,8 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .g-soon-badge{position:absolute;top:10px;inset-inline-end:10px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px}
 .chapter-card--locked{opacity:.55;cursor:not-allowed;pointer-events:none}
 .ch-badge--soon{background:var(--accent-soft);color:var(--accent);font-size:.75rem}
+/* المواد بحالة «قريباً» داخل قائمة مواد المرحلة */
+.subject-card--locked{opacity:.55;cursor:not-allowed;pointer-events:none}
+.subject-card--locked::before{opacity:.4}
+.subject-card--locked .s-meta--muted{color:var(--faint)}
+.s-soon-badge{position:absolute;top:10px;inset-inline-end:10px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px}

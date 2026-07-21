@@ -1,25 +1,30 @@
-// ─── C1: نطاق إثبات المفهوم (Proof of Concept) ───────────────────────────────
-// الصفوف والمواد والفصول المتاحة حالياً — لا تُحذف البيانات الأصلية بل تُقيَّد
-// هنا فقط. لتوسيع النطاق لاحقاً: أضف المعرّف للقوائم أدناه فقط.
-export const POC_STAGES   = ["m1", "m2", "m3"];          // الصفوف المتوسطة فقط
-export const POC_SUBJECTS = ["math", "ar", "dig"];        // رياضيات · عربي · مهارات رقمية
-export const POC_CHAPTERS = [1];                          // الفصل الدراسي الأول فقط
+// ─── نطاق الإتاحة (Availability scope) ────────────────────────────────────────
+// جميع المراحل والمواد موجودة في البيانات، لكن المتاح فعلياً الآن هو فقط:
+//   • المراحل المتوسطة (m1/m2/m3)                 → status: "available"
+//   • المواد: رياضيات (math) + مهارات رقمية (dig)   → متاحة داخل المراحل المتاحة
+// كل ما عداها يُعرض بحالة "coming_soon" (ظاهر لكنه مقفول). لتوسيع النطاق لاحقاً:
+// غيّر status المرحلة، أو أضف معرّف المادة إلى POC_SUBJECTS — دون حذف أي بيانات.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const STAGES = [
-  { id: "p1", n: "الصف الأول الابتدائي", lv: "primary" },
-  { id: "p2", n: "الصف الثاني الابتدائي", lv: "primary" },
-  { id: "p3", n: "الصف الثالث الابتدائي", lv: "primary" },
-  { id: "p4", n: "الصف الرابع الابتدائي", lv: "primary" },
-  { id: "p5", n: "الصف الخامس الابتدائي", lv: "primary" },
-  { id: "p6", n: "الصف السادس الابتدائي", lv: "primary" },
-  { id: "m1", n: "الصف الأول المتوسط", lv: "middle" },
-  { id: "m2", n: "الصف الثاني المتوسط", lv: "middle" },
-  { id: "m3", n: "الصف الثالث المتوسط", lv: "middle" },
-  { id: "h1", n: "الصف الأول الثانوي", lv: "high" },
-  { id: "h2", n: "الصف الثاني الثانوي", lv: "high" },
-  { id: "h3", n: "الصف الثالث الثانوي", lv: "high" },
+  { id: "p1", n: "الصف الأول الابتدائي", lv: "primary", status: "coming_soon" },
+  { id: "p2", n: "الصف الثاني الابتدائي", lv: "primary", status: "coming_soon" },
+  { id: "p3", n: "الصف الثالث الابتدائي", lv: "primary", status: "coming_soon" },
+  { id: "p4", n: "الصف الرابع الابتدائي", lv: "primary", status: "coming_soon" },
+  { id: "p5", n: "الصف الخامس الابتدائي", lv: "primary", status: "coming_soon" },
+  { id: "p6", n: "الصف السادس الابتدائي", lv: "primary", status: "coming_soon" },
+  { id: "m1", n: "الصف الأول المتوسط", lv: "middle", status: "available" },
+  { id: "m2", n: "الصف الثاني المتوسط", lv: "middle", status: "available" },
+  { id: "m3", n: "الصف الثالث المتوسط", lv: "middle", status: "available" },
+  { id: "h1", n: "الصف الأول الثانوي", lv: "high", status: "coming_soon" },
+  { id: "h2", n: "الصف الثاني الثانوي", lv: "high", status: "coming_soon" },
+  { id: "h3", n: "الصف الثالث الثانوي", lv: "high", status: "coming_soon" },
 ];
+
+// C1: نطاق POC — POC_STAGES مُشتق من status أعلاه (مصدر واحد للحقيقة) مع بقاء الاسم القديم.
+export const POC_STAGES   = STAGES.filter((s) => s.status === "available").map((s) => s.id);
+export const POC_SUBJECTS = ["math", "dig"];   // المواد المتاحة داخل المراحل المتاحة (رياضيات · مهارات رقمية)
+export const POC_CHAPTERS = [1];               // الفصل الدراسي الأول فقط
 
 export const LEVEL_NAMES = { primary: "المرحلة الابتدائية", middle: "المرحلة المتوسطة", high: "المرحلة الثانوية" };
 
@@ -55,9 +60,9 @@ export const STAGE_SUBJECTS = {
   p4: ["lgty", "math", "sci", "en", "isl", "soc", "dig", "art", "pe"],
   p5: ["lgty", "math", "sci", "en", "isl", "soc", "dig", "art", "pe"],
   p6: ["lgty", "math", "sci", "en", "isl", "soc", "dig", "art", "pe"],
-  m1: ["math", "ar", "dig"], // C1: POC — رياضيات · عربي · مهارات رقمية فقط
-  m2: ["math", "ar", "dig"], // C1: POC
-  m3: ["math", "ar", "dig"], // C1: POC
+  m1: ["ar", "math", "sci", "en", "isl", "soc", "dig"], // جميع المواد — المتاح فعلياً: math + dig (البقية coming_soon)
+  m2: ["ar", "math", "sci", "en", "isl", "soc", "dig"],
+  m3: ["ar", "math", "sci", "en", "isl", "soc", "dig"],
   h1: ["ar", "math", "phy", "chem", "bio", "en", "isl", "digtech"],
   h2: ["ar", "math", "phy", "chem", "bio", "en", "isl", "digtech"],
   h3: ["ar", "math", "phy", "chem", "bio", "en", "isl", "digtech", "bus"],
@@ -150,6 +155,26 @@ export function stageById(id) {
 export function subjectsForStage(stage) {
   if (!stage) return [];
   return STAGE_SUBJECTS[stage.id] || LEVEL_SUBJECTS[stage.lv] || [];
+}
+
+// ─── حالة الإتاحة (available | coming_soon) ───────────────────────────────────
+// مُشتقّة بالكامل من STAGES[].status و POC_SUBJECTS — لا مصدر ثانٍ للحقيقة.
+export function isStageAvailable(stageId) {
+  const s = stageById(stageId);
+  return !!s && s.status === "available";
+}
+
+export function stageStatus(stageId) {
+  return isStageAvailable(stageId) ? "available" : "coming_soon";
+}
+
+// مادة تُعتبر متاحة فقط إذا كانت مرحلتها متاحة والمادة ضمن POC_SUBJECTS.
+export function isSubjectAvailable(stageId, subjectId) {
+  return isStageAvailable(stageId) && POC_SUBJECTS.includes(subjectId);
+}
+
+export function subjectStatus(stageId, subjectId) {
+  return isSubjectAvailable(stageId, subjectId) ? "available" : "coming_soon";
 }
 
 export function lessonsFor(subjectId) {

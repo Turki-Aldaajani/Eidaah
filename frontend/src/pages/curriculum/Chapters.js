@@ -3,13 +3,15 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import Icon from "../../components/Icon";
 import Footer from "../../Footer";
-import { stageById, SUB_DEFS, CHAPTERS, toArabicDigits } from "../../data/curriculum";
+import { stageById, isSubjectAvailable, SUB_DEFS, CHAPTERS, toArabicDigits } from "../../data/curriculum";
 
 export default function Chapters() {
   const { stageId, subjectId } = useParams();
   const stage = stageById(stageId);
   const subject = SUB_DEFS[subjectId];
   if (!stage || !subject) return <Navigate to="/learn" replace />;
+  // المواد بحالة "coming_soon" مقفولة حتى عبر الرابط المباشر — نعيد التوجيه لقائمة مواد المرحلة.
+  if (!isSubjectAvailable(stageId, subjectId)) return <Navigate to={`/learn/${stageId}`} replace />;
 
   return (
     <>
