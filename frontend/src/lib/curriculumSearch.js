@@ -124,18 +124,64 @@ function entriesForStage(stageId) {
   return out;
 }
 
-function scoreEntry(entry, contentTokens, subjectHint) {
-  let exact = 0;
-  let partial = 0;
-  for (const q of contentTokens) {
-    if (entry._tokens.includes(q)) {
-      exact += 1;
-    } else if (entry._tokens.some((t) => t.includes(q) || q.includes(t))) {
-      partial += 1;
+// مسافة ليفنشتاين (تحرير) بين نصّين — لتسامح الأخطاء الإملائية
+export function levenshtein(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+
+// أفضل درجة تطابق لكلمة استعلام مع كلمات عنوان الدرس:
+//   تطابق كامل = 1.0 · تطابق جزئي (substring) = 0.6 · تقريبي (إملائي) ≤ 0.5
+// "clean" تعني تطابقاً نظيفاً (بلا اعتماد على التقريب) — يميّز الثقة العالية.
+function bestTokenScore(q, titleTokens) {
+  if (titleTokens.includes(q)) return { score: 1.0, fuzzy: false, clean: true };
+  if (titleTokens.some((t) => t.includes(q) || q.includes(t))) {
+    return { score: 0.6, fuzzy: false, clean: true };
+  }
+  // مطابقة تقريبية (Levenshtein) للأخطاء الإملائية — مفيدة للكلمات المعرّبة
+  // مثل: "سكراش"/"سكرتش" ⟶ "سكراتش". عتبة ضيّقة تجنّباً للمطابقات الكاذبة.
+  let best = 0;
+  for (const t of titleTokens) {
+    const L = Math.max(q.length, t.length);
+    if (L < 4) continue;
+    const d = levenshtein(q, t);
+    const maxDist = L >= 6 ? 2 : 1;
+    if (d <= maxDist && d / L <= 0.34) {
+      best = Math.max(best, 0.5 * (1 - d / L));
     }
   }
-  if (exact + partial === 0) return 0;
-  return exact * 1.0 + partial * 0.5 + (subjectHint === entry.subjectId ? 0.5 : 0);
+  if (best > 0) return { score: best, fuzzy: true, clean: false };
+  return { score: 0, fuzzy: false, clean: false };
+}
+
+// يعيد { score, cleanCount, fuzzy }: score إجمالي، cleanCount عدد الكلمات
+// المطابَقة نظيفاً، fuzzy إن اعتمد أي تطابق على التقريب الإملائي.
+function scoreEntry(entry, contentTokens, subjectHint) {
+  let score = 0;
+  let cleanCount = 0;
+  let fuzzy = false;
+  for (const q of contentTokens) {
+    const m = bestTokenScore(q, entry._tokens);
+    if (m.score === 0) continue;
+    score += m.score;
+    if (m.clean) cleanCount += 1;
+    if (m.fuzzy) fuzzy = true;
+  }
+  if (score === 0) return { score: 0, cleanCount: 0, fuzzy: false };
+  if (subjectHint === entry.subjectId) score += 0.5;
+  return { score, cleanCount, fuzzy };
 }
 
 function availableSubjectsMessage(stageId) {
@@ -187,10 +233,11 @@ export function searchCurriculum(query, stageId = "m1") {
   }
 
   const scored = entries
-    .map((e) => ({ entry: e, score: scoreEntry(e, contentTokens, subjectHint) }))
+    .map((e) => ({ entry: e, ...scoreEntry(e, contentTokens, subjectHint) }))
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score || a.entry.lessonIdx - b.entry.lessonIdx);
 
+  // لا تطابق إطلاقاً (ولا حتى تقريبي) → عندئذٍ فقط نعتذر
   if (scored.length === 0) {
     if (subjectAvailable) return subjectBrowse(base, entries, subjectHint, stage, 0.4);
     return {
@@ -203,8 +250,9 @@ export function searchCurriculum(query, stageId = "m1") {
   const gap = scored[1] ? top.score - scored[1].score : Infinity;
   const confidence = Math.max(0, Math.min(1, top.score / (contentTokens.length + 0.5)));
 
-  // exact: مرشّح واحد، أو متصدّر متقدّم بفارق كلمة كاملة على الأقل
-  if (scored.length === 1 || gap >= 1.0) {
+  // exact/redirect فقط لتطابق نظيف مهيمن (كل كلمات الاستعلام طوبقت بلا تقريب)
+  const exactGrade = !top.fuzzy && top.cleanCount === contentTokens.length;
+  if (exactGrade && (scored.length === 1 || gap >= 1.0)) {
     return {
       ...base, status: "exact", action: "redirect",
       confidence: Math.max(confidence, 0.7),
@@ -213,10 +261,14 @@ export function searchCurriculum(query, stageId = "m1") {
     };
   }
 
-  // multiple: عدة مرشّحين متقاربين — حتى 4
+  // غير ذلك → اقتراحات "هل تقصد؟" (بما فيها الأخطاء الإملائية) — حتى 4 أزرار
+  const results = scored.slice(0, 4);
+  const anyFuzzy = results.some((s) => s.fuzzy);
   return {
     ...base, status: "multiple", action: "show_options", confidence,
-    results: scored.slice(0, 4).map((s) => pick(s.entry)),
-    message: "وجدت عدة دروس محتملة — أيّها تقصد؟",
+    results: results.map((s) => pick(s.entry)),
+    message: anyFuzzy
+      ? "هل تقصد أحد هذه الدروس؟"
+      : "وجدت عدة دروس محتملة — أيّها تقصد؟",
   };
 }

@@ -1,15 +1,16 @@
 // ─── C3 (#52): شات بوت التنقل الذكي في المناهج ────────────────────────────────
-// واجهة محادثة بسيطة تختصر التنقّل الهرمي (المرحلة → المادة → الفصل → الوحدة →
-// الدرس) إلى خطوة واحدة: يكتب الطالب نيّته بلغة حرة، فنبحث في فهرس المناهج
-// المحلي (بلا توليد، بلا شبكة) وننقله مباشرة أو نعرض خيارات.
+// واجهة محادثة بارزة (Hero Search) تختصر التنقّل الهرمي (المرحلة → المادة →
+// الفصل → الوحدة → الدرس) إلى خطوة واحدة: يكتب الطالب نيّته بلغة حرة، فنبحث في
+// فهرس المناهج المحلي (بلا توليد، بلا شبكة) وننقله مباشرة أو نعرض اقتراحات.
 //
 // ثلاث حالات (من searchCurriculum):
 //   exact    → رسالة + تنقّل مباشر لصفحة الدرس
-//   multiple → أزرار خيارات (≤4) + تلميح "وضّح أكثر"
+//   multiple → أزرار اقتراحات (≤4) "هل تقصد؟" + تلميح "وضّح أكثر"
 //   no_match → رد لطيف يذكر المتاح، بلا كسر للواجهة
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Icon from "./Icon";
 import { searchCurriculum } from "../lib/curriculumSearch";
 
 const GREETING =
@@ -50,46 +51,62 @@ export default function CurriculumChatbot({ stageId = "m1" }) {
   }
 
   return (
-    <section className="curriculum-chatbot" aria-label="مساعد التنقل في المناهج" dir="rtl">
-      <div className="chat-log" role="log" aria-live="polite">
-        {messages.map((m, i) => (
-          <div key={i} className={`chat-msg chat-${m.role}`}>
-            <p className="chat-text">{m.text}</p>
+    <section className="cbot card" aria-label="مساعد التنقل في المناهج" dir="rtl">
+      <div className="cbot-head">
+        <span className="cbot-kicker">
+          <Icon name="sparkles" /> بحث ذكي في المناهج
+        </span>
+        <h2 className="cbot-title">اكتب ما تريد تعلّمه، ونأخذك للدرس مباشرة</h2>
+        <p className="cbot-lead">
+          بدل التنقّل بين المرحلة والمادة والفصل — اسأل بلغتك، مثل: «أريد درس
+          الأعداد النسبية» أو «سكراتش».
+        </p>
+      </div>
 
-            {m.options && m.options.length > 0 && (
-              <ul className="chat-options">
-                {m.options.map((opt) => (
-                  <li key={opt.url}>
+      <div className="cbot-log" role="log" aria-live="polite">
+        {messages.map((m, i) => (
+          <div key={i} className={`chat-row chat-row-${m.role}`}>
+            <div className={`chat-msg chat-${m.role}`}>
+              <p className="chat-text">{m.text}</p>
+
+              {m.options && m.options.length > 0 && (
+                <div className="chat-options">
+                  {m.options.map((opt) => (
                     <button
                       type="button"
-                      className="chat-option card"
+                      key={opt.url}
+                      className="chat-option"
                       onClick={() => goTo(opt)}
                     >
-                      {opt.lessonTitle} — {opt.subjectName}
+                      <span className="chat-option-t">{opt.lessonTitle}</span>
+                      <span className="chat-option-s">{opt.subjectName}</span>
                     </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                  ))}
+                </div>
+              )}
 
-            {m.hint && (
-              <p className="chat-hint">
-                للانتقال المباشر، اكتب اسم الدرس بدقة أكبر (وضّح أكثر).
-              </p>
-            )}
+              {m.hint && (
+                <p className="chat-hint">
+                  للانتقال المباشر، اكتب اسم الدرس بدقة أكبر (وضّح أكثر).
+                </p>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
-      <form className="chat-input" onSubmit={handleSubmit}>
+      <form className="cbot-form" onSubmit={handleSubmit}>
         <input
+          className="cbot-input"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="اكتب سؤالك... مثال: أريد درس الأعداد النسبية"
           aria-label="سؤالك"
         />
-        <button type="submit">أرسل</button>
+        <button className="cbot-send" type="submit">
+          أرسل
+        </button>
       </form>
     </section>
   );

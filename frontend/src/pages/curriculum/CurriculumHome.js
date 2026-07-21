@@ -49,13 +49,14 @@ export default function CurriculumHome() {
               <Icon name="sparkles" /> منصة تعلّم بالذكاء الاصطناعي
             </span>
             <h1 className="hero-title">
-              اختر <span className="hl">مرحلتك الدراسية</span>
+              اعثر على <span className="hl">درسك</span> بسؤال واحد
             </h1>
-            <p className="hero-sub">تعلّم أسرع بالذكاء الاصطناعي، مصمم خصيصاً للمنهج السعودي</p>
+            <p className="hero-sub">اسأل بالذكاء الاصطناعي وننقلك مباشرة للدرس — أو تصفّح المناهج بنفسك أدناه</p>
             <CurriculumChatbot />
           </div>
         </div>
         <div className="container home-groups">
+          <h2 className="home-browse-h">أو تصفّح المناهج حسب المرحلة</h2>
           {LEVELS.map((lv) => (
             <section className="level-group" key={lv}>
               <h2 className="level-h">
