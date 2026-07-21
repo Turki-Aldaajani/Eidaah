@@ -65,3 +65,43 @@ test("clicking Explain fetches the slide analysis and renders it in the explanat
   await waitFor(() => expect(screen.getByText("شرح الذكاء الاصطناعي")).toBeInTheDocument());
   expect(screen.getByText("مثال واقعي")).toBeInTheDocument();
 });
+
+// A4 (#25): auto-generated title + description at the top of the results page.
+test("renders the auto-generated title, description and AI badge from /status", async () => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      session_id: "sess-1",
+      indexing_complete: true,
+      slides: [],
+      topics: [],
+      summary: "",
+      title: "شرح الأعداد النسبية",
+      description: "درس يوضّح مفهوم الأعداد النسبية.",
+      auto_generated: true,
+    }),
+  });
+  renderResults();
+  expect(await screen.findByText("شرح الأعداد النسبية")).toBeInTheDocument();
+  expect(screen.getByText("درس يوضّح مفهوم الأعداد النسبية.")).toBeInTheDocument();
+  expect(screen.getByText(/بالذكاء الاصطناعي/)).toBeInTheDocument();
+});
+
+test("shows a filename-fallback title with NO AI badge when metadata was not generated", async () => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      session_id: "sess-1",
+      indexing_complete: true,
+      slides: [],
+      topics: [],
+      summary: "",
+      title: "deck",
+      description: "",
+      auto_generated: false,
+    }),
+  });
+  renderResults();
+  expect(await screen.findByText("deck")).toBeInTheDocument();
+  expect(screen.queryByText(/بالذكاء الاصطناعي/)).toBeNull();
+});

@@ -24,6 +24,7 @@ from session_store import (
 from slide_renderer import render_slides
 from chunker import chunk_slides
 from topic_detector import detect_topics
+from metadata_generator import generate_material_metadata, fallback_title_from_filename
 from rag_generator import generate_summary, generate_topic_analysis  # noqa: F401 (generate_summary used in endpoint)
 from lesson_tool import generate_lesson_tool_content
 from question_generator import generate_review_questions
@@ -141,6 +142,14 @@ def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, f
         all_text = "\n\n".join(s["text"] for s in session.slides)
         session.summary = generate_summary(all_text, call_groq)
 
+        # 5. Generate title + description ONCE (A4 · #25). Served from /status
+        #    afterwards with no further LLM calls.
+        print(f"🏷️  [{session_id}] Generating title & description...")
+        meta = generate_material_metadata(all_text, session.filename, call_groq)
+        session.title = meta["title"]
+        session.description = meta["description"]
+        session.metadata_auto = meta["auto_generated"]
+
         session.indexing_complete = True
         print(f"✅ [{session_id}] Pipeline complete! ({len(chunks)} chunks, {len(topics)} topics)")
 
@@ -173,6 +182,9 @@ async def upload_file(
     )
 
     session = create_session(filename=file.filename, slides=pages)
+    # Provisional title from the filename so the results page has something to
+    # show instantly; the background pipeline replaces it with the AI title.
+    session.title = fallback_title_from_filename(file.filename)
 
     background_tasks.add_task(
         _run_semantic_pipeline,
@@ -185,6 +197,7 @@ async def upload_file(
     return {
         "session_id": session.session_id,
         "filename": file.filename,
+        "title": session.title,
         "slides": pages,
     }
 
@@ -213,6 +226,11 @@ async def session_status(session_id: str):
         "slides": slides_with_images,
         "topics": session.topics if session.indexing_complete else [],
         "summary": session.summary if session.indexing_complete else "",
+        # A4 (#25): title is available immediately (filename fallback), the
+        # description once the pipeline has generated it. No LLM call here.
+        "title": session.title,
+        "description": session.description,
+        "auto_generated": session.metadata_auto,
     }
 
 
