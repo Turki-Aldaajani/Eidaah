@@ -2,8 +2,11 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./theme/ThemeContext";
 import { AuthProvider } from "./auth/AuthContext";
+import { ProfileProvider } from "./profile/ProfileContext";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
+import Onboarding from "./pages/Onboarding";
+import Settings from "./pages/Settings";
 import Upload from "./pages/Upload";
 import Results from "./pages/Results";
 import About from "./About";
@@ -18,10 +21,13 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+      <ProfileProvider>
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/learn" element={<CurriculumHome />} />
           <Route path="/learn/:stageId" element={<Subjects />} />
           <Route path="/learn/:stageId/:subjectId" element={<Chapters />} />
@@ -34,6 +40,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>
   );

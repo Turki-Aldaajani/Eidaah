@@ -618,3 +618,25 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 [data-theme="dark"] .nav-auth{background:var(--bg-h);border-color:var(--line)}
 [data-theme="dark"] .auth-input{background:var(--bg-h);border-color:var(--line)}
 @media (max-width:560px){.nav-auth-email{display:none}}
+
+/* ---------- onboarding + settings (F1: الأونبوردنق والإعدادات) ---------- */
+.onb-card{max-width:480px}
+.onb-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.onb-skip-all{background:none;border:none;color:var(--mut);font-size:.82rem;font-family:inherit;cursor:pointer;padding:4px 6px;border-radius:var(--r-s);transition:.2s}
+.onb-skip-all:hover{color:var(--pri);background:var(--pri-soft)}
+.onb-progress{height:6px;background:var(--bg-h);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:4px}
+.onb-progress-bar{height:100%;background:var(--pri);border-radius:999px;transition:width .3s ease}
+.onb-step-count{color:var(--faint);font-size:.78rem;margin:0}
+.onb-q{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:8px 0 2px}
+.onb-q-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:var(--pri-soft);border:1px solid var(--pri-line);color:var(--pri)}
+.onb-q-icon .ic{width:24px;height:24px}
+.onb-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.onb-actions .btn{flex:1;justify-content:center;min-width:120px}
+.onb-finish{flex:1;justify-content:center}
+select.auth-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235A5A54' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 9.5l5.5 5.5 5.5-5.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 14px center}
+.settings-summary{background:var(--bg-h);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin:4px 0 8px}
+.settings-summary-title{display:block;font-size:.78rem;font-weight:700;color:var(--faint);margin-bottom:8px}
+.settings-summary-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.settings-summary-list li{display:flex;justify-content:space-between;gap:12px;font-size:.9rem}
+.settings-summary-list li span{color:var(--mut)}
+.settings-summary-list li b{color:var(--ink);font-weight:600;text-align:left}
