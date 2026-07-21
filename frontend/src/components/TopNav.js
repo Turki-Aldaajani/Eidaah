@@ -21,11 +21,21 @@ export default function TopNav() {
         </Link>
         <div className="nav-side">
           {session ? (
-            <Link className="nav-auth signed" to="/login" title={session.user?.email}>
-              <Icon name="mail" />
-              <span className="nav-auth-email">{session.user?.email}</span>
-              {account?.type === "university" && <span className="nav-auth-chip">جامعي</span>}
-            </Link>
+            <>
+              <Link className="nav-auth signed" to="/login" title={session.user?.email}>
+                <Icon name="mail" />
+                <span className="nav-auth-email">{session.user?.email}</span>
+                {account?.type === "university" && <span className="nav-auth-chip">جامعي</span>}
+              </Link>
+              <Link
+                className="theme-toggle"
+                to="/settings"
+                aria-label="الإعدادات"
+                title="الإعدادات"
+              >
+                <Icon name="settings" />
+              </Link>
+            </>
           ) : (
             <Link className="nav-auth" to="/login">
               <Icon name="mail" />
