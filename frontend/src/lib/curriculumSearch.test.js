@@ -1,0 +1,199 @@
+// اختبار منطق بحث المناهج C3 (#52) — دوال نقية، بلا تصيير.
+import { searchCurriculum, normalizeAr, routableSubjects, levenshtein } from "./curriculumSearch";
+import { LESSONS, STAGE_SUBJECTS, POC_STAGES } from "../data/curriculum";
+
+describe("normalizeAr", () => {
+  test("يزيل الحركات (harakat)", () => {
+    expect(normalizeAr("مُعَلِّم")).toBe("معلم");
+  });
+  test("يوحّد الألف بأنواعها", () => {
+    expect(normalizeAr("أحمد")).toBe("احمد");
+    expect(normalizeAr("إسلام")).toBe("اسلام");
+    expect(normalizeAr("آمن")).toBe("امن");
+  });
+  test("يوحّد التاء المربوطة والألف المقصورة", () => {
+    expect(normalizeAr("مدرسة")).toBe("مدرسه");
+    expect(normalizeAr("مصطفى")).toBe("مصطفي");
+  });
+  test("يتعامل مع الفراغ والقيم الفارغة", () => {
+    expect(normalizeAr("  مرحبا   بك ")).toBe("مرحبا بك");
+    expect(normalizeAr("")).toBe("");
+    expect(normalizeAr(null)).toBe("");
+  });
+});
+
+describe("searchCurriculum — الحالة 1: تطابق واضح مع تحديد الصف (exact → redirect)", () => {
+  test("سؤال واضح مع ذكر الصف ينتقل مباشرة لصفحة الدرس", () => {
+    const r = searchCurriculum("أريد درس الأعداد النسبية أول متوسط");
+    expect(r.status).toBe("exact");
+    expect(r.action).toBe("redirect");
+    expect(r.results).toHaveLength(1);
+    expect(r.results[0].url).toBe("/learn/m1/math/1/0");
+    expect(r.results[0].lessonTitle).toBe("الأعداد النسبية");
+  });
+
+  test("اسم درس + مادة + صف → تطابق دقيق", () => {
+    const r = searchCurriculum("أعداد نسبية رياضيات ثاني متوسط");
+    expect(r.status).toBe("exact");
+    expect(r.results[0].subjectId).toBe("math");
+    expect(r.results[0].url).toBe("/learn/m2/math/1/0");
+  });
+
+  test("درس متاح (مهارات رقمية) عبر تمرير الصف كوسيط", () => {
+    const r = searchCurriculum("العروض التقديمية", "m1");
+    expect(r.status).toBe("exact");
+    expect(r.results[0].subjectId).toBe("dig");
+    expect(r.results[0].lessonTitle).toBe("العروض التقديمية");
+    expect(r.results[0].url).toBe("/learn/m1/dig/1/5");
+  });
+
+  test("درس مهارات رقمية مع الصف (سكراتش، ثالث متوسط)", () => {
+    const r = searchCurriculum("سكراتش ثالث متوسط");
+    expect(r.status).toBe("exact");
+    expect(r.results[0].subjectId).toBe("dig");
+    expect(r.results[0].url).toBe("/learn/m3/dig/1/3");
+  });
+
+  test("كشف المرحلة من النص يغيّر مسار التنقّل", () => {
+    const r = searchCurriculum("درس الأعداد النسبية ثاني متوسط");
+    expect(r.stageId).toBe("m2");
+    expect(r.results[0].url).toBe("/learn/m2/math/1/0");
+  });
+});
+
+describe("معالجة الدروس المكررة عبر الصفوف (Disambiguation)", () => {
+  test("درس عام بلا تحديد صف → خيارات الصفوف بلا توجيه عشوائي", () => {
+    const r = searchCurriculum("الأعداد النسبية");
+    expect(r.status).toBe("multiple");
+    expect(r.action).toBe("show_options");
+    expect(r.status).not.toBe("exact");
+    // نتيجة لكل صف من صفوف POC
+    expect(r.results).toHaveLength(POC_STAGES.length);
+    expect(r.results.every((x) => x.lessonTitle === "الأعداد النسبية")).toBe(true);
+    const stages = r.results.map((x) => x.stageId).sort();
+    expect(stages).toEqual([...POC_STAGES].sort());
+  });
+
+  test("كل خيار يوضّح صفه (stageName) ورابطه الصحيح", () => {
+    const r = searchCurriculum("الأعداد النسبية");
+    for (const res of r.results) {
+      expect(typeof res.stageName).toBe("string");
+      expect(res.stageName).toContain("متوسط");
+      expect(res.url).toBe(`/learn/${res.stageId}/math/1/0`);
+    }
+    const names = r.results.map((x) => x.stageName);
+    expect(new Set(names).size).toBe(r.results.length); // أسماء صفوف مختلفة
+  });
+});
+
+describe("searchCurriculum — الحالة 2: غموض (multiple ≤4 → options)", () => {
+  test("ذكر مادة فقط → عرض دروسها (≤4 خيارات)", () => {
+    const r = searchCurriculum("أريد درس رياضيات");
+    expect(r.status).toBe("multiple");
+    expect(r.action).toBe("show_options");
+    expect(r.results.length).toBeGreaterThan(1);
+    expect(r.results.length).toBeLessThanOrEqual(4);
+    expect(r.results.every((x) => x.subjectId === "math")).toBe(true);
+  });
+
+  test("كلمة مادة غامضة (بادئة) → خيارات", () => {
+    const r = searchCurriculum("درس رياضي");
+    expect(r.status).toBe("multiple");
+    expect(r.results.length).toBeLessThanOrEqual(4);
+  });
+
+  test("لا يتجاوز 4 خيارات أبداً", () => {
+    const r = searchCurriculum("مهارات رقمية");
+    expect(r.results.length).toBeLessThanOrEqual(4);
+  });
+});
+
+describe("searchCurriculum — الحالة 3: خارج النطاق (no_match → explain)", () => {
+  test("مادة غير متاحة → رد لطيف بلا كسر", () => {
+    const r = searchCurriculum("فيزياء نووية");
+    expect(r.status).toBe("no_match");
+    expect(r.action).toBe("explain");
+    expect(r.results).toHaveLength(0);
+    expect(typeof r.message).toBe("string");
+    expect(r.message.length).toBeGreaterThan(0);
+  });
+
+  test("كلام لا صلة له → رد لطيف يذكر المتاح", () => {
+    const r = searchCurriculum("مطعم بيتزা قريب");
+    expect(r.status).toBe("no_match");
+    expect(r.message).toContain("رياضيات");
+  });
+
+  test("استعلام فارغ لا يكسر", () => {
+    const r = searchCurriculum("");
+    expect(r.status).toBe("no_match");
+    expect(r.results).toHaveLength(0);
+  });
+});
+
+describe("المطابقة التقريبية والأخطاء الإملائية (Fuzzy)", () => {
+  test("خطأ إملائي شائع في كلمة معرّبة يجد الدرس الصحيح", () => {
+    for (const typo of ["سكراش", "سكرتش"]) {
+      const r = searchCurriculum(typo);
+      expect(r.results.length).toBeGreaterThanOrEqual(1);
+      const dig = r.results.find((x) => x.subjectId === "dig");
+      expect(dig).toBeTruthy();
+      expect(dig.lessonTitle).toContain("سكراتش");
+    }
+  });
+
+  test("عند التشابه التقريبي يعرض اقتراح 'هل تقصد؟' لا رسالة اعتذار", () => {
+    const r = searchCurriculum("سكراش");
+    expect(r.status).toBe("multiple");
+    expect(r.action).toBe("show_options");
+    expect(r.message).toContain("هل تقصد");
+  });
+
+  test("الاعتذار فقط عند انعدام أي تشابه", () => {
+    const r = searchCurriculum("زغردة الديناصورات");
+    expect(r.status).toBe("no_match");
+  });
+
+  test("levenshtein يحسب مسافة التحرير بدقة", () => {
+    expect(levenshtein("سكراش", "سكراتش")).toBe(1);
+    expect(levenshtein("abc", "abc")).toBe(0);
+    expect(levenshtein("kitten", "sitting")).toBe(3);
+  });
+});
+
+describe("قيود القبول", () => {
+  test("لا توليد — كل نتيجة موجودة فعلاً في فهرس LESSONS", () => {
+    for (const q of ["الأعداد النسبية", "العروض التقديمية", "سكراتش", "رياضيات"]) {
+      const r = searchCurriculum(q);
+      for (const res of r.results) {
+        expect(LESSONS[res.subjectId]).toContain(res.lessonTitle);
+        expect(LESSONS[res.subjectId][res.lessonIdx]).toBe(res.lessonTitle);
+      }
+    }
+  });
+
+  test("لا يوجّه إلا لمواد النطاق المتاح للمرحلة", () => {
+    const r = searchCurriculum("أريد درس رياضيات");
+    for (const res of r.results) {
+      expect(routableSubjects("m1")).toContain(res.subjectId);
+    }
+    // بعد #63: ar موجود في STAGE_SUBJECTS.m1 لكنه "قريباً" وغير قابل للتنقّل
+    expect(STAGE_SUBJECTS.m1).toContain("ar");
+    expect(routableSubjects("m1")).not.toContain("ar");
+    expect(routableSubjects("m1")).toEqual(expect.arrayContaining(["math", "dig"]));
+  });
+
+  test("زمن الاستجابة < 3 ثوانٍ (فوري فعلياً)", () => {
+    const t0 = Date.now();
+    for (let i = 0; i < 50; i++) searchCurriculum("أريد درس الأعداد النسبية");
+    expect(Date.now() - t0).toBeLessThan(3000);
+  });
+
+  test("confidence ضمن [0,1]", () => {
+    for (const q of ["الأعداد النسبية", "رياضيات", "فيزياء"]) {
+      const r = searchCurriculum(q);
+      expect(r.confidence).toBeGreaterThanOrEqual(0);
+      expect(r.confidence).toBeLessThanOrEqual(1);
+    }
+  });
+});
