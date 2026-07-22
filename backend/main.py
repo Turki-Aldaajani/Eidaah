@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import ai_logic
-from concurrency import executor
+from concurrency import executor, video_executor
 from Model import call_groq
 from slowapi.errors import RateLimitExceeded
 
@@ -771,7 +771,7 @@ async def lesson_videos(
 
     loop = asyncio.get_event_loop()
     ranked = await loop.run_in_executor(
-        executor,
+        video_executor,
         lambda: recommend_videos(
             lesson, subject_id=subject_id, subject_name=subject_name,
             grade_name=grade_name, provider=_video_provider_singleton(),

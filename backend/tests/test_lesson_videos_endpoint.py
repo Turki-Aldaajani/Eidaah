@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from fastapi.testclient import TestClient
 
 import main
+import concurrency
 from rate_limit import VIDEOS_LIMIT
 
 client = TestClient(main.app)
@@ -72,6 +73,38 @@ def test_empty_results_are_cached_with_a_short_ttl(monkeypatch):
     ttl = expires_at - time.time()
     assert ttl <= main._EMPTY_VIDEO_CACHE_TTL + 1          # short TTL, not the 6h one
     assert ttl < main._VIDEO_CACHE_TTL
+
+
+def test_lesson_videos_uses_the_isolated_video_executor(monkeypatch):
+    """
+    Regression guard: lesson_videos used to share the same pool as uploads,
+    the AI assistant, and every other blocking endpoint. Once
+    YOUTUBE_API_KEY started doing real (slow, multi-request) work instead of
+    always returning empty, a burst of video requests saturated that shared
+    pool and starved uploads/the assistant too -- reproduced live in
+    production. It must submit to its own video_executor, never the shared
+    `executor` that everything else depends on.
+    """
+    main._video_cache.clear()
+    monkeypatch.setattr(main, "recommend_videos", lambda lesson, **kw: [])
+
+    video_calls, shared_calls = [], []
+
+    def spy(log):
+        real_submit = concurrency.video_executor.submit if log is video_calls else concurrency.executor.submit
+
+        def _submit(fn, *args, **kwargs):
+            log.append(1)
+            return real_submit(fn, *args, **kwargs)
+        return _submit
+
+    monkeypatch.setattr(concurrency.video_executor, "submit", spy(video_calls))
+    monkeypatch.setattr(concurrency.executor, "submit", spy(shared_calls))
+
+    r = client.get("/api/lesson_videos", params={"lesson": "درس عزل التنفيذ"})
+    assert r.status_code == 200
+    assert len(video_calls) == 1
+    assert len(shared_calls) == 0
 
 
 def test_lesson_videos_requires_a_lesson():
