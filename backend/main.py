@@ -22,7 +22,7 @@ from Model import call_groq
 from slowapi.errors import RateLimitExceeded
 
 from rate_limit import (
-    limiter, rate_limit_handler, UPLOAD_LIMIT, ANALYZE_LIMIT,
+    limiter, rate_limit_handler, UPLOAD_LIMIT, ANALYZE_LIMIT, VIDEOS_LIMIT,
 )
 from session_store import (
     create_session, get_session, cleanup_expired, active_session_count
@@ -709,7 +709,9 @@ def _video_provider_singleton():
 
 
 @app.get("/api/lesson_videos", tags=["Curriculum: Videos"])
+@limiter.limit(VIDEOS_LIMIT)
 async def lesson_videos(
+    request: Request,
     lesson: str,
     subject_id: Optional[str] = None,
     subject_name: Optional[str] = None,
