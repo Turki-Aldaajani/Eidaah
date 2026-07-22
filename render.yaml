@@ -13,3 +13,8 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: https://eidaah-jgqp.vercel.app
+      # Render proxies to us, so the real client IP is in X-Forwarded-For.
+      # Without this every request keys on the proxy address and one busy
+      # student would rate-limit the whole app.
+      - key: TRUST_PROXY
+        value: "true"

@@ -6,6 +6,8 @@ import io
 from fastapi import HTTPException
 import traceback
 
+from concurrency import run_blocking
+
 # Import the AI model function from Model.py
 # Signature: generate_explanation_and_example(text: str) -> (explanation, example)
 try:
@@ -72,7 +74,7 @@ def validate_file(file_stream: io.BytesIO, file_type: str, filename: str):
 # Helper function: Extract text from PDF
 # Returns a list of dictionaries: [{"slide_number": 1, "text": "..."}]
 # ---------------------------------------------------------
-async def extract_pages_from_pdf(file_stream):
+def _extract_pages_from_pdf_sync(file_stream):
     pages_content = []
     try:
         with pdfplumber.open(file_stream) as pdf:
@@ -98,11 +100,16 @@ async def extract_pages_from_pdf(file_stream):
         raise HTTPException(status_code=500, detail="Error occurred while parsing the PDF file.")
 
 
+async def extract_pages_from_pdf(file_stream):
+    """Parse the PDF on the shared pool — pdfplumber is fully blocking."""
+    return await run_blocking(_extract_pages_from_pdf_sync, file_stream)
+
+
 # ---------------------------------------------------------
 # Helper function: Extract text from PPTX
 # Returns a list of dictionaries: [{"slide_number": 1, "text": "..."}]
 # ---------------------------------------------------------
-async def extract_pages_from_pptx(file_stream):
+def _extract_pages_from_pptx_sync(file_stream):
     slides_content = []
     try:
         presentation = Presentation(file_stream)
@@ -130,6 +137,11 @@ async def extract_pages_from_pptx(file_stream):
     except Exception as e:
         print(f"Error extracting PPTX: {e}")
         raise HTTPException(status_code=500, detail="Error occurred while parsing the PPTX file.")
+
+
+async def extract_pages_from_pptx(file_stream):
+    """Parse the PPTX on the shared pool — python-pptx is fully blocking."""
+    return await run_blocking(_extract_pages_from_pptx_sync, file_stream)
 
 
 # ---------------------------------------------------------
@@ -179,7 +191,9 @@ async def process_text_directly(text: str, language: str = None):
 
     try:
         print("🤖 Calling AI model...")
-        explanation, example = generate_explanation_and_example(truncated_text, language=language)
+        explanation, example = await run_blocking(
+            generate_explanation_and_example, truncated_text, language=language
+        )
         print(f"✅ Analysis complete!")
         print(f"   Explanation: {explanation[:100]}...")
         print(f"   Example: {example[:100]}...")

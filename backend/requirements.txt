@@ -7,6 +7,7 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.0
 python-multipart==0.0.9
+slowapi==0.1.10
 
 # File Processing
 pdfplumber==0.10.3
