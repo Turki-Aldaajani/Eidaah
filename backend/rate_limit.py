@@ -16,10 +16,17 @@ from slowapi.errors import RateLimitExceeded
 UPLOAD_LIMIT = os.getenv("RATE_LIMIT_UPLOAD", "10/minute")
 ANALYZE_LIMIT = os.getenv("RATE_LIMIT_ANALYZE", "30/minute")
 AGENT_LIMIT = os.getenv("RATE_LIMIT_AGENT", "60/minute")
-# Lower than the others: each call can trigger a YouTube Data API search (its
-# own external quota) plus a Groq relevance call, and results are cached for
-# 6h — a legitimate user never needs more than a handful of these per minute.
-VIDEOS_LIMIT = os.getenv("RATE_LIMIT_VIDEOS", "5/minute")
+# Each call can trigger a YouTube Data API search (its own external quota)
+# plus a Groq relevance call, and results are cached for 6h, so this stays
+# tighter than the plain analysis endpoints. It was originally 5/minute, but
+# that broke ordinary lesson browsing: exploring a curriculum page routinely
+# means opening several different lessons within a minute (each is a fresh,
+# uncached query), and React's StrictMode fires every effect twice in
+# development, doubling real request volume — reproduced live, five lesson
+# views were enough to 429 the section into "couldn't load" for the rest of
+# the minute. 20/minute keeps the same abuse/quota protection while covering
+# realistic browsing plus that dev-mode doubling.
+VIDEOS_LIMIT = os.getenv("RATE_LIMIT_VIDEOS", "20/minute")
 
 # Render terminates TLS at its edge and proxies to us, so request.client.host is
 # the proxy's address for every request — keying on it would put all users in one
