@@ -356,6 +356,32 @@ async def analyze_slide(request: Request, payload: AnalyzeRequest):
 
 
 # ---------------------------------------------------------
+# ENDPOINT: Library material content (I3) — READ-ONLY, never calls Groq
+# فتح مادة معالجة يقرأ المخزَّن من Supabase فقط (لا استدعاء Groq إطلاقاً).
+# هذا جوهر معيار قبول I3 (أساس التوسع بلا حرق رصيد الـ API).
+# ---------------------------------------------------------
+@app.get("/api/materials/{material_id}/content", tags=["Library: Materials"])
+async def material_content(material_id: str):
+    """Return a processed material's stored summary + topics. Never calls Groq."""
+    from supabase_client import get_service_client
+    from material_service import fetch_material_content
+
+    loop = asyncio.get_event_loop()
+    try:
+        view = await loop.run_in_executor(
+            executor, fetch_material_content, get_service_client(), material_id
+        )
+    except Exception as e:
+        raise HTTPException(503, f"تعذّر قراءة المادة: {e}")
+
+    if view is None:
+        raise HTTPException(404, "المادة غير موجودة.")
+    if view.get("processing_status") != "processed":
+        raise HTTPException(409, "المادة لم تُعالَج بعد.")
+    return view
+
+
+# ---------------------------------------------------------
 # ENDPOINT: Curriculum Lesson AI Tools (summary / example / notes / quiz)
 # ---------------------------------------------------------
 LESSON_TOOLS = {"sum", "ex", "notes", "quiz"}
