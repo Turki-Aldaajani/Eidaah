@@ -66,7 +66,13 @@ def score_relevance(context, videos, call_groq_fn):
     known = {it["id"] for it in items}
 
     try:
-        raw = call_groq_fn(prompt=prompt, max_tokens=400, temperature=0.0)
+        # reasoning_effort="low": see metadata_generator.py for the full
+        # explanation — at the default "medium" effort, gpt-oss-120b's hidden
+        # reasoning tokens intermittently consumed the whole max_tokens budget
+        # on this JSON-only prompt, returning empty content and silently
+        # dropping relevance from ranking. Reproduced live against this exact
+        # call; "low" effort + more headroom eliminated it.
+        raw = call_groq_fn(prompt=prompt, max_tokens=500, temperature=0.0, reasoning_effort="low")
         data = json.loads(_strip_code_fences(raw))
         if not isinstance(data, dict):
             return {}

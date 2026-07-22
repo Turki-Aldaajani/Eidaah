@@ -22,6 +22,21 @@ def test_parses_scores_and_normalizes_to_unit_interval():
     assert out == {"a": 0.96, "b": 0.10}
 
 
+def test_calls_groq_with_low_reasoning_effort():
+    """Regression guard: reproduced live against the real API, this call's
+    hidden reasoning tokens intermittently consumed the whole max_tokens
+    budget at the default "medium" effort, returning empty content and
+    silently dropping relevance from ranking. Locks in the fix."""
+    seen = {}
+
+    def spy_groq(prompt=None, **kwargs):
+        seen.update(kwargs)
+        return json.dumps({"a": 90, "b": 10})
+
+    score_relevance(CTX, VIDS, spy_groq)
+    assert seen.get("reasoning_effort") == "low"
+
+
 def test_strips_code_fences():
     raw = "```json\n" + json.dumps({"a": 80, "b": 0}) + "\n```"
     out = score_relevance(CTX, VIDS, fake_groq(raw))
