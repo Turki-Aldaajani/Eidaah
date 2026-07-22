@@ -11,6 +11,14 @@ services:
         value: 3.11.9
       - key: GROQ_API_KEY
         sync: false
+      # C4: without this, build_provider() falls back to StaticVideoProvider
+      # (always empty) -- every /api/lesson_videos call silently returns zero
+      # videos. This was missing from the blueprint entirely (unlike
+      # GROQ_API_KEY above), so a sync never provisioned a slot for it on
+      # Render. Set the real value in the Render dashboard -- sync:false
+      # means Blueprint sync will never overwrite it once set.
+      - key: YOUTUBE_API_KEY
+        sync: false
       - key: FRONTEND_URL
         value: https://eidaah-jgqp.vercel.app
       # Render proxies to us, so the real client IP is in X-Forwarded-For.

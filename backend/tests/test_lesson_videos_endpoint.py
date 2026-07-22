@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from fastapi.testclient import TestClient
@@ -47,6 +48,30 @@ def test_lesson_videos_maps_ranked_results_hides_internals_and_caches(monkeypatc
     })
     assert r2.json()["cached"] is True
     assert calls["n"] == 1
+
+
+def test_empty_results_are_cached_with_a_short_ttl(monkeypatch):
+    """
+    Regression guard: a misconfigured/rejected YOUTUBE_API_KEY, a transient
+    network error, or a quota blip all make recommend_videos() return []
+    exactly like a lesson with genuinely no good matches. Caching that with
+    the full 6h TTL -- reproduced live in production -- meant the section
+    stayed stuck on "no videos" for hours after the underlying cause was
+    fixed. Empty results must get a much shorter TTL than real results.
+    """
+    main._video_cache.clear()
+    monkeypatch.setattr(main, "recommend_videos", lambda lesson, **kw: [])
+
+    r = client.get("/api/lesson_videos", params={"lesson": "درس بلا نتائج"})
+    assert r.status_code == 200
+    assert r.json() == {"videos": [], "count": 0, "cached": False}
+
+    cache_key = ("درس بلا نتائج", "", "", "", 8)
+    expires_at, payload = main._video_cache[cache_key]
+    assert payload == []
+    ttl = expires_at - time.time()
+    assert ttl <= main._EMPTY_VIDEO_CACHE_TTL + 1          # short TTL, not the 6h one
+    assert ttl < main._VIDEO_CACHE_TTL
 
 
 def test_lesson_videos_requires_a_lesson():
