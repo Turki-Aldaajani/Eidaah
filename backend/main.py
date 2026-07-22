@@ -11,6 +11,7 @@ import asyncio
 import io
 import os
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 
@@ -30,6 +31,8 @@ from lesson_tool import generate_lesson_tool_content
 from question_generator import generate_review_questions
 import agent_store
 from study_agent import plan_study, grade_answers, build_report
+from video_recommender import recommend_videos, to_public_video
+from video_provider import build_provider
 
 # Thread pool for blocking work
 executor = ThreadPoolExecutor(max_workers=3)
@@ -670,6 +673,59 @@ async def agent_status(run_id: str):
     if run.status == "awaiting_answers" and run.current_step():
         body["current"] = _present_step(run)["step"]
     return body
+
+
+# ---------------------------------------------------------
+# ENDPOINT: Lesson Videos (C4 · smart recommendation engine)
+# ---------------------------------------------------------
+# Builds a curriculum-aware query, searches APPROVED channels first (YouTube via
+# the provider abstraction), filters + ranks, and folds in a hidden one-shot LLM
+# relevance signal. Results are cached in-process to spare the YouTube quota — a
+# Supabase-backed cache + admin/ratings are the next C4 slices.
+_video_provider = None
+_video_cache = {}                       # cache_key -> (expires_at, payload)
+_VIDEO_CACHE_TTL = 6 * 3600             # 6 hours
+
+
+def _video_provider_singleton():
+    global _video_provider
+    if _video_provider is None:
+        _video_provider = build_provider()
+    return _video_provider
+
+
+@app.get("/api/lesson_videos", tags=["Curriculum: Videos"])
+async def lesson_videos(
+    lesson: str,
+    subject_id: Optional[str] = None,
+    subject_name: Optional[str] = None,
+    grade_name: Optional[str] = None,
+    limit: int = 8,
+):
+    """Best explanation videos for a lesson — generated once, then cached."""
+    lesson = (lesson or "").strip()
+    if not lesson:
+        raise HTTPException(400, "Query param 'lesson' is required.")
+    limit = max(1, min(limit, 20))
+
+    cache_key = (lesson, subject_id or "", subject_name or "", grade_name or "", limit)
+    now_ts = time.time()
+    cached = _video_cache.get(cache_key)
+    if cached and cached[0] > now_ts:
+        return {"videos": cached[1], "count": len(cached[1]), "cached": True}
+
+    loop = asyncio.get_event_loop()
+    ranked = await loop.run_in_executor(
+        executor,
+        lambda: recommend_videos(
+            lesson, subject_id=subject_id, subject_name=subject_name,
+            grade_name=grade_name, provider=_video_provider_singleton(),
+            call_groq_fn=call_groq, limit=limit,
+        ),
+    )
+    videos = [to_public_video(v) for v in ranked]
+    _video_cache[cache_key] = (now_ts + _VIDEO_CACHE_TTL, videos)
+    return {"videos": videos, "count": len(videos), "cached": False}
 
 
 # ---------------------------------------------------------
