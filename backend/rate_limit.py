@@ -16,6 +16,10 @@ from slowapi.errors import RateLimitExceeded
 UPLOAD_LIMIT = os.getenv("RATE_LIMIT_UPLOAD", "10/minute")
 ANALYZE_LIMIT = os.getenv("RATE_LIMIT_ANALYZE", "30/minute")
 AGENT_LIMIT = os.getenv("RATE_LIMIT_AGENT", "60/minute")
+# Lower than the others: each call can trigger a YouTube Data API search (its
+# own external quota) plus a Groq relevance call, and results are cached for
+# 6h — a legitimate user never needs more than a handful of these per minute.
+VIDEOS_LIMIT = os.getenv("RATE_LIMIT_VIDEOS", "5/minute")
 
 # Render terminates TLS at its edge and proxies to us, so request.client.host is
 # the proxy's address for every request — keying on it would put all users in one
