@@ -44,7 +44,9 @@ def _search_approved(provider, queries, approved, published_after):
     pool = []
     q = queries[0]
     for ch in approved:
-        cid = provider.resolve_channel_id(ch["handle"])
+        # Prefer the channel_id already stored in Supabase (saves a YouTube
+        # channels.list resolve call); fall back to resolving the @handle.
+        cid = ch.get("channel_id") or provider.resolve_channel_id(ch["handle"])
         if not cid:
             continue
         approved_ids[cid] = ch["priority"]
@@ -122,6 +124,7 @@ def to_public_video(v):
         "published_at": v.get("published_at", ""),
         "duration_seconds": v.get("duration_seconds", 0),
         "view_count": v.get("view_count", 0),
+        "like_count": v.get("like_count", 0),
         "approved": bool(v.get("approved")),
         "badge": v.get("badge"),
         "source": v.get("source", "youtube"),

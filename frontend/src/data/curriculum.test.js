@@ -11,9 +11,61 @@ import {
   fmtViews,
   fmtRate,
   mockVideos,
+  videoFromApi,
   defaultFilters,
   applyFilters,
 } from "./curriculum";
+
+const API_VIDEO = {
+  video_id: "yt1",
+  title: "شرح الأعداد النسبية",
+  channel_title: "أكاديمية سعيد الشلوي",
+  approved: true,
+  badge: "قناة معتمدة",
+  duration_seconds: 754, // 12:34
+  view_count: 250000,
+  like_count: 10000,
+  published_at: "2025-06-01T00:00:00Z",
+  url: "https://www.youtube.com/watch?v=yt1",
+};
+
+test("videoFromApi maps real backend fields into the VideoGrid shape", () => {
+  const v = videoFromApi(API_VIDEO, "math", 0);
+  expect(v.title).toBe("شرح الأعداد النسبية");
+  expect(v.ver).toBe(true); // approved -> verified badge
+  expect(v.approved).toBe(true);
+  expect(v.badge).toBe("قناة معتمدة");
+  expect(v.year).toBe(2025);
+  expect(v.views).toBe(250000);
+  expect(v.durM).toBeCloseTo(754 / 60, 5);
+  expect(v.dur).toBe("١٢:٣٤"); // mm:ss in Arabic digits
+  expect(v.icn).toBe(SUB_DEFS.math.icn);
+  expect(Array.isArray(v.g)).toBe(true);
+  expect(v.match).toHaveProperty("t"); // VideoCard reads match.t / match.cls
+});
+
+test("videoFromApi defaults dialect to 'sa' and derives a rating in 4.0–5.0", () => {
+  const v = videoFromApi(API_VIDEO, "math", 0);
+  expect(v.nat).toBe("sa");
+  expect(v.rate).toBeGreaterThanOrEqual(4.0);
+  expect(v.rate).toBeLessThanOrEqual(5.0);
+  // no engagement data -> neutral default rating
+  expect(videoFromApi({ video_id: "x", view_count: 0, like_count: 0 }, "math", 0).rate).toBe(4.6);
+});
+
+test("mapped videos work with the existing (unchanged) applyFilters", () => {
+  const mapped = [
+    videoFromApi(API_VIDEO, "math", 0),
+    videoFromApi({ ...API_VIDEO, video_id: "yt2", approved: false, badge: null,
+      duration_seconds: 120, view_count: 500, published_at: "2022-01-01T00:00:00Z" }, "math", 1),
+  ];
+  // "approved channel" filter keeps only the verified one
+  expect(applyFilters(mapped, { ...defaultFilters(), ver: true })).toHaveLength(1);
+  // "newest" recency filter (>= 2025) drops the 2022 video
+  expect(applyFilters(mapped, { ...defaultFilters(), rec: "y2" }).every((v) => v.year >= 2025)).toBe(true);
+  // most-viewed filter (>= 50k) keeps the popular one only
+  expect(applyFilters(mapped, { ...defaultFilters(), views: "v50k" })).toHaveLength(1);
+});
 
 test("STAGES has 12 grades across 3 levels", () => {
   expect(STAGES).toHaveLength(12);

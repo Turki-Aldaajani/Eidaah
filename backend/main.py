@@ -11,7 +11,6 @@ import asyncio
 import io
 import os
 import re
-import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -38,6 +37,7 @@ import agent_store
 from study_agent import plan_study, grade_answers, build_report
 from video_recommender import recommend_videos, to_public_video
 from video_provider import build_provider
+from video_cache import get_cached, set_cached, make_cache_key
 
 
 # ---------------------------------------------------------
@@ -694,11 +694,10 @@ async def agent_status(run_id: str):
 # ---------------------------------------------------------
 # Builds a curriculum-aware query, searches APPROVED channels first (YouTube via
 # the provider abstraction), filters + ranks, and folds in a hidden one-shot LLM
-# relevance signal. Results are cached in-process to spare the YouTube quota — a
-# Supabase-backed cache + admin/ratings are the next C4 slices.
+# relevance signal. Results are cached in Supabase (video_cache) so a repeat view
+# is a pure DB read — no YouTube/Groq calls. Degrades to "always fresh" when
+# Supabase is not configured.
 _video_provider = None
-_video_cache = {}                       # cache_key -> (expires_at, payload)
-_VIDEO_CACHE_TTL = 6 * 3600             # 6 hours
 
 
 def _video_provider_singleton():
@@ -724,11 +723,10 @@ async def lesson_videos(
         raise HTTPException(400, "Query param 'lesson' is required.")
     limit = max(1, min(limit, 20))
 
-    cache_key = (lesson, subject_id or "", subject_name or "", grade_name or "", limit)
-    now_ts = time.time()
-    cached = _video_cache.get(cache_key)
-    if cached and cached[0] > now_ts:
-        return {"videos": cached[1], "count": len(cached[1]), "cached": True}
+    cache_key = make_cache_key(lesson, subject_id, grade_name, limit)
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return {"videos": cached, "count": len(cached), "cached": True}
 
     loop = asyncio.get_event_loop()
     ranked = await loop.run_in_executor(
@@ -740,7 +738,7 @@ async def lesson_videos(
         ),
     )
     videos = [to_public_video(v) for v in ranked]
-    _video_cache[cache_key] = (now_ts + _VIDEO_CACHE_TTL, videos)
+    set_cached(cache_key, videos)
     return {"videos": videos, "count": len(videos), "cached": False}
 
 

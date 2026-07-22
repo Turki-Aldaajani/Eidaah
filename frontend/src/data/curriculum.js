@@ -225,6 +225,53 @@ export function mockVideos(lesson, subjectId) {
   });
 }
 
+// C4 · PR 2 — map one backend /api/lesson_videos item (to_public_video shape)
+// into the exact object VideoGrid + applyFilters + the Lesson player already
+// consume, so NO UI/filter code changes. Real fields (duration, views, year,
+// approved) map directly; the two dimensions YouTube v3 doesn't expose are
+// approximated so the existing filters keep discriminating:
+//   • nat  — dialect isn't in the API; approved channels are Saudi and the
+//            curriculum is Saudi, so default "sa" unless the backend sends one.
+//   • rate — no 5-star rating in v3; derive ~4.0–5.0 from the like/view ratio.
+function _rateFromEngagement(likes, views) {
+  if (!views || views <= 0 || !likes || likes <= 0) return 4.6;
+  return Math.max(4.0, Math.min(5.0, 4.0 + (likes / views) * 25));
+}
+
+export function videoFromApi(v, subjectId, index = 0) {
+  const icn = (SUB_DEFS[subjectId] || SUB_DEFS.math).icn;
+  const secs = Math.max(0, Math.round(v.duration_seconds || 0));
+  const mm = Math.floor(secs / 60);
+  const ss = secs % 60;
+  const dur = `${toArabicDigits(String(mm).padStart(2, "0"))}:${toArabicDigits(String(ss).padStart(2, "0"))}`;
+  const views = v.view_count || 0;
+  const year = v.published_at ? new Date(v.published_at).getFullYear() : new Date().getFullYear();
+  const ver = !!v.approved;
+  const ch = v.channel_title || "";
+  return {
+    id: v.video_id,
+    url: v.url || (v.video_id ? `https://www.youtube.com/watch?v=${v.video_id}` : ""),
+    thumbnail: v.thumbnail_url || "",
+    title: v.title || "",
+    ch,
+    init: (ch.replace("أ. ", "").charAt(0)) || "▶",
+    nat: v.nationality || "sa",
+    ver,
+    approved: ver,
+    badge: v.badge || null,
+    durM: secs / 60,
+    dur,
+    views,
+    viewsT: fmtViews(views),
+    year,
+    rate: Math.round(_rateFromEngagement(v.like_count, views) * 10) / 10,
+    match: ver ? MATCHES[0] : MATCHES[1],
+    reason: ver ? "من قناة معتمدة موصى بها" : (views >= 100000 ? REASONS[1] : REASONS[0]),
+    g: VID_GRADS[index % VID_GRADS.length],
+    icn,
+  };
+}
+
 export function defaultFilters() {
   return { nat: "all", rec: "all", dur: "all", views: "all", rate: "all", ver: false };
 }

@@ -5,7 +5,9 @@ import TopNav from "../../components/TopNav";
 import Footer from "../../Footer";
 import VideoGrid from "./VideoGrid";
 import AiToolsPanel from "./AiToolsPanel";
-import { stageById, SUB_DEFS, CHAPTERS, lessonsFor, mockVideos, STEPS, toArabicDigits } from "../../data/curriculum";
+import { stageById, SUB_DEFS, CHAPTERS, lessonsFor, mockVideos, videoFromApi, STEPS, toArabicDigits } from "../../data/curriculum";
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 function emptyProgress() {
   return { video: false, sum: false, ex: false, notes: false, quiz: false };
@@ -72,6 +74,7 @@ export default function Lesson() {
 
   const [progress, setProgress] = useState(emptyProgress());
   const [playingVideo, setPlayingVideo] = useState(null);
+  const [videos, setVideos] = useState([]);
 
   const lessonKey = `${stageId}/${subjectId}/${chapterId}/${lessonIdx}`;
   useEffect(() => {
@@ -79,10 +82,46 @@ export default function Lesson() {
     setPlayingVideo(null);
   }, [lessonKey]);
 
+  // Fetch the real recommendations from the C4 engine. Seed with the local mock
+  // synchronously so the section is never empty and still works if the API is
+  // unreachable; replace with the backend results once they arrive.
+  useEffect(() => {
+    if (!lesson || !subject || !stage) {
+      setVideos([]);
+      return;
+    }
+    setVideos(mockVideos(lesson, subjectId));
+    if (typeof fetch !== "function") return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const params = new URLSearchParams({
+          lesson: lesson.t,
+          subject_id: subjectId,
+          subject_name: subject.n || "",
+          grade_name: stage.n || "",
+        });
+        const res = await fetch(`${API_URL}/api/lesson_videos?${params.toString()}`);
+        if (!res.ok) return; // keep the mock fallback
+        const data = await res.json();
+        const list = Array.isArray(data.videos)
+          ? data.videos.map((v, i) => videoFromApi(v, subjectId, i))
+          : [];
+        if (!cancelled && list.length) setVideos(list);
+      } catch {
+        /* network/API error — keep the mock fallback already in state */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonKey]);
+
   if (!stage || !subject || !chapter || !lesson) return <Navigate to="/learn" replace />;
 
   const markStep = (key) => setProgress((p) => (p[key] ? p : { ...p, [key]: true }));
-  const videos = mockVideos(lesson, subjectId);
   const done = STEPS.filter((s) => progress[s.k]).length;
   const pct = Math.round((done / STEPS.length) * 100);
 

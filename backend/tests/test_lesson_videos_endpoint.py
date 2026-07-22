@@ -14,7 +14,12 @@ VIDEOS_LIMIT_PER_MINUTE = int(VIDEOS_LIMIT.split("/")[0])
 
 
 def test_lesson_videos_maps_ranked_results_hides_internals_and_caches(monkeypatch):
-    main._video_cache.clear()
+    # Emulate the Supabase cache with an in-test store so caching is exercised
+    # without a live database.
+    store = {}
+    monkeypatch.setattr(main, "get_cached", lambda key: store.get(key))
+    monkeypatch.setattr(main, "set_cached", lambda key, videos, **k: store.__setitem__(key, videos))
+
     calls = {"n": 0}
 
     def fake_recommend(lesson, **kw):
@@ -57,7 +62,10 @@ def test_lesson_videos_requires_a_lesson():
 def test_lesson_videos_is_rate_limited(monkeypatch):
     """Each call can trigger a YouTube search + a Groq relevance call, so this
     endpoint gets a tighter per-client limit than the plain analysis endpoints."""
-    main._video_cache.clear()
+    # Force every request past the cache so the limiter (not the cache) is what
+    # short-circuits repeats.
+    monkeypatch.setattr(main, "get_cached", lambda key: None)
+    monkeypatch.setattr(main, "set_cached", lambda key, videos, **k: False)
     monkeypatch.setattr(main, "recommend_videos", lambda lesson, **kw: [])
 
     def _get(i):
