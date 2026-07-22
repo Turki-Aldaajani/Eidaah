@@ -42,6 +42,21 @@ def test_generates_title_and_description_from_valid_json():
     assert result["model"]  # a model label is recorded
 
 
+def test_calls_groq_with_low_reasoning_effort():
+    """Regression guard: gpt-oss-120b's hidden reasoning tokens count against
+    max_tokens, and at the default "medium" effort intermittently consumed the
+    whole budget on this short prompt, returning empty content. Locks in the
+    reasoning_effort="low" fix that eliminated the flakiness."""
+    seen = {}
+
+    def spy_groq(prompt=None, **kwargs):
+        seen.update(kwargs)
+        return json.dumps({"title": "عنوان", "description": "وصف"}, ensure_ascii=False)
+
+    generate_material_metadata(ARABIC_TEXT, "lesson.pdf", spy_groq)
+    assert seen.get("reasoning_effort") == "low"
+
+
 def test_strips_markdown_code_fences():
     inner = json.dumps({"title": "عنوان", "description": "وصف مختصر"}, ensure_ascii=False)
     raw = "```json\n" + inner + "\n```"

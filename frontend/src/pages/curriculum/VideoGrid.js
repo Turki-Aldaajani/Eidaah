@@ -1,13 +1,8 @@
 import React, { useState } from "react";
 import Icon from "../../components/Icon";
-import { defaultFilters, applyFilters, NAT_NAMES, toArabicDigits, fmtRate } from "../../data/curriculum";
+import { defaultFilters, applyFilters, toArabicDigits, fmtRate } from "../../data/curriculum";
 
 const FILTER_FIELDS = [
-  {
-    key: "nat",
-    label: "جنسية الشارح",
-    opts: [["all", "الكل"], ["sa", "سعودي"], ["jo", "أردني"], ["eg", "مصري"], ["kw", "كويتي"]],
-  },
   { key: "rec", label: "حداثة المحتوى", opts: [["all", "أي وقت"], ["y1", "أحدث الشروحات"], ["y2", "آخر سنتين"]] },
   {
     key: "dur",
@@ -26,12 +21,18 @@ function VideoCard({ video, onWatch }) {
   return (
     <div className="vid-card card anim">
       <div className="thumb" style={{ background: `linear-gradient(135deg,${video.g[0]},${video.g[1]})` }}>
+        {video.thumbnail_url && (
+          <img className="thumb-img" src={video.thumbnail_url} alt="" loading="lazy"
+               onError={(e) => { e.currentTarget.style.display = "none"; }} />
+        )}
         <span className="th-reason">
           <Icon name="sparkles" /> {video.reason}
         </span>
-        <span className="th-ic">
-          <Icon name={video.icn} />
-        </span>
+        {!video.thumbnail_url && (
+          <span className="th-ic">
+            <Icon name={video.icn} />
+          </span>
+        )}
         <button type="button" className="th-play" aria-label="تشغيل الشرح" onClick={() => onWatch(video)}>
           <Icon name="play" />
         </button>
@@ -49,7 +50,6 @@ function VideoCard({ video, onWatch }) {
               <Icon name="badge-check" />
             </span>
           )}
-          <span className="ch-nat">{NAT_NAMES[video.nat]}</span>
         </div>
         <div className="v-stats">
           <span>

@@ -100,34 +100,20 @@ export const DIFFS = [
 ];
 const DIFF_PATTERN = [0, 0, 1, 1, 2, 1];
 
-const CHANNELS = [
-  { n: "عين دروس", nat: "sa", v: true },
-  { n: "أ. خالد الحربي", nat: "sa", v: false },
-  { n: "أ. نورة القحطاني", nat: "sa", v: false },
-  { n: "أكاديمية التفوق", nat: "kw", v: true },
-  { n: "شرح المناهج العربية", nat: "eg", v: false },
-  { n: "أ. عبدالله المالكي", nat: "sa", v: false },
-  { n: "منصة تفوّق الخليج", nat: "kw", v: false },
-  { n: "أ. محمد عادل", nat: "jo", v: false },
-];
-export const NAT_NAMES = { sa: "سعودي", jo: "أردني", eg: "مصري", kw: "كويتي" };
-
-const VIDS_META = [
-  { ty: "شرح مبسط وسريع", ch: 0, durM: 4, views: 1200000, year: 2026, rate: 4.8, match: 0, reason: 2 },
-  { ty: "شرح شامل مع أمثلة", ch: 1, durM: 14, views: 856000, year: 2025, rate: 4.7, match: 0, reason: 0 },
-  { ty: "حل تمارين الكتاب", ch: 2, durM: 23, views: 430000, year: 2025, rate: 4.5, match: 1, reason: 0 },
-  { ty: "مراجعة مركزة قبل الاختبار", ch: 3, durM: 9, views: 2100000, year: 2024, rate: 4.9, match: 0, reason: 1 },
-  { ty: "أسئلة متوقعة وتدريب مكثف", ch: 4, durM: 36, views: 98000, year: 2023, rate: 4.2, match: 2, reason: 0 },
-  { ty: "تأسيس من الصفر", ch: 5, durM: 47, views: 610000, year: 2026, rate: 4.6, match: 1, reason: 0 },
-  { ty: "شرح تفاعلي مختصر", ch: 6, durM: 7, views: 320000, year: 2026, rate: 4.4, match: 1, reason: 2 },
-  { ty: "مراجعة شاملة للوحدة", ch: 7, durM: 18, views: 1500000, year: 2024, rate: 4.8, match: 0, reason: 1 },
-];
+// عرض بطاقات الفيديو الحقيقية القادمة من /api/lesson_videos (C4).
+// ── لا توجد بيانات حقيقية لجنسية الشارح، فلا يوجد فلتر أو حقل لها. ─────────────
 export const MATCHES = [
   { t: "ممتاز", cls: "m-a" },
   { t: "جيد جداً", cls: "m-b" },
   { t: "جيد", cls: "m-c" },
 ];
-const REASONS = ["موصى به بناءً على مطابقة المنهج", "الأكثر مشاهدة بين الطلاب", "شرح في وقت أقل"];
+const REASONS = {
+  approved: "من قناة معتمدة",
+  mostViewed: "الأكثر مشاهدة بين الطلاب",
+  shortest: "شرح في وقت أقل",
+  default: "موصى به بناءً على مطابقة المنهج",
+};
+// تدرّجات لونية زخرفية فقط (خلفية الصورة المصغّرة قبل تحميلها/عند غيابها) — لا علاقة لها ببيانات الفيديو.
 const VID_GRADS = [
   ["#155043", "#0F3E34"], ["#125D64", "#155043"], ["#3CA45D", "#155043"], ["#869200", "#5F6800"],
   ["#3CA6EB", "#125D64"], ["#F3C43C", "#B57A0A"], ["#125D64", "#0F3E34"], ["#EB3C87", "#155043"],
@@ -186,9 +172,10 @@ export function toArabicDigits(n) {
   return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
 }
 
-export function fmtDur(m) {
-  const mm = Math.floor(m);
-  const ss = (m * 7) % 60 | 0;
+export function fmtDurationSeconds(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds || 0));
+  const mm = Math.floor(s / 60);
+  const ss = s % 60;
   return `${toArabicDigits(String(mm).padStart(2, "0"))}:${toArabicDigits(String(ss).padStart(2, "0"))}`;
 }
 
@@ -201,24 +188,55 @@ export function fmtRate(r) {
   return toArabicDigits(r.toFixed(1)).replace(".", "٫");
 }
 
-export function mockVideos(lesson, subjectId) {
+// match_score (من الباك إند) درجة ترتيب مركّبة حقيقية — مطابقة الدرس/الصف/المادة
+// + المشاهدات + الحداثة + قناة معتمدة + مطابقة LLM مخفية (video_ranker.py).
+// نحوّلها إلى مقياس ٠-٥ للعرض والفلترة، دون اختلاق أي بيانات: القاسم مُعاير على
+// المدى الفعلي للدرجات المُلاحظة من محرك الترتيب (فيديو من قناة معتمدة ومطابق
+// للدرس عادة ما تكون درجته ~١٩٠-٢٤٠).
+function scoreToRating(score) {
+  return Math.max(0, Math.min(5, (score || 0) / 50));
+}
+
+function matchTierFromScore(score) {
+  if (score >= 220) return MATCHES[0]; // ممتاز
+  if (score >= 170) return MATCHES[1]; // جيد جداً
+  return MATCHES[2]; // جيد
+}
+
+// يحوّل استجابة /api/lesson_videos الحقيقية (فيديوهات يوتيوب فعلية من قنوات
+// معتمدة) إلى شكل بطاقة الفيديو — كل حقل مشتق من بيانات واقعية، لا بيانات وهمية.
+export function adaptApiVideos(apiVideos, subjectId) {
   const icn = (SUB_DEFS[subjectId] || SUB_DEFS.math).icn;
-  return VIDS_META.map((m, i) => {
-    const ch = CHANNELS[m.ch];
+  const list = apiVideos || [];
+  const maxViews = Math.max(0, ...list.map((v) => v.view_count || 0));
+  const minDuration = list.length ? Math.min(...list.map((v) => v.duration_seconds || Infinity)) : 0;
+
+  return list.map((v, i) => {
+    const durSeconds = v.duration_seconds || 0;
+    const year = v.published_at ? new Date(v.published_at).getFullYear() : new Date().getFullYear();
+    const channel = v.channel_title || "";
+
+    let reason = REASONS.default;
+    if (v.approved) reason = REASONS.approved;
+    else if (list.length > 1 && maxViews > 0 && v.view_count === maxViews) reason = REASONS.mostViewed;
+    else if (list.length > 1 && durSeconds > 0 && durSeconds === minDuration) reason = REASONS.shortest;
+
     return {
-      title: `${lesson.t} | ${m.ty}`,
-      ch: ch.n,
-      init: ch.n.replace("أ. ", "").charAt(0),
-      nat: ch.nat,
-      ver: ch.v,
-      durM: m.durM,
-      dur: fmtDur(m.durM),
-      views: m.views,
-      viewsT: fmtViews(m.views),
-      year: m.year,
-      rate: m.rate,
-      match: MATCHES[m.match],
-      reason: REASONS[m.reason],
+      video_id: v.video_id,
+      url: v.url,
+      title: v.title,
+      ch: channel,
+      init: channel.charAt(0) || "؟",
+      ver: !!v.approved,
+      durM: durSeconds / 60,
+      dur: fmtDurationSeconds(durSeconds),
+      views: v.view_count || 0,
+      viewsT: fmtViews(v.view_count || 0),
+      year,
+      rate: scoreToRating(v.match_score),
+      match: matchTierFromScore(v.match_score || 0),
+      reason,
+      thumbnail_url: v.thumbnail_url,
       g: VID_GRADS[i % VID_GRADS.length],
       icn,
     };
@@ -226,15 +244,15 @@ export function mockVideos(lesson, subjectId) {
 }
 
 export function defaultFilters() {
-  return { nat: "all", rec: "all", dur: "all", views: "all", rate: "all", ver: false };
+  return { rec: "all", dur: "all", views: "all", rate: "all", ver: false };
 }
 
 export function applyFilters(videos, filters) {
   const f = filters;
+  const currentYear = new Date().getFullYear();
   return videos.filter((v) => {
-    if (f.nat !== "all" && v.nat !== f.nat) return false;
-    if (f.rec === "y1" && v.year < 2026) return false;
-    if (f.rec === "y2" && v.year < 2025) return false;
+    if (f.rec === "y1" && v.year < currentYear) return false;
+    if (f.rec === "y2" && v.year < currentYear - 1) return false;
     if (f.dur === "lt5" && !(v.durM < 5)) return false;
     if (f.dur === "lt10" && !(v.durM < 10)) return false;
     if (f.dur === "d10_20" && !(v.durM >= 10 && v.durM <= 20)) return false;

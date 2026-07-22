@@ -250,6 +250,28 @@ def test_failed_processing_marks_material_failed(fake_client):
     assert row["processing_status"] == "failed"
 
 
+def test_crash_mid_pipeline_marks_material_failed_instead_of_hanging(fake_client):
+    """
+    Regression guard: run_personal_pipeline used to have no try/except at all,
+    so a crash anywhere after process_material() (a transient Supabase error,
+    a malformed topic dict, ...) left the row stuck at processing_status=
+    'processing' forever -- reproduced live, no error visible anywhere except
+    a server log line. It must now be marked 'failed' like any other failure.
+    """
+    with patch("main.ai_logic.process_file_to_pages", new=_fake_pages), \
+         patch("personal_materials_store.process_material", return_value=FAKE_RESULT), \
+         patch("personal_materials_store.generate_material_metadata", side_effect=RuntimeError("boom")):
+        res = client.post(
+            "/api/my/materials",
+            files={"file": ("notes.pdf", b"%PDF-1.4 fake", "application/pdf")},
+            headers={"X-User-Id": "alice"},
+        )
+        mid = res.json()["material_id"]
+
+    row = next(r for r in fake_client.tables["materials"].rows if r["id"] == mid)
+    assert row["processing_status"] == "failed"
+
+
 # --------------------------------------------------------------------------
 # القبول (١): المادة الشخصية لا تظهر لغير صاحبها
 # --------------------------------------------------------------------------

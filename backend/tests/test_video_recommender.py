@@ -94,6 +94,9 @@ def test_relevance_scoring_runs_once_and_stays_hidden():
     public = to_public_video(out[0])
     assert "relevance" not in public and "score" not in public
     assert public["approved"] is True and public["badge"] == APPROVED_BADGE
+    # match_score is the final composite ranking score (used by the frontend's
+    # "video rating" filter) -- distinct from the raw hidden relevance number.
+    assert public["match_score"] == out[0]["score"]
 
 
 def test_empty_lesson_returns_nothing():

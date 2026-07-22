@@ -53,21 +53,37 @@ def run_personal_pipeline(material_id: str, slides: list, filename: str, call_gr
     Background (blocking — run via executor, like I3's own endpoint): analyze
     via I3's exact pipeline, generate title/description (A4 — process_material
     has no equivalent, it only returns summary+topics), then persist.
+
+    Runs with no HTTP caller listening (the upload response already went out),
+    so nothing else can report a failure here. Without the try/except, any
+    crash (a transient Supabase error, a malformed topic dict, ...) left the
+    row stuck at processing_status='processing' forever with no error visible
+    anywhere except a server log line — reproduced live. On any exception the
+    material is now marked 'failed', same as the "no extractable text" case.
     """
     client = get_service_client()
-    result = process_material(slides, call_groq_fn, language)
-    if result is None:
-        client.table("materials").update({"processing_status": "failed"}).eq("id", material_id).execute()
-        return
+    try:
+        result = process_material(slides, call_groq_fn, language)
+        if result is None:
+            client.table("materials").update({"processing_status": "failed"}).eq("id", material_id).execute()
+            return
 
-    all_text = "\n\n".join(s["text"] for s in slides)
-    meta = generate_material_metadata(all_text, filename, call_groq_fn)
+        all_text = "\n\n".join(s["text"] for s in slides)
+        meta = generate_material_metadata(all_text, filename, call_groq_fn)
 
-    upsert_material_content(client, material_id, result)  # marks processing_status='processed'
-    client.table("materials").update({
-        "title": meta["title"],
-        "description": meta["description"],
-    }).eq("id", material_id).execute()
+        upsert_material_content(client, material_id, result)  # marks processing_status='processed'
+        client.table("materials").update({
+            "title": meta["title"],
+            "description": meta["description"],
+        }).eq("id", material_id).execute()
+    except Exception as e:
+        print(f"❌ [{material_id}] Personal material pipeline crashed: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            client.table("materials").update({"processing_status": "failed"}).eq("id", material_id).execute()
+        except Exception as mark_failed_error:
+            print(f"❌ [{material_id}] Also failed to mark the material as failed: {mark_failed_error}")
 
 
 def get_personal_material(material_id: str, owner_id: str):

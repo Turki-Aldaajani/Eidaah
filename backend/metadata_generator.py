@@ -101,7 +101,13 @@ def generate_material_metadata(text, filename, call_groq_fn, language="ar", mode
     )
 
     try:
-        raw = call_groq_fn(prompt=prompt, max_tokens=300, temperature=0.3)
+        # reasoning_effort="low": gpt-oss-120b's hidden reasoning tokens count
+        # against max_tokens even though they never appear in the output. At
+        # "medium" effort, reasoning intermittently ate the whole budget on
+        # this short prompt, returning empty/truncated content and silently
+        # falling back on ~40% of calls. "low" reasoning + a bit more headroom
+        # eliminated the failures in repeated testing.
+        raw = call_groq_fn(prompt=prompt, max_tokens=400, temperature=0.3, reasoning_effort="low")
         data = json.loads(_strip_code_fences(raw))
         if not isinstance(data, dict):
             raise ValueError("Expected a JSON object")

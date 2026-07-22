@@ -111,7 +111,9 @@ def recommend_videos(lesson_title, subject_id=None, subject_name=None, grade_nam
 
 
 def to_public_video(v):
-    """Trim a ranked video to the fields the frontend needs (relevance stays hidden)."""
+    """Trim a ranked video to the fields the frontend needs (the raw LLM
+    relevance number stays hidden; match_score is the final composite ranking
+    score, already used to order results, so exposing it isn't a new leak)."""
     return {
         "video_id": v.get("video_id"),
         "title": v.get("title", ""),
@@ -125,4 +127,5 @@ def to_public_video(v):
         "approved": bool(v.get("approved")),
         "badge": v.get("badge"),
         "source": v.get("source", "youtube"),
+        "match_score": v.get("score", 0),
     }
