@@ -1,7 +1,7 @@
 # main.py
 # Eidaah Phase 3 — Topic Detection + Analysis (LLM-only, no local embeddings)
 
-from fastapi import FastAPI, File, UploadFile, Request, HTTPException, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, Request, HTTPException, BackgroundTasks, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
@@ -38,6 +38,7 @@ import agent_store
 from study_agent import plan_study, grade_answers, build_report
 from video_recommender import recommend_videos, to_public_video
 from video_provider import build_provider
+import personal_materials_store
 
 
 # ---------------------------------------------------------
@@ -772,6 +773,171 @@ async def lesson_videos(
     videos = [to_public_video(v) for v in ranked]
     _video_cache[cache_key] = (now_ts + _VIDEO_CACHE_TTL, videos)
     return {"videos": videos, "count": len(videos), "cached": False}
+
+
+# ---------------------------------------------------------
+# S1 · Personal Materials + Progress (#43)
+#
+# A student uploads a PRIVATE material — analyzed via I3's exact pipeline
+# (material_ingest.process_material) and persisted in Supabase for the owner
+# ONLY, with no admin approval. Reuses I3's write path
+# (upsert_material_content) and view assembly (build_material_view) as-is;
+# does NOT reuse I3's find_or_create_material / fetch_material_content, which
+# assume public library materials with no owner filter — every read here is
+# owner-scoped in the query itself, on top of the RLS added in the S1 privacy
+# migration (20260722000001_s1_material_content_privacy.sql). See
+# personal_materials_store.py for the full rationale.
+#
+# Identity comes from the `X-User-Id` header: the durable design authenticates
+# via Supabase (I1) and scopes rows with RLS, but that JWT isn't wired into
+# this FastAPI service yet, so the header carries the student identity in the
+# meantime. Ownership is enforced in personal_materials_store.py regardless.
+# ---------------------------------------------------------
+def _require_user(x_user_id: Optional[str]) -> str:
+    uid = (x_user_id or "").strip()
+    if not uid:
+        raise HTTPException(401, "معرّف المستخدم مطلوب (X-User-Id).")
+    return uid
+
+
+def _progress_public(progress: dict) -> dict:
+    completed = progress.get("completed_slides") or []
+    total = progress.get("total_slides") or 0
+    return {
+        "completed_slides": list(completed),
+        "completed_count": len(completed),
+        "total_slides": total,
+        "percent": round(100 * len(completed) / total) if total else 0,
+        "avg_review_score": progress.get("avg_review_score") or 0.0,
+        "last_activity": progress.get("last_activity"),
+    }
+
+
+def _material_public(material: dict) -> dict:
+    return {
+        "material_id": material["id"],
+        "scope": personal_materials_store.SCOPE_PERSONAL,
+        "title": material.get("title"),
+        "description": material.get("description"),
+        "processing_status": material.get("processing_status"),
+        "total_slides": material.get("slide_count", 0),
+        "topics": material.get("topics", []),
+        "summary": material.get("summary"),
+        "created_at": material.get("created_at"),
+    }
+
+
+def _material_list_item(row: dict) -> dict:
+    return {
+        "material_id": row["id"],
+        "scope": personal_materials_store.SCOPE_PERSONAL,
+        "title": row.get("title"),
+        "description": row.get("description"),
+        "processing_status": row.get("processing_status"),
+        "created_at": row.get("created_at"),
+    }
+
+
+@app.post("/api/my/materials", tags=["S1: Personal Materials"])
+async def upload_personal_material(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(..., description="PDF or PPTX file"),
+    x_user_id: Optional[str] = Header(None),
+):
+    """Upload a personal material. Extracts slides immediately and inserts the
+    owner-scoped materials row; analysis + storage run in the background via
+    I3's pipeline (material_ingest.run_personal_pipeline)."""
+    owner_id = _require_user(x_user_id)
+
+    file_contents = await file.read()
+    if len(file_contents) > MAX_UPLOAD_SIZE:
+        return JSONResponse(status_code=413, content={"detail": "File too large. Max 20MB."})
+
+    file_stream = io.BytesIO(file_contents)
+    pages = await ai_logic.process_file_to_pages(
+        file=file_stream,
+        file_type=file.content_type,
+        filename=file.filename,
+    )
+
+    loop = asyncio.get_event_loop()
+    provisional_title = fallback_title_from_filename(file.filename)
+    material = await loop.run_in_executor(
+        executor, personal_materials_store.create_personal_material, owner_id, provisional_title,
+    )
+
+    background_tasks.add_task(
+        personal_materials_store.run_personal_pipeline,
+        material["id"], pages, file.filename, call_groq,
+    )
+
+    return JSONResponse(status_code=201, content={
+        "material_id": material["id"],
+        "scope": personal_materials_store.SCOPE_PERSONAL,
+        "title": material["title"],
+        "processing_status": material["processing_status"],
+        "created_at": material["created_at"],
+    })
+
+
+@app.get("/api/my/materials", tags=["S1: Personal Materials"])
+async def list_personal_materials(x_user_id: Optional[str] = Header(None)):
+    """List the caller's personal materials only — never anyone else's."""
+    owner_id = _require_user(x_user_id)
+    loop = asyncio.get_event_loop()
+    rows = await loop.run_in_executor(
+        executor, personal_materials_store.list_personal_materials, owner_id,
+    )
+    return {"materials": [_material_list_item(r) for r in rows]}
+
+
+@app.get("/api/my/materials/{material_id}", tags=["S1: Personal Materials"])
+async def get_personal_material(material_id: str, x_user_id: Optional[str] = Header(None)):
+    """Fetch one personal material. Returns 404 for non-owners (never leaks it)."""
+    owner_id = _require_user(x_user_id)
+    loop = asyncio.get_event_loop()
+    material = await loop.run_in_executor(
+        executor, personal_materials_store.get_personal_material, material_id, owner_id,
+    )
+    if material is None:
+        raise HTTPException(404, "Material not found.")
+    return _material_public(material)
+
+
+@app.get("/api/my/materials/{material_id}/progress", tags=["S1: Personal Materials"])
+async def get_personal_progress(material_id: str, x_user_id: Optional[str] = Header(None)):
+    """Read the owner's progress on a personal material."""
+    owner_id = _require_user(x_user_id)
+    loop = asyncio.get_event_loop()
+    progress = await loop.run_in_executor(
+        executor, personal_materials_store.get_progress, material_id, owner_id,
+    )
+    if progress is None:
+        raise HTTPException(404, "Material not found.")
+    return {"material_id": material_id, "progress": _progress_public(progress)}
+
+
+class ProgressUpdate(BaseModel):
+    completed_slides: Optional[list] = None      # slide numbers the student finished
+    avg_review_score: Optional[float] = None     # 0..1, متوسط أسئلة المراجعة
+
+
+@app.put("/api/my/materials/{material_id}/progress", tags=["S1: Personal Materials"])
+async def update_personal_progress(
+    material_id: str,
+    payload: ProgressUpdate,
+    x_user_id: Optional[str] = Header(None),
+):
+    """Update the owner's progress. 404 for non-owners (can't touch others')."""
+    owner_id = _require_user(x_user_id)
+    loop = asyncio.get_event_loop()
+    progress = await loop.run_in_executor(
+        executor, personal_materials_store.update_progress,
+        material_id, owner_id, payload.completed_slides, payload.avg_review_score,
+    )
+    if progress is None:
+        raise HTTPException(404, "Material not found.")
+    return {"material_id": material_id, "progress": _progress_public(progress)}
 
 
 # ---------------------------------------------------------
