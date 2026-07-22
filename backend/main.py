@@ -124,6 +124,8 @@ def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, f
     if not session:
         return
 
+    all_text = "\n\n".join(s["text"] for s in session.slides)
+
     try:
         # 1. Render slide images (optional — needs LibreOffice for PPTX)
         print(f"🖼️  [{session_id}] Rendering slide images...")
@@ -135,36 +137,38 @@ def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, f
         chunks = chunk_slides(session.slides)
         session.chunks = chunks
 
-        if not chunks:
-            session.indexing_complete = True
-            return
+        if chunks:
+            # 3. Detect topics via LLM (no embeddings!)
+            print(f"🏷️  [{session_id}] Detecting topics via LLM...")
+            topics = detect_topics(chunks, call_groq)
+            session.topics = topics
 
-        # 3. Detect topics via LLM (no embeddings!)
-        print(f"🏷️  [{session_id}] Detecting topics via LLM...")
-        topics = detect_topics(chunks, call_groq)
-        session.topics = topics
+            # 4. Generate global summary
+            print(f"📝 [{session_id}] Generating summary...")
+            session.summary = generate_summary(all_text, call_groq)
 
-        # 4. Generate global summary
-        print(f"📝 [{session_id}] Generating summary...")
-        all_text = "\n\n".join(s["text"] for s in session.slides)
-        session.summary = generate_summary(all_text, call_groq)
-
-        # 5. Generate title + description ONCE (A4 · #25). Served from /status
-        #    afterwards with no further LLM calls.
-        print(f"🏷️  [{session_id}] Generating title & description...")
-        meta = generate_material_metadata(all_text, session.filename, call_groq)
-        session.title = meta["title"]
-        session.description = meta["description"]
-        session.metadata_auto = meta["auto_generated"]
-
-        session.indexing_complete = True
-        print(f"✅ [{session_id}] Pipeline complete! ({len(chunks)} chunks, {len(topics)} topics)")
+            print(f"✅ [{session_id}] Pipeline complete! ({len(chunks)} chunks, {len(topics)} topics)")
 
     except Exception as e:
         print(f"❌ [{session_id}] Semantic pipeline error: {e}")
         import traceback
         traceback.print_exc()
-        session.indexing_complete = True
+
+    # 5. Generate title + description ONCE (A4 · #25). Always attempted,
+    #    independent of steps 1-4 above — a document with no extractable
+    #    chunks (image-only slides, OCR failure) or an earlier pipeline
+    #    failure must still get a title/description. Served from /status
+    #    afterwards with no further LLM call.
+    try:
+        print(f"🏷️  [{session_id}] Generating title & description...")
+        meta = generate_material_metadata(all_text, session.filename, call_groq)
+        session.title = meta["title"]
+        session.description = meta["description"]
+        session.metadata_auto = meta["auto_generated"]
+    except Exception as e:
+        print(f"❌ [{session_id}] Metadata generation step crashed: {e}")
+
+    session.indexing_complete = True
 
 
 # ---------------------------------------------------------
