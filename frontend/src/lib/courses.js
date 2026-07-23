@@ -130,6 +130,27 @@ export async function selectCourse(courseId, term) {
   return data;
 }
 
+// إضافة مجمّعة: كل المقررات المحددة في طلب واحد (تخفّف تكرار الاتصالات).
+export async function selectCourses(courseIds, term) {
+  const ids = [...new Set(courseIds)].filter(Boolean);
+  if (ids.length === 0) return [];
+  const supabase = getSupabaseClient();
+  const user = await currentUser(supabase);
+  if (!user) throw new Error('سجّل الدخول لإضافة مقررات');
+  const rows = ids.map((id) => ({
+    user_id: user.id,
+    course_id: id,
+    term,
+    status: 'in_progress',
+  }));
+  const { data, error } = await supabase
+    .from('student_courses')
+    .insert(rows)
+    .select('id, course_id, status');
+  if (error) throw new Error(`تعذّر إضافة المقررات: ${error.message}`);
+  return data || [];
+}
+
 export async function unselectCourse(courseId, term) {
   const supabase = getSupabaseClient();
   const user = await currentUser(supabase);

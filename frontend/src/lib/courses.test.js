@@ -12,6 +12,7 @@ const {
   addCustomCourse,
   fetchStudentCourses,
   selectCourse,
+  selectCourses,
   unselectCourse,
 } = require('./courses');
 
@@ -113,6 +114,27 @@ describe('اختيار المقررات', () => {
   test('selectCourse يرفض بلا جلسة', async () => {
     getSupabaseClient.mockReturnValue(client({ user: null, from: jest.fn(() => q({})) }));
     await expect(selectCourse('c1', 't')).rejects.toThrow(/سجّل الدخول/);
+  });
+
+  test('selectCourses يُدرج كل المقررات المحددة في طلب واحد', async () => {
+    const query = q({ data: [{ id: 's1' }, { id: 's2' }] });
+    const from = jest.fn(() => query);
+    getSupabaseClient.mockReturnValue(client({ user: { id: 'u1' }, from }));
+
+    await selectCourses(['c1', 'c2', 'c1'], '1447-1'); // c1 مكرر يُزال
+
+    expect(from).toHaveBeenCalledTimes(1); // اتصال واحد فقط
+    expect(query.insert).toHaveBeenCalledWith([
+      { user_id: 'u1', course_id: 'c1', term: '1447-1', status: 'in_progress' },
+      { user_id: 'u1', course_id: 'c2', term: '1447-1', status: 'in_progress' },
+    ]);
+  });
+
+  test('selectCourses بقائمة فارغة لا يتصل بالسيرفر', async () => {
+    const from = jest.fn(() => q({}));
+    getSupabaseClient.mockReturnValue(client({ user: { id: 'u1' }, from }));
+    await expect(selectCourses([], 't')).resolves.toEqual([]);
+    expect(from).not.toHaveBeenCalled();
   });
 
   test('unselectCourse يحذف باختيار المستخدم والفصل', async () => {
