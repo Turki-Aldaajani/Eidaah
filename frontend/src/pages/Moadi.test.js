@@ -145,17 +145,20 @@ test('البحث يفلتر الكتالوج فوراً بلا إعادة تحم
   expect(courses.fetchCourseCatalog).toHaveBeenCalledTimes(1);
 });
 
-test('إضافة مقرر خاص تُنشئه وتُحدّده للإضافة المجمّعة', async () => {
+test('إضافة مقرر خاص: بلا جامعة (خاص)، وتُظهر استبيان المساهمة', async () => {
   renderMoadi();
   fireEvent.click(await screen.findByRole('button', { name: /أضف مقرراً خاصاً/ }));
   fireEvent.change(screen.getByLabelText('اسم المقرر'), { target: { value: 'تعلم آلي' } });
   fireEvent.click(screen.getByRole('button', { name: /أضِف وحدّد/ }));
+
   await waitFor(() =>
-    expect(courses.addCustomCourse).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'تعلم آلي', university: 'جامعة الإمام' })
-    )
+    expect(courses.addCustomCourse).toHaveBeenCalledWith(expect.objectContaining({ name: 'تعلم آلي' }))
   );
-  expect(await screen.findByRole('button', { name: /إلى مقرراتي/ })).toBeInTheDocument();
+  // المقرر الخاص لا يحمل جامعة (لا يتسرّب لكتالوج غيره)
+  expect(courses.addCustomCourse.mock.calls[0][0]).not.toHaveProperty('university');
+  // يظهر استبيان المساهمة، والمقرر محدَّد للإضافة المجمّعة
+  expect(await screen.findByText('ساهم في المكتبة؟')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /إلى مقرراتي/ })).toBeInTheDocument();
 });
 
 test('إنهاء الفصل بخيارين: «تجاوزت» ترقّي المستوى وتظهر تهنئة', async () => {

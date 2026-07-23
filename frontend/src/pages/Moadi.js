@@ -7,6 +7,7 @@ import { Link, Navigate } from 'react-router-dom';
 import TopNav from '../components/TopNav';
 import Footer from '../Footer';
 import Icon from '../components/Icon';
+import ContributeSurvey from '../components/ContributeSurvey';
 import { useAuth } from '../auth/AuthContext';
 import { useProfile } from '../profile/ProfileContext';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
@@ -51,6 +52,7 @@ export default function Moadi() {
   const [confirmCourse, setConfirmCourse] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [custom, setCustom] = useState({ name: '', level: '', elective: 'required' });
+  const [contributeCourse, setContributeCourse] = useState(null); // استبيان المساهمة بعد إضافة مقرر خاص
   const [endTerm, setEndTerm] = useState(null); // { [scId]: 'passed' | 'not' }
   const [endTermDismissed, setEndTermDismissed] = useState(false);
   const [popup, setPopup] = useState('');
@@ -200,9 +202,9 @@ export default function Moadi() {
     setBusy(true);
     setError('');
     try {
+      // المقرر الخاص يبقى خاصاً بصاحبه (بلا جامعة → لا يظهر في كتالوج غيره)
       const created = await addCustomCourse({
         name: custom.name,
-        university,
         level: custom.level ? Number(custom.level) : null,
         electiveType: custom.elective,
       });
@@ -210,6 +212,7 @@ export default function Moadi() {
       setStaged((prev) => new Set(prev).add(created.id)); // يُحدَّد للإضافة المجمّعة
       setCustom({ name: '', level: '', elective: 'required' });
       setShowAdd(false);
+      setContributeCourse(created); // استبيان المساهمة (أو الإبقاء خاصاً)
     } catch (err) {
       setError(err.message);
     } finally {
@@ -575,6 +578,15 @@ export default function Moadi() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* استبيان المساهمة في المكتبة بعد إضافة مقرر خاص */}
+      {contributeCourse && (
+        <ContributeSurvey
+          course={contributeCourse}
+          profile={profile}
+          onClose={() => setContributeCourse(null)}
+        />
       )}
       <Footer />
     </>
