@@ -47,7 +47,31 @@ test("the explanation card is the first result card in the DOM (renders on the r
   const cards = container.querySelectorAll(".result-card");
   expect(cards).toHaveLength(2);
   expect(cards[0].textContent).toContain("شرح تحليلي");
-  expect(cards[1].querySelector(".result-select")).not.toBeNull();
+  expect(cards[1].querySelector(".result-slide-nav")).not.toBeNull();
+});
+
+test("F4: slide navigation shows a «n / total» counter and prev/next arrows", async () => {
+  localStorage.setItem(
+    "slides",
+    JSON.stringify([
+      { slide_number: 1, text: "الشريحة الأولى", explanation: null, example: null },
+      { slide_number: 2, text: "الشريحة الثانية", explanation: null, example: null },
+      { slide_number: 3, text: "الشريحة الثالثة", explanation: null, example: null },
+    ])
+  );
+  const { container } = renderResults();
+  await waitFor(() => expect(container.querySelector(".result-slide-nav")).not.toBeNull());
+
+  const counter = container.querySelector(".slide-counter");
+  expect(counter.textContent).toMatch(/١ \/ ٣/); // عدّاد بأرقام عربية
+
+  const prev = screen.getByRole("button", { name: "الشريحة السابقة" });
+  const next = screen.getByRole("button", { name: "الشريحة التالية" });
+  expect(prev).toBeDisabled(); // أول شريحة → السابق معطّل
+
+  fireEvent.click(next);
+  expect(container.querySelector(".slide-counter").textContent).toMatch(/٢ \/ ٣/);
+  expect(prev).not.toBeDisabled();
 });
 
 test("clicking Explain fetches the slide analysis and renders it in the explanation card", async () => {
