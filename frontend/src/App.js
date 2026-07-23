@@ -10,6 +10,8 @@ import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 import Moadi from "./pages/Moadi";
 import Library from "./pages/Library";
+import SubmitMaterial from "./pages/SubmitMaterial";
+import Admin from "./pages/Admin";
 import MaterialView from "./pages/MaterialView";
 import Upload from "./pages/Upload";
 import Results from "./pages/Results";
@@ -34,6 +36,8 @@ function App() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/moadi" element={<Moadi />} />
+          <Route path="/submit-material" element={<SubmitMaterial />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/library" element={<Library />} />
           <Route path="/library/:materialId" element={<MaterialView />} />
           <Route path="/learn" element={<CurriculumHome />} />
