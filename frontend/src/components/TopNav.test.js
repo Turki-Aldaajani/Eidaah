@@ -28,6 +28,11 @@ test("renders the brand name", () => {
   expect(screen.getByText("إيضاح")).toBeInTheDocument();
 });
 
+test("لا يعرض السلوقن القديم تحت اللوقو", () => {
+  renderTopNav();
+  expect(screen.queryByText(/سِرَاجَه/)).not.toBeInTheDocument();
+});
+
 test("clicking the theme toggle switches the document theme", () => {
   renderTopNav();
   const toggleBtn = screen.getByRole("button", { name: "تبديل الوضع الليلي" });
