@@ -138,3 +138,22 @@ describe('الكتابة التجريبية — submitMaterialRequest', () => {
     await expect(submitMaterialRequest({})).rejects.toThrow(/عنوان المادة مطلوب/);
   });
 });
+
+describe('normalizeSupabaseUrl', () => {
+  const { normalizeSupabaseUrl } = require('./supabaseClient');
+
+  test('يزيل المسار الزائد /rest/v1 (سبب Invalid path)', () => {
+    expect(normalizeSupabaseUrl('https://abc.supabase.co/rest/v1/')).toBe('https://abc.supabase.co');
+    expect(normalizeSupabaseUrl('https://abc.supabase.co/rest/v1')).toBe('https://abc.supabase.co');
+  });
+
+  test('يبقي الرابط الصحيح ويزيل الشرطة الأخيرة', () => {
+    expect(normalizeSupabaseUrl('https://abc.supabase.co')).toBe('https://abc.supabase.co');
+    expect(normalizeSupabaseUrl('https://abc.supabase.co/')).toBe('https://abc.supabase.co');
+  });
+
+  test('يتحمّل القيم الفارغة', () => {
+    expect(normalizeSupabaseUrl('')).toBe('');
+    expect(normalizeSupabaseUrl(undefined)).toBeUndefined();
+  });
+});

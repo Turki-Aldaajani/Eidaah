@@ -2,7 +2,20 @@
 // المفاتيح من frontend/.env (انظر .env.example وsupabase/README.md).
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+// عميل Supabase يريد أصل المشروع فقط (https://<ref>.supabase.co). لو أضيف
+// مسار زائد بالخطأ في متغيّر البيئة (مثل .../rest/v1/) تفشل نداءات المصادقة بـ
+// «Invalid path specified in request URL». نأخذ الأصل فقط لنكون محصّنين.
+export function normalizeSupabaseUrl(url) {
+  if (!url) return url;
+  const trimmed = String(url).trim();
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed.replace(/\/+$/, '');
+  }
+}
+
+const SUPABASE_URL = normalizeSupabaseUrl(process.env.REACT_APP_SUPABASE_URL);
 const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 let client = null;
