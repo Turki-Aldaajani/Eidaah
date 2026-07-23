@@ -728,3 +728,18 @@ select.auth-input{cursor:pointer;appearance:none;background-image:url("data:imag
 .subject-card--locked::before{opacity:.4}
 .subject-card--locked .s-meta--muted{color:var(--faint)}
 .s-soon-badge{position:absolute;top:10px;inset-inline-end:10px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px}
+
+/* ---------- library (F2: المكتبة وصفحة المادة) ---------- */
+.lib-card{position:relative;--c:var(--pri)}
+.lib-badge{position:absolute;top:10px;inset-inline-start:10px;font-size:.62rem;font-weight:700;color:var(--suc);background:var(--suc-bg);border:1px solid var(--suc-line);padding:2px 9px;border-radius:999px}
+.lib-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:40px 24px;max-width:520px;margin:24px auto}
+.lib-empty .s-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:var(--pri-soft);border:1px solid var(--pri-line);color:var(--pri)}
+.lib-empty .s-icon .ic{width:24px;height:24px}
+.lib-empty h3{font-size:1.15rem;font-weight:700}
+.lib-empty .s-desc{color:var(--mut);line-height:1.7;max-width:420px}
+.lib-content{display:flex;flex-direction:column;gap:16px}
+.lib-summary p{color:var(--ink);line-height:1.9;margin:6px 0 10px}
+.lib-topic{margin-bottom:14px}
+.lib-topic-label{color:var(--pri);font-size:1rem;font-weight:700;margin-bottom:6px}
+.lib-topic h4{font-size:.85rem;font-weight:600;color:var(--mut);margin:10px 0 2px}
+.lib-topic p{line-height:1.9;color:var(--ink)}
