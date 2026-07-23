@@ -592,6 +592,11 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .nav-auth .ic{width:15px;height:15px}
 .nav-auth-email{direction:ltr;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav-auth-chip{font-size:.62rem;font-weight:700;color:var(--pri);background:var(--pri-soft);border:1px solid var(--pri-line);padding:1px 8px;border-radius:999px}
+/* ويدجت النقاط والمستوى (F6) */
+.points-widget{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:var(--pri);background:var(--pri-soft);border:1px solid var(--pri-line);padding:5px 11px;border-radius:999px}
+.points-widget .points-star{width:14px;height:14px;color:#f0a800}
+.points-balance{font-weight:700;font-variant-numeric:tabular-nums}
+.points-level{font-size:.68rem;font-weight:700;color:var(--mut);border-inline-start:1px solid var(--pri-line);padding-inline-start:6px}
 .auth-wrap{display:flex;justify-content:center;padding:56px 16px}
 .auth-card{width:100%;max-width:440px;padding:32px 28px;display:flex;flex-direction:column;gap:14px}
 .auth-title{font-size:1.5rem;font-weight:700}

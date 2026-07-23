@@ -4,6 +4,7 @@ import { ThemeProvider } from "./theme/ThemeContext";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { AuthProvider } from "./auth/AuthContext";
 import { ProfileProvider } from "./profile/ProfileContext";
+import { PointsProvider } from "./points/PointsContext";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
@@ -28,6 +29,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
       <ProfileProvider>
+      <PointsProvider>
       <LanguageProvider>
       <Router>
         <Routes>
@@ -53,6 +55,7 @@ function App() {
         </Routes>
       </Router>
       </LanguageProvider>
+      </PointsProvider>
       </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>

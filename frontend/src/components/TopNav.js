@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
+import PointsWidget from "./PointsWidget";
 import { useTheme } from "../theme/ThemeContext";
 import { useAuth } from "../auth/AuthContext";
 import { isAdminEmail } from "../data/admins";
@@ -28,6 +29,7 @@ export default function TopNav() {
           </Link>
           {session ? (
             <>
+              <PointsWidget />
               <Link className="nav-auth" to="/moadi">
                 <Icon name="book-open" />
                 <span className="nav-auth-email">مقرراتي</span>
