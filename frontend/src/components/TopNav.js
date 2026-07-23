@@ -26,6 +26,10 @@ export default function TopNav() {
           </Link>
           {session ? (
             <>
+              <Link className="nav-auth" to="/moadi">
+                <Icon name="book-open" />
+                <span className="nav-auth-email">مقرراتي</span>
+              </Link>
               <Link className="nav-auth signed" to="/login" title={session.user?.email}>
                 <Icon name="mail" />
                 <span className="nav-auth-email">{session.user?.email}</span>

@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
+import Moadi from "./pages/Moadi";
 import Library from "./pages/Library";
 import MaterialView from "./pages/MaterialView";
 import Upload from "./pages/Upload";
@@ -32,6 +33,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/moadi" element={<Moadi />} />
           <Route path="/library" element={<Library />} />
           <Route path="/library/:materialId" element={<MaterialView />} />
           <Route path="/learn" element={<CurriculumHome />} />

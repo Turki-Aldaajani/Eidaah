@@ -729,6 +729,36 @@ select.auth-input{cursor:pointer;appearance:none;background-image:url("data:imag
 .subject-card--locked .s-meta--muted{color:var(--faint)}
 .s-soon-badge{position:absolute;top:10px;inset-inline-end:10px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px}
 
+/* ---------- موادي (S2: اختيار المقررات) ---------- */
+.moadi-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.moadi-section{font-size:1.05rem;font-weight:700;margin:26px 0 12px}
+.moadi-grid{margin-bottom:8px}
+.moadi-catalog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px}
+.moadi-filters{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.moadi-checkbox{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--mut);cursor:pointer}
+.moadi-checkbox input{width:15px;height:15px;accent-color:var(--pri);cursor:pointer}
+.moadi-level{max-width:200px}
+.moadi-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.moadi-actions .btn{padding:8px 16px;font-size:.85rem}
+.course-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.course-badge{font-size:.66rem;font-weight:600;color:var(--mut);background:var(--bg-h);border:1px solid var(--line);padding:2px 9px;border-radius:999px}
+.course-badge.elective-required{color:var(--pri);background:var(--pri-soft);border-color:var(--pri-line)}
+.course-badge.elective-free_elective{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line)}
+.course-badge.elective-pure_elective{color:var(--info);background:var(--info-bg);border-color:var(--info-line)}
+.course-status{position:absolute;top:10px;inset-inline-start:10px;font-size:.62rem;font-weight:700;padding:2px 9px;border-radius:999px}
+.status-in_progress{color:var(--info);background:var(--info-bg);border:1px solid var(--info-line)}
+.status-completed{color:var(--suc);background:var(--suc-bg);border:1px solid var(--suc-line)}
+.status-dropped,.status-failed{color:var(--err);background:var(--err-bg);border:1px solid var(--err-line)}
+.course-locked{display:block;color:var(--err);font-size:.72rem;margin-top:8px}
+.moadi-add{margin-top:22px}
+.moadi-add-form{max-width:460px;padding:22px;display:flex;flex-direction:column;gap:10px}
+.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:20px}
+.modal-card{width:100%;max-width:460px;padding:26px;display:flex;flex-direction:column;gap:14px}
+.endterm-list{display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow:auto}
+.endterm-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.endterm-row span{font-size:.9rem;font-weight:600}
+.endterm-row select{max-width:130px}
+
 /* ---------- library (F2: المكتبة وصفحة المادة) ---------- */
 .lib-card{position:relative;--c:var(--pri)}
 .lib-badge{position:absolute;top:10px;inset-inline-start:10px;font-size:.62rem;font-weight:700;color:var(--suc);background:var(--suc-bg);border:1px solid var(--suc-line);padding:2px 9px;border-radius:999px}
