@@ -39,7 +39,8 @@ const CATALOG = [
   { id: 'c1', name: 'مقدمة في البرمجة', elective_type: 'required', default_level: 1, prerequisites: [] },
   { id: 'c2', name: 'هياكل البيانات', elective_type: 'required', default_level: 2, prerequisites: [] },
   { id: 'c4', name: 'قواعد البيانات', elective_type: 'required', default_level: 2, prerequisites: [] },
-  { id: 'c3', name: 'الخوارزميات', elective_type: 'free_elective', default_level: 2, prerequisites: ['c2'] },
+  { id: 'c3', name: 'الخوارزميات', elective_type: 'free_elective', default_level: 2, prerequisites: ['c2'] }, // مقفل، مستوى 2
+  { id: 'c5', name: 'أنظمة التشغيل', elective_type: 'required', default_level: 3, prerequisites: [] }, // مستوى آخر
 ];
 
 // فصل غير مُعرّف في التقويم → لا تفعيل تلقائي لإنهاء الفصل في معظم الاختبارات
@@ -70,11 +71,20 @@ function addButtonFor(name) {
   return screen.getByText(name).closest('.subject-card').querySelector('button');
 }
 
-test('الافتراضي يعرض مقررات مستوى الطالب المتاحة، ويُخفي المقفلة', async () => {
+test('الافتراضي يعرض مقررات مستوى الطالب (بما فيها المقفلة)، ويُخفي المستويات الأخرى', async () => {
   renderMoadi();
   expect(await screen.findByText('هياكل البيانات')).toBeInTheDocument();
   expect(screen.getByText('قواعد البيانات')).toBeInTheDocument();
-  expect(screen.queryByText('الخوارزميات')).not.toBeInTheDocument(); // مقفل → مخفي
+  expect(screen.getByText('الخوارزميات')).toBeInTheDocument(); // مقفل لكن ظاهر وقابل للإضافة
+  expect(screen.queryByText('أنظمة التشغيل')).not.toBeInTheDocument(); // مستوى آخر → مخفي
+});
+
+test('«إظهار غير المتوفرة لمستواك» يكشف مقررات المستويات الأخرى', async () => {
+  renderMoadi();
+  await screen.findByText('هياكل البيانات');
+  expect(screen.queryByText('أنظمة التشغيل')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText('إظهار المقررات غير المتوفرة لمستواك'));
+  expect(await screen.findByText('أنظمة التشغيل')).toBeInTheDocument();
 });
 
 test('الإضافة مجمّعة: التحديد محلي بلا اتصال، ثم دفعة واحدة عبر selectCourses', async () => {
@@ -99,13 +109,11 @@ test('البحث يفلتر الكتالوج فوراً بلا إعادة تحم
   expect(courses.fetchCourseCatalog).toHaveBeenCalledTimes(1); // لا إعادة تحميل
 });
 
-test('مقرر مقفل: يظهر بالكشف، وتحديده يتطلب تأكيد المتطلب', async () => {
+test('المقرر المقفل قابل للإضافة مباشرة (بلا كشف) مع تأكيد المتطلب', async () => {
   renderMoadi();
-  await screen.findByText('هياكل البيانات');
-  fireEvent.click(screen.getByLabelText('إظهار المقررات غير المتوفرة لمستواك'));
+  await screen.findByText('الخوارزميات'); // ظاهر افتراضياً في مستوى الطالب
 
-  expect(await screen.findByText('الخوارزميات')).toBeInTheDocument();
-  fireEvent.click(addButtonFor('الخوارزميات'));
+  fireEvent.click(addButtonFor('الخوارزميات')); // الزر يستجيب (لا حجب pointer-events)
   expect(await screen.findByText('تأكيد المتطلب')).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: /نعم، اجتزت المتطلب/ }));

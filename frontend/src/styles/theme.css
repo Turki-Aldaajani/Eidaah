@@ -749,7 +749,9 @@ select.auth-input{cursor:pointer;appearance:none;background-image:url("data:imag
 .status-in_progress{color:var(--info);background:var(--info-bg);border:1px solid var(--info-line)}
 .status-completed{color:var(--suc);background:var(--suc-bg);border:1px solid var(--suc-line)}
 .status-dropped,.status-failed{color:var(--err);background:var(--err-bg);border:1px solid var(--err-line)}
-.course-locked{display:block;color:var(--err);font-size:.72rem;margin-top:8px}
+.course-locked{display:block;color:var(--warn);font-size:.72rem;margin-top:8px}
+/* مقرر يحتاج متطلباً: تلميح خفيف فقط — يبقى قابلاً للإضافة (بتأكيد المتطلب) */
+.course-needs-prereq{border-style:dashed}
 .moadi-add{margin-top:22px}
 .moadi-add-form{max-width:460px;padding:22px;display:flex;flex-direction:column;gap:10px}
 .modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:20px}

@@ -101,10 +101,11 @@ export default function Moadi() {
   const nameById = Object.fromEntries(catalog.map((c) => [c.id, c.name]));
   const searchLc = search.trim().toLowerCase();
 
+  // مقررات مستوى الطالب افتراضياً (تشمل المقفلة — تُضاف بتأكيد المتطلب، إذ قد
+  // يكون الطالب اجتاز المتطلب والموقع لا يعلم). الـ checkbox يكشف المستويات الأخرى.
   const available = catalog
     .filter((c) => !selectedIds.has(c.id))
-    .filter((c) => !levelFilter || String(c.default_level) === String(levelFilter))
-    .filter((c) => showUnavailable || isCourseUnlocked(c, completedIds))
+    .filter((c) => showUnavailable || !levelFilter || String(c.default_level) === String(levelFilter))
     .filter((c) => !searchLc || `${c.name} ${c.code || ''}`.toLowerCase().includes(searchLc));
 
   function prereqNamesFor(course) {
@@ -347,9 +348,8 @@ export default function Moadi() {
 
               {available.length === 0 ? (
                 <p className="s-desc">
-                  {searchLc ? 'لا نتائج للبحث.' : 'لا مقررات متاحة'}
-                  {!searchLc && levelFilter ? ' لهذا المستوى' : ''} — فعّل «إظهار غير المتوفرة»
-                  أو أضف مقرراً خاصاً بالأسفل.
+                  {searchLc ? 'لا نتائج للبحث.' : 'لا مقررات في مستواك'} — فعّل «إظهار المقررات غير
+                  المتوفرة لمستواك» أعلاه، أو أضف مقرراً خاصاً بالأسفل.
                 </p>
               ) : (
                 <div className="grid subjects moadi-grid">
@@ -358,14 +358,14 @@ export default function Moadi() {
                     const isStaged = staged.has(c.id);
                     return (
                       <div
-                        className={`card subject-card lib-card${unlocked ? '' : ' subject-card--locked'}${
+                        className={`card subject-card lib-card${unlocked ? '' : ' course-needs-prereq'}${
                           isStaged ? ' course-staged' : ''
                         }`}
                         key={c.id}
                         style={{ '--c': 'var(--pri)' }}
                       >
                         <span className="s-icon">
-                          <Icon name={unlocked ? 'book-open' : 'shield'} />
+                          <Icon name="book-open" />
                         </span>
                         <div className="s-body">
                           <h3>{c.name}</h3>
