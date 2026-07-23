@@ -164,6 +164,44 @@ export async function unselectCourse(courseId, term) {
   if (error) throw new Error(`تعذّر حذف المقرر: ${error.message}`);
 }
 
+// وسم فصل للمقررات المُجتازة سابقاً (سجل الطالب: متطلبات أنهاها قبل الموقع).
+export const PRIOR_TERM = 'سابق';
+
+// سجل المقررات التي أتمّها الطالب (كل الفصول) — أساس فتح المتطلبات.
+export async function fetchCompletedCourseIds() {
+  const supabase = getSupabaseClient();
+  const user = await currentUser(supabase);
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from('student_courses')
+    .select('course_id')
+    .eq('user_id', user.id)
+    .eq('status', 'completed');
+  if (error) throw new Error(`تعذّر تحميل سجلك الدراسي: ${error.message}`);
+  return [...new Set((data || []).map((r) => r.course_id))];
+}
+
+// تسجيل مقررات كمُجتازة (عند تأكيد الطالب أنه أنهى متطلباً) — idempotent.
+export async function markCoursesCompleted(courseIds) {
+  const ids = [...new Set(courseIds)].filter(Boolean);
+  if (ids.length === 0) return [];
+  const supabase = getSupabaseClient();
+  const user = await currentUser(supabase);
+  if (!user) throw new Error('سجّل الدخول أولاً');
+  const rows = ids.map((id) => ({
+    user_id: user.id,
+    course_id: id,
+    term: PRIOR_TERM,
+    status: 'completed',
+  }));
+  const { data, error } = await supabase
+    .from('student_courses')
+    .upsert(rows, { onConflict: 'user_id,course_id,term', ignoreDuplicates: true })
+    .select('id, course_id');
+  if (error) throw new Error(`تعذّر حفظ سجلك: ${error.message}`);
+  return data || [];
+}
+
 // تحديث حالة مقرر (دورة الفصل: مكتمل/محذوف/راسب).
 export async function updateStudentCourseStatus(studentCourseId, status) {
   const supabase = getSupabaseClient();

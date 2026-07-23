@@ -15,6 +15,8 @@ import { isTermEnded } from '../data/academicCalendar';
 import {
   fetchCourseCatalog,
   fetchStudentCourses,
+  fetchCompletedCourseIds,
+  markCoursesCompleted,
   selectCourses,
   unselectCourse,
   addCustomCourse,
@@ -38,6 +40,7 @@ export default function Moadi() {
 
   const [catalog, setCatalog] = useState([]);
   const [selected, setSelected] = useState([]);
+  const [completedIds, setCompletedIds] = useState([]); // سجل المقررات المُجتازة (كل الفصول)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -56,12 +59,14 @@ export default function Moadi() {
     setLoading(true);
     setError('');
     try {
-      const [cat, sel] = await Promise.all([
+      const [cat, sel, done] = await Promise.all([
         fetchCourseCatalog({ university }),
         fetchStudentCourses(term),
+        fetchCompletedCourseIds(),
       ]);
       setCatalog(cat);
       setSelected(sel);
+      setCompletedIds(done);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -97,15 +102,24 @@ export default function Moadi() {
   if (!session) return <Navigate to="/login" replace />;
 
   const selectedIds = new Set(selected.map((s) => s.course?.id));
-  const completedIds = selected.filter((s) => s.status === 'completed').map((s) => s.course?.id);
+  const completedSet = new Set(completedIds);
   const nameById = Object.fromEntries(catalog.map((c) => [c.id, c.name]));
   const searchLc = search.trim().toLowerCase();
 
-  // مقررات مستوى الطالب افتراضياً (تشمل المقفلة — تُضاف بتأكيد المتطلب، إذ قد
-  // يكون الطالب اجتاز المتطلب والموقع لا يعلم). الـ checkbox يكشف المستويات الأخرى.
+  // التوفّر يحكمه المتطلب لا المستوى: نعرض المتاح (المتطلب مُستوفى) افتراضياً،
+  // والمستوى يقيّد الإجبارية التخصصية فقط (الحرة/الاختيارية تُعرض بلا قيد مستوى).
+  // الـ checkbox يكشف «غير المتوفرة» = المقفلة بمتطلبات، بغضّ النظر عن المستوى.
   const available = catalog
     .filter((c) => !selectedIds.has(c.id))
-    .filter((c) => showUnavailable || !levelFilter || String(c.default_level) === String(levelFilter))
+    .filter((c) => !completedSet.has(c.id)) // لا نعرض ما اجتازه الطالب
+    .filter((c) => {
+      const unlocked = isCourseUnlocked(c, completedIds);
+      if (!unlocked) return showUnavailable; // مقفل → يظهر فقط عند «إظهار غير المتوفرة»
+      if (c.elective_type === 'required') {
+        return !levelFilter || String(c.default_level) === String(levelFilter);
+      }
+      return true; // الحرة/الاختيارية غير مقيّدة بالمستوى
+    })
     .filter((c) => !searchLc || `${c.name} ${c.code || ''}`.toLowerCase().includes(searchLc));
 
   function prereqNamesFor(course) {
@@ -129,7 +143,25 @@ export default function Moadi() {
     setStaged((prev) => new Set(prev).add(course.id));
   }
 
-  function confirmStage() {
+  // خيار (أ): الطالب أنهى المتطلب فعلاً — نسجّله مُجتازاً (يفتح تابعيه ولا يظهر)
+  async function confirmPrereqDone() {
+    const course = confirmCourse;
+    setConfirmCourse(null);
+    if (!course) return;
+    const prereqs = course.prerequisites || [];
+    try {
+      if (prereqs.length) {
+        await markCoursesCompleted(prereqs);
+        setCompletedIds((prev) => [...new Set([...prev, ...prereqs])]);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+    setStaged((prev) => new Set(prev).add(course.id));
+  }
+
+  // خيار (ب): لم ينهِ المتطلب لكن الإرشاد سمح استثناءً — نضيف بلا تسجيل المتطلب
+  function confirmPrereqWaived() {
     if (confirmCourse) setStaged((prev) => new Set(prev).add(confirmCourse.id));
     setConfirmCourse(null);
   }
@@ -318,7 +350,7 @@ export default function Moadi() {
                       checked={showUnavailable}
                       onChange={(e) => setShowUnavailable(e.target.checked)}
                     />
-                    إظهار المقررات غير المتوفرة لمستواك
+                    إظهار المقررات غير المتوفرة (المقفلة بمتطلبات)
                   </label>
                   <select
                     className="auth-input moadi-level"
@@ -348,8 +380,8 @@ export default function Moadi() {
 
               {available.length === 0 ? (
                 <p className="s-desc">
-                  {searchLc ? 'لا نتائج للبحث.' : 'لا مقررات في مستواك'} — فعّل «إظهار المقررات غير
-                  المتوفرة لمستواك» أعلاه، أو أضف مقرراً خاصاً بالأسفل.
+                  {searchLc ? 'لا نتائج للبحث.' : 'لا مقررات متاحة الآن'} — فعّل «إظهار المقررات غير
+                  المتوفرة» أعلاه، أو أضف مقرراً خاصاً بالأسفل.
                 </p>
               ) : (
                 <div className="grid subjects moadi-grid">
@@ -455,23 +487,28 @@ export default function Moadi() {
         </div>
       )}
 
-      {/* تأكيد إضافة مقرر مقفل */}
+      {/* تأكيد إضافة مقرر مقفل — ثلاثة خيارات */}
       {confirmCourse && (
         <div className="modal-overlay" role="dialog" aria-label="تأكيد المتطلب">
           <div className="card modal-card anim">
-            <h2>تأكيد المتطلب</h2>
+            <h2>متطلب هذا المقرر</h2>
             <p className="s-desc">
-              «{confirmCourse.name}» يتطلب إتمام: {prereqNamesFor(confirmCourse)}.
-              حدّده فقط إن كنت قد اجتزت المتطلب.
+              «{confirmCourse.name}» يتطلب إتمام: {prereqNamesFor(confirmCourse)}. اختر ما ينطبق عليك:
             </p>
-            <div className="moadi-actions">
-              <button type="button" className="btn" onClick={confirmStage} disabled={busy}>
-                نعم، اجتزت المتطلب — حدّده
+            <div className="endterm-choices">
+              <button type="button" className="btn" onClick={confirmPrereqDone} disabled={busy}>
+                نعم، أنهيت المتطلب
+              </button>
+              <button type="button" className="btn ghost" onClick={confirmPrereqWaived} disabled={busy}>
+                لم أنهه، لكن الإرشاد سمح لي (استثناء)
               </button>
               <button type="button" className="btn ghost" onClick={() => setConfirmCourse(null)} disabled={busy}>
                 إلغاء
               </button>
             </div>
+            <p className="s-desc" style={{ fontSize: '.78rem' }}>
+              «أنهيت المتطلب» يسجّله في سجلك فلا يظهر مجدداً ويفتح المقررات التي تعتمد عليه.
+            </p>
           </div>
         </div>
       )}

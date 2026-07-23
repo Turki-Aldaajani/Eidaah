@@ -11,6 +11,8 @@ const {
   fetchCourseCatalog,
   addCustomCourse,
   fetchStudentCourses,
+  fetchCompletedCourseIds,
+  markCoursesCompleted,
   selectCourse,
   selectCourses,
   unselectCourse,
@@ -19,7 +21,7 @@ const {
 // كائن استعلام قابل للانتظار: كل دالة ترجعه، و await يحلّه إلى {data, error}
 function q(result) {
   const obj = {};
-  for (const m of ['select', 'eq', 'in', 'order', 'single', 'insert', 'update', 'delete']) {
+  for (const m of ['select', 'eq', 'in', 'order', 'single', 'insert', 'upsert', 'update', 'delete']) {
     obj[m] = jest.fn(() => obj);
   }
   obj.then = (resolve) => resolve({ data: result.data ?? null, error: result.error ?? null });
@@ -164,5 +166,37 @@ describe('اختيار المقررات', () => {
   test('fetchStudentCourses بلا جلسة يرجع فارغاً', async () => {
     getSupabaseClient.mockReturnValue(client({ user: null, from: jest.fn(() => q({})) }));
     await expect(fetchStudentCourses('t')).resolves.toEqual([]);
+  });
+});
+
+describe('سجل المقررات المُجتازة', () => {
+  test('fetchCompletedCourseIds يرجع معرّفات المقررات المكتملة بلا تكرار', async () => {
+    const query = q({ data: [{ course_id: 'c1' }, { course_id: 'c2' }, { course_id: 'c1' }] });
+    const from = jest.fn(() => query);
+    getSupabaseClient.mockReturnValue(client({ user: { id: 'u1' }, from }));
+
+    await expect(fetchCompletedCourseIds()).resolves.toEqual(['c1', 'c2']);
+    expect(query.eq).toHaveBeenCalledWith('status', 'completed');
+  });
+
+  test('markCoursesCompleted يسجّل المتطلبات مُجتازة (upsert idempotent)', async () => {
+    const query = q({ data: [{ id: 'x', course_id: 'c2' }] });
+    const from = jest.fn(() => query);
+    getSupabaseClient.mockReturnValue(client({ user: { id: 'u1' }, from }));
+
+    await markCoursesCompleted(['c2', 'c2']); // مكرر يُزال
+
+    expect(from).toHaveBeenCalledWith('student_courses');
+    expect(query.upsert).toHaveBeenCalledWith(
+      [{ user_id: 'u1', course_id: 'c2', term: 'سابق', status: 'completed' }],
+      { onConflict: 'user_id,course_id,term', ignoreDuplicates: true }
+    );
+  });
+
+  test('markCoursesCompleted بقائمة فارغة لا يتصل بالسيرفر', async () => {
+    const from = jest.fn(() => q({}));
+    getSupabaseClient.mockReturnValue(client({ user: { id: 'u1' }, from }));
+    await expect(markCoursesCompleted([])).resolves.toEqual([]);
+    expect(from).not.toHaveBeenCalled();
   });
 });

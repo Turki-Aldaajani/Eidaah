@@ -770,6 +770,8 @@ select.auth-input{cursor:pointer;appearance:none;background-image:url("data:imag
 .seg-btn{padding:7px 16px;font-size:.82rem;font-weight:600;background:var(--card);color:var(--mut);transition:.15s}
 .seg-btn+.seg-btn{border-inline-start:1px solid var(--line)}
 .seg-btn.active{background:var(--pri);color:#fff}
+.endterm-choices{display:flex;flex-direction:column;gap:9px}
+.endterm-choices .btn{justify-content:center}
 
 /* ---------- library (F2: المكتبة وصفحة المادة) ---------- */
 .lib-card{position:relative;--c:var(--pri)}

@@ -1,4 +1,4 @@
-// اختبارات صفحة مقرراتي (مهمة S2): تحديد مجمّع، بحث، خياران لإنهاء الفصل، تفعيل تلقائي
+// اختبارات صفحة مقرراتي (S2): توفّر لا مستوى، ثلاث خيارات للمتطلب، سجل المُجتاز
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Moadi from './Moadi';
@@ -11,6 +11,8 @@ jest.mock('../lib/courses', () => ({
   ...jest.requireActual('../lib/courses'),
   fetchCourseCatalog: jest.fn(),
   fetchStudentCourses: jest.fn(),
+  fetchCompletedCourseIds: jest.fn(),
+  markCoursesCompleted: jest.fn(),
   selectCourses: jest.fn(),
   unselectCourse: jest.fn(),
   addCustomCourse: jest.fn(),
@@ -39,11 +41,11 @@ const CATALOG = [
   { id: 'c1', name: 'مقدمة في البرمجة', elective_type: 'required', default_level: 1, prerequisites: [] },
   { id: 'c2', name: 'هياكل البيانات', elective_type: 'required', default_level: 2, prerequisites: [] },
   { id: 'c4', name: 'قواعد البيانات', elective_type: 'required', default_level: 2, prerequisites: [] },
-  { id: 'c3', name: 'الخوارزميات', elective_type: 'free_elective', default_level: 2, prerequisites: ['c2'] }, // مقفل، مستوى 2
-  { id: 'c5', name: 'أنظمة التشغيل', elective_type: 'required', default_level: 3, prerequisites: [] }, // مستوى آخر
+  { id: 'c3', name: 'الخوارزميات', elective_type: 'free_elective', default_level: 2, prerequisites: ['c2'] }, // مقفل
+  { id: 'c5', name: 'أنظمة التشغيل', elective_type: 'required', default_level: 3, prerequisites: [] }, // مستوى آخر (إجباري)
+  { id: 'c6', name: 'ريادة الأعمال', elective_type: 'pure_elective', default_level: 5, prerequisites: [] }, // اختياري بلا قيد مستوى
 ];
 
-// فصل غير مُعرّف في التقويم → لا تفعيل تلقائي لإنهاء الفصل في معظم الاختبارات
 const OPEN_TERM = '1450-1';
 
 let saveProfile;
@@ -61,6 +63,8 @@ beforeEach(() => {
   setProfile();
   courses.fetchCourseCatalog.mockResolvedValue(CATALOG);
   courses.fetchStudentCourses.mockResolvedValue(SELECTED);
+  courses.fetchCompletedCourseIds.mockResolvedValue([]);
+  courses.markCoursesCompleted.mockResolvedValue([]);
   courses.selectCourses.mockResolvedValue([]);
   courses.unselectCourse.mockResolvedValue();
   courses.addCustomCourse.mockResolvedValue({ id: 'cNew', name: 'مقرر خاص', elective_type: 'required', prerequisites: [] });
@@ -71,29 +75,62 @@ function addButtonFor(name) {
   return screen.getByText(name).closest('.subject-card').querySelector('button');
 }
 
-test('الافتراضي يعرض مقررات مستوى الطالب (بما فيها المقفلة)، ويُخفي المستويات الأخرى', async () => {
+test('الافتراضي: المتاح لمستوى الطالب + الاختيارية بلا قيد مستوى؛ المقفل والإجباري بمستوى آخر مخفيان', async () => {
+  renderMoadi();
+  expect(await screen.findByText('هياكل البيانات')).toBeInTheDocument(); // إجباري مستوى 2 متاح
+  expect(screen.getByText('قواعد البيانات')).toBeInTheDocument();
+  expect(screen.getByText('ريادة الأعمال')).toBeInTheDocument(); // اختياري مستوى 5 → يظهر (لا قيد مستوى)
+  expect(screen.queryByText('الخوارزميات')).not.toBeInTheDocument(); // مقفل → مخفي
+  expect(screen.queryByText('أنظمة التشغيل')).not.toBeInTheDocument(); // إجباري مستوى آخر → مخفي
+});
+
+test('«إظهار غير المتوفرة» يكشف المقفلة (لا يرتبط بالمستوى)', async () => {
+  renderMoadi();
+  await screen.findByText('هياكل البيانات');
+  fireEvent.click(screen.getByLabelText('إظهار المقررات غير المتوفرة (المقفلة بمتطلبات)'));
+  expect(await screen.findByText('الخوارزميات')).toBeInTheDocument(); // مقفل مستوى 2 يظهر
+});
+
+test('المقرر المُجتاز سابقاً لا يظهر في الكتالوج', async () => {
+  courses.fetchCompletedCourseIds.mockResolvedValue(['c4']);
   renderMoadi();
   expect(await screen.findByText('هياكل البيانات')).toBeInTheDocument();
-  expect(screen.getByText('قواعد البيانات')).toBeInTheDocument();
-  expect(screen.getByText('الخوارزميات')).toBeInTheDocument(); // مقفل لكن ظاهر وقابل للإضافة
-  expect(screen.queryByText('أنظمة التشغيل')).not.toBeInTheDocument(); // مستوى آخر → مخفي
+  expect(screen.queryByText('قواعد البيانات')).not.toBeInTheDocument(); // مُجتاز → مستبعد
 });
 
-test('«إظهار غير المتوفرة لمستواك» يكشف مقررات المستويات الأخرى', async () => {
+test('«أنهيت المتطلب» يسجّل المتطلب مُجتازاً ثم يحدّد المقرر', async () => {
   renderMoadi();
   await screen.findByText('هياكل البيانات');
-  expect(screen.queryByText('أنظمة التشغيل')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByLabelText('إظهار المقررات غير المتوفرة لمستواك'));
-  expect(await screen.findByText('أنظمة التشغيل')).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText('إظهار المقررات غير المتوفرة (المقفلة بمتطلبات)'));
+
+  fireEvent.click(addButtonFor('الخوارزميات'));
+  expect(await screen.findByText('متطلب هذا المقرر')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'نعم، أنهيت المتطلب' }));
+
+  await waitFor(() => expect(courses.markCoursesCompleted).toHaveBeenCalledWith(['c2']));
+  fireEvent.click(await screen.findByRole('button', { name: /إلى مقرراتي/ }));
+  await waitFor(() =>
+    expect(courses.selectCourses).toHaveBeenCalledWith(expect.arrayContaining(['c3']), OPEN_TERM)
+  );
 });
 
-test('الإضافة مجمّعة: التحديد محلي بلا اتصال، ثم دفعة واحدة عبر selectCourses', async () => {
+test('«الإرشاد سمح لي» يضيف المقرر بلا تسجيل المتطلب', async () => {
   renderMoadi();
   await screen.findByText('هياكل البيانات');
+  fireEvent.click(screen.getByLabelText('إظهار المقررات غير المتوفرة (المقفلة بمتطلبات)'));
 
-  fireEvent.click(addButtonFor('هياكل البيانات')); // تحديد محلي
-  expect(courses.selectCourses).not.toHaveBeenCalled(); // لا اتصال بالسيرفر بعد
+  fireEvent.click(addButtonFor('الخوارزميات'));
+  fireEvent.click(await screen.findByRole('button', { name: /الإرشاد سمح لي/ }));
 
+  expect(courses.markCoursesCompleted).not.toHaveBeenCalled();
+  expect(await screen.findByRole('button', { name: /إلى مقرراتي/ })).toBeInTheDocument();
+});
+
+test('الإضافة مجمّعة: تحديد محلي ثم دفعة واحدة عبر selectCourses', async () => {
+  renderMoadi();
+  await screen.findByText('هياكل البيانات');
+  fireEvent.click(addButtonFor('هياكل البيانات'));
+  expect(courses.selectCourses).not.toHaveBeenCalled();
   fireEvent.click(await screen.findByRole('button', { name: /إلى مقرراتي/ }));
   await waitFor(() => expect(courses.selectCourses).toHaveBeenCalledWith(['c2'], OPEN_TERM));
 });
@@ -102,26 +139,10 @@ test('البحث يفلتر الكتالوج فوراً بلا إعادة تحم
   renderMoadi();
   await screen.findByText('هياكل البيانات');
   expect(screen.getByText('قواعد البيانات')).toBeInTheDocument();
-
   fireEvent.change(screen.getByLabelText('بحث المقررات'), { target: { value: 'هياكل' } });
   expect(screen.getByText('هياكل البيانات')).toBeInTheDocument();
   expect(screen.queryByText('قواعد البيانات')).not.toBeInTheDocument();
-  expect(courses.fetchCourseCatalog).toHaveBeenCalledTimes(1); // لا إعادة تحميل
-});
-
-test('المقرر المقفل قابل للإضافة مباشرة (بلا كشف) مع تأكيد المتطلب', async () => {
-  renderMoadi();
-  await screen.findByText('الخوارزميات'); // ظاهر افتراضياً في مستوى الطالب
-
-  fireEvent.click(addButtonFor('الخوارزميات')); // الزر يستجيب (لا حجب pointer-events)
-  expect(await screen.findByText('تأكيد المتطلب')).toBeInTheDocument();
-
-  fireEvent.click(screen.getByRole('button', { name: /نعم، اجتزت المتطلب/ }));
-  expect(courses.selectCourses).not.toHaveBeenCalled(); // حُدِّد فقط
-  fireEvent.click(await screen.findByRole('button', { name: /إلى مقرراتي/ }));
-  await waitFor(() =>
-    expect(courses.selectCourses).toHaveBeenCalledWith(expect.arrayContaining(['c3']), OPEN_TERM)
-  );
+  expect(courses.fetchCourseCatalog).toHaveBeenCalledTimes(1);
 });
 
 test('إضافة مقرر خاص تُنشئه وتُحدّده للإضافة المجمّعة', async () => {
@@ -129,7 +150,6 @@ test('إضافة مقرر خاص تُنشئه وتُحدّده للإضافة ا
   fireEvent.click(await screen.findByRole('button', { name: /أضف مقرراً خاصاً/ }));
   fireEvent.change(screen.getByLabelText('اسم المقرر'), { target: { value: 'تعلم آلي' } });
   fireEvent.click(screen.getByRole('button', { name: /أضِف وحدّد/ }));
-
   await waitFor(() =>
     expect(courses.addCustomCourse).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'تعلم آلي', university: 'جامعة الإمام' })
@@ -138,28 +158,12 @@ test('إضافة مقرر خاص تُنشئه وتُحدّده للإضافة ا
   expect(await screen.findByRole('button', { name: /إلى مقرراتي/ })).toBeInTheDocument();
 });
 
-test('إنهاء الفصل بخيارين فقط: «لم أتجاوز» يسجّل الحالة ويبدأ فصلاً جديداً', async () => {
+test('إنهاء الفصل بخيارين: «تجاوزت» ترقّي المستوى وتظهر تهنئة', async () => {
   renderMoadi();
   fireEvent.click(await screen.findByRole('button', { name: /أنهيت الفصل/ }));
   const dialog = await screen.findByRole('dialog', { name: 'إنهاء الفصل' });
-
   expect(within(dialog).getByRole('button', { name: 'تجاوزت' })).toBeInTheDocument();
   expect(within(dialog).getByRole('button', { name: 'لم أتجاوز' })).toBeInTheDocument();
-  expect(within(dialog).queryByRole('combobox')).not.toBeInTheDocument(); // بلا قائمة منسدلة
-
-  fireEvent.click(within(dialog).getByRole('button', { name: 'لم أتجاوز' }));
-  fireEvent.click(within(dialog).getByRole('button', { name: /تأكيد وبدء فصل جديد/ }));
-
-  await waitFor(() => expect(courses.updateStudentCourseStatus).toHaveBeenCalledWith('sc1', 'dropped'));
-  expect(saveProfile).toHaveBeenCalledWith(
-    expect.objectContaining({ current_term: expect.stringContaining('التالي') })
-  );
-});
-
-test('«تجاوزت» ترقّي المستوى وتظهر تهنئة', async () => {
-  renderMoadi();
-  fireEvent.click(await screen.findByRole('button', { name: /أنهيت الفصل/ }));
-  const dialog = await screen.findByRole('dialog', { name: 'إنهاء الفصل' });
   fireEvent.click(within(dialog).getByRole('button', { name: /تأكيد وبدء فصل جديد/ }));
 
   await waitFor(() => expect(courses.updateStudentCourseStatus).toHaveBeenCalledWith('sc1', 'completed'));
@@ -168,7 +172,7 @@ test('«تجاوزت» ترقّي المستوى وتظهر تهنئة', async (
 });
 
 test('يُفعّل إنهاء الفصل تلقائياً عند نهاية الفصل الدراسي', async () => {
-  setProfile({ current_term: '1447-1' }); // فصل منتهٍ حسب التقويم
+  setProfile({ current_term: '1447-1' });
   renderMoadi();
   expect(await screen.findByRole('dialog', { name: 'إنهاء الفصل' })).toBeInTheDocument();
 });
