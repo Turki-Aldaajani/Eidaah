@@ -20,6 +20,10 @@ export default function TopNav() {
           </span>
         </Link>
         <div className="nav-side">
+          <Link className="nav-auth" to="/library">
+            <Icon name="book-open" />
+            <span className="nav-auth-email">المكتبة</span>
+          </Link>
           {session ? (
             <>
               <Link className="nav-auth" to="/moadi">

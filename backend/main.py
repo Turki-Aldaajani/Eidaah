@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import ai_logic
-from concurrency import executor
+from concurrency import executor, video_executor
 from Model import call_groq
 from slowapi.errors import RateLimitExceeded
 
@@ -730,6 +730,14 @@ async def agent_status(run_id: str):
 _video_provider = None
 _video_cache = {}                       # cache_key -> (expires_at, payload)
 _VIDEO_CACHE_TTL = 6 * 3600             # 6 hours
+# A misconfigured/rejected YOUTUBE_API_KEY, a transient network error, or a
+# YouTube quota blip all make recommend_videos() return [] the same way a
+# lesson with genuinely no good matches would. Caching that empty result for
+# the full 6h -- reproduced live in production -- meant the section stayed
+# stuck on "no videos" for hours after the underlying cause was fixed. Empty
+# results now expire in 5 minutes so the app self-heals quickly, while a
+# short TTL still spares the YouTube quota against back-to-back reloads.
+_EMPTY_VIDEO_CACHE_TTL = 5 * 60         # 5 minutes
 
 
 def _video_provider_singleton():
@@ -763,7 +771,7 @@ async def lesson_videos(
 
     loop = asyncio.get_event_loop()
     ranked = await loop.run_in_executor(
-        executor,
+        video_executor,
         lambda: recommend_videos(
             lesson, subject_id=subject_id, subject_name=subject_name,
             grade_name=grade_name, provider=_video_provider_singleton(),
@@ -771,7 +779,8 @@ async def lesson_videos(
         ),
     )
     videos = [to_public_video(v) for v in ranked]
-    _video_cache[cache_key] = (now_ts + _VIDEO_CACHE_TTL, videos)
+    ttl = _VIDEO_CACHE_TTL if videos else _EMPTY_VIDEO_CACHE_TTL
+    _video_cache[cache_key] = (now_ts + ttl, videos)
     return {"videos": videos, "count": len(videos), "cached": False}
 
 
