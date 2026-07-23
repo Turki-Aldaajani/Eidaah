@@ -46,12 +46,12 @@ export default function ContributeSurvey({ course, profile, onClose }) {
             </span>
             <h2>ساهم في المكتبة؟</h2>
             <p className="s-desc">
-              هل «{course?.name}» من منهج جامعتك؟ ساهم به ليستفيد زملاؤك — بعد مراجعة المشرف يظهر في المكتبة.
+              هل «{course?.name}» ضمن الخطة الجامعية؟ ساهم به ليستفيد زملاؤك — بعد مراجعة المشرف يظهر في المكتبة.
               وإلا يبقى خاصاً بك وحدك.
             </p>
             <div className="endterm-choices">
               <button type="button" className="btn" onClick={() => setStep('details')}>
-                نعم، من منهج جامعتي
+                نعم، ضمن الخطة الجامعية
               </button>
               <button type="button" className="btn ghost" onClick={onClose}>
                 تخطّي — يبقى خاصاً بي

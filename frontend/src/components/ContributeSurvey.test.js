@@ -23,7 +23,7 @@ test('«تخطّي» يُبقي المقرر خاصاً ولا يرسل طلبا
 
 test('«نعم» ثم إرسال يقدّم طلب مساهمة (محتوى مكتمل) ويعرض نجاحاً', async () => {
   render(<ContributeSurvey course={course} profile={profile} onClose={jest.fn()} />);
-  fireEvent.click(screen.getByRole('button', { name: 'نعم، من منهج جامعتي' }));
+  fireEvent.click(screen.getByRole('button', { name: 'نعم، ضمن الخطة الجامعية' }));
 
   expect(screen.getByLabelText('اسم المقرر')).toHaveValue('شبكات الحاسب');
   fireEvent.click(screen.getByRole('button', { name: 'أرسل للمراجعة' }));
@@ -43,7 +43,7 @@ test('«نعم» ثم إرسال يقدّم طلب مساهمة (محتوى مك
 
 test('اختيار «يوجد متبقٍ» ينعكس في وصف الطلب', async () => {
   render(<ContributeSurvey course={course} profile={profile} onClose={jest.fn()} />);
-  fireEvent.click(screen.getByRole('button', { name: 'نعم، من منهج جامعتي' }));
+  fireEvent.click(screen.getByRole('button', { name: 'نعم، ضمن الخطة الجامعية' }));
   fireEvent.click(screen.getByRole('button', { name: 'يوجد متبقٍ' }));
   fireEvent.click(screen.getByRole('button', { name: 'أرسل للمراجعة' }));
 
