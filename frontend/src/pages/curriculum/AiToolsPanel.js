@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Icon from "../../components/Icon";
 import Quiz from "./Quiz";
 import { AIF } from "../../data/curriculum";
+import { usePoints } from "../../points/PointsContext";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
@@ -95,6 +96,14 @@ export default function AiToolsPanel({ stage, subject, lesson, onStepDone }) {
   const [cache, setCache] = useState({});
   const [loading, setLoading] = useState({});
   const [errors, setErrors] = useState({});
+  const { award } = usePoints();
+
+  // إكمال جولة أسئلة لأول مرة: علّم الخطوة مكتملة واكسب نقاطاً (F6).
+  // award لا يفعل شيئاً بدون جلسة، فمسار الضيف يبقى سليماً.
+  const completeQuizRound = () => {
+    onStepDone("quiz");
+    award("completed_quiz_round");
+  };
 
   const fetchTool = async (tool) => {
     setLoading((l) => ({ ...l, [tool]: true }));
@@ -136,7 +145,7 @@ export default function AiToolsPanel({ stage, subject, lesson, onStepDone }) {
     if (key === "sum") return <SummaryContent points={data.points} />;
     if (key === "ex") return <ExampleContent heading={data.heading} paragraphs={data.paragraphs} />;
     if (key === "notes") return <NotesContent laws={data.laws} defs={data.defs} exam={data.exam} />;
-    if (key === "quiz") return <Quiz questions={data.questions} onFirstCorrectSubmit={() => onStepDone("quiz")} />;
+    if (key === "quiz") return <Quiz questions={data.questions} onFirstCorrectSubmit={completeQuizRound} />;
     return null;
   };
 
