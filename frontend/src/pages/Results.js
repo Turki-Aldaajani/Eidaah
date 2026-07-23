@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import { useLanguage } from "../i18n/LanguageContext";
+import { toArabicDigits } from "../data/curriculum";
 import "../styles/analyzer.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
@@ -14,6 +15,8 @@ const staticTranslations = {
     crumb_prefix: "حلّل ملفاتك",
     back_button: "← رجوع",
     slide: "شريحة",
+    prev_slide: "الشريحة السابقة",
+    next_slide: "الشريحة التالية",
     explain_button: "شرح",
     analytical_explanation: "شرح تحليلي:",
     real_world_example: "مثال واقعي:",
@@ -33,6 +36,8 @@ const staticTranslations = {
     crumb_prefix: "Analyze your files",
     back_button: "← Back",
     slide: "Slide",
+    prev_slide: "Previous slide",
+    next_slide: "Next slide",
     explain_button: "Explain",
     analytical_explanation: "Analytical Explanation:",
     real_world_example: "Real-World Example:",
@@ -292,6 +297,12 @@ export default function Results() {
   }
 
   const currentSlideData = slides[currentSlide];
+  const arNum = (n) => (language === "ar" ? toArabicDigits(String(n)) : String(n));
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+    setAnalysis(null);
+  };
 
   return (
     <>
@@ -384,20 +395,29 @@ export default function Results() {
 
             {/* عمود الشريحة + المواضيع — ثانياً في الـ DOM، يظهر يساراً تحت dir=rtl */}
             <div className="card result-card">
-              <select
-                className="result-select"
-                value={currentSlide}
-                onChange={(e) => {
-                  setCurrentSlide(Number(e.target.value));
-                  setAnalysis(null);
-                }}
-              >
-                {slides.map((slide, index) => (
-                  <option key={index} value={index}>
-                    {t.slide} {slide.slide_number}
-                  </option>
-                ))}
-              </select>
+              <div className="result-slide-nav">
+                <button
+                  type="button"
+                  className="slide-nav-btn"
+                  onClick={() => goToSlide(Math.max(0, currentSlide - 1))}
+                  disabled={currentSlide === 0}
+                  aria-label={t.prev_slide}
+                >
+                  <Icon name="chev" className="rot-r" />
+                </button>
+                <span className="slide-counter" aria-live="polite">
+                  {t.slide} {arNum(currentSlide + 1)} / {arNum(slides.length)}
+                </span>
+                <button
+                  type="button"
+                  className="slide-nav-btn"
+                  onClick={() => goToSlide(Math.min(slides.length - 1, currentSlide + 1))}
+                  disabled={currentSlide === slides.length - 1}
+                  aria-label={t.next_slide}
+                >
+                  <Icon name="chev" className="rot-l" />
+                </button>
+              </div>
 
               {slideImages[currentSlideData.slide_number] ? (
                 <img
