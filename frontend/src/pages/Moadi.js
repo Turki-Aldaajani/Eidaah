@@ -178,11 +178,11 @@ export default function Moadi() {
             <nav className="crumbs">
               <Link to="/">الرئيسية</Link>
               <i className="sep">‹</i>
-              <span className="cur">موادي</span>
+              <span className="cur">مقرراتي</span>
             </nav>
             <div className="moadi-head">
               <div>
-                <h1>موادي</h1>
+                <h1>مقرراتي</h1>
                 <p>
                   {university ? `${university} · ` : ''}
                   {term}
@@ -301,7 +301,7 @@ export default function Moadi() {
                               onClick={() => handleSelect(c)}
                               disabled={busy || !unlocked}
                             >
-                              <Icon name="check" /> أضف لموادي
+                              <Icon name="check" /> أضف لمقرراتي
                             </button>
                           </div>
                         </div>

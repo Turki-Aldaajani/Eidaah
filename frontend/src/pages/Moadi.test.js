@@ -69,7 +69,7 @@ test('تعرض المقررات المختارة والكتالوج المتاح
 test('إضافة مقرر من الكتالوج يستدعي selectCourse بالفصل الحالي', async () => {
   renderMoadi();
   await screen.findByText('هياكل البيانات');
-  const addButtons = screen.getAllByRole('button', { name: /أضف لموادي/ });
+  const addButtons = screen.getAllByRole('button', { name: /أضف لمقرراتي/ });
   fireEvent.click(addButtons[0]);
   await waitFor(() => expect(courses.selectCourse).toHaveBeenCalledWith('c2', '1447-1'));
 });
