@@ -24,3 +24,8 @@ test("the curriculum card links to /learn and the analyzer card links to /analyz
   expect(screen.getByText("المناهج التعليمية").closest("a")).toHaveAttribute("href", "/learn");
   expect(screen.getByText("حلّل ملفاتك التعليمية").closest("a")).toHaveAttribute("href", "/analyze");
 });
+
+test("يعرض سلوقن إيضاح الجديد في الهوم بيج", () => {
+  renderLanding();
+  expect(screen.getByText(/كل خطوة أوضح وكل هدف أقرب/)).toBeInTheDocument();
+});

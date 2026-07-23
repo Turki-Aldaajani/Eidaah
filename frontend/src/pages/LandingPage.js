@@ -94,7 +94,7 @@ export default function LandingPage() {
                 <Icon name="sparkles" /> منصة تعلّم بالذكاء الاصطناعي
               </span>
               <h1 className="hero-title">
-                تعلّم <span className="hl">بذكاء</span>، وافهم المنهج بطريقة أوضح.
+                برفقة <span className="hl">إيضاح</span> .. كل خطوة أوضح وكل هدف أقرب
               </h1>
               <p className="hero-sub">
                 منصة تعليمية مدعومة بالذكاء الاصطناعي تساعدك على الوصول إلى أفضل الشروحات، وتلخيص الدروس، وإنشاء
