@@ -41,6 +41,8 @@ export default function Moadi() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [levelFilter, setLevelFilter] = useState('');
+  const [showUnavailable, setShowUnavailable] = useState(false);
+  const [confirmCourse, setConfirmCourse] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [custom, setCustom] = useState({ name: '', level: '', elective: 'required' });
   const [endTerm, setEndTerm] = useState(null); // خريطة course_id -> status عند إنهاء الفصل
@@ -72,15 +74,40 @@ export default function Moadi() {
     if (session) load();
   }, [session, load]);
 
+  // الافتراضي: مقررات مستوى الطالب (لا كل المستويات) — يضبط مرة عند توفر المستوى
+  useEffect(() => {
+    setLevelFilter((prev) =>
+      prev === '' && profile?.level != null ? String(profile.level) : prev
+    );
+  }, [profile?.level]);
+
   if (!session) return <Navigate to="/login" replace />;
 
   const selectedIds = new Set(selected.map((s) => s.course?.id));
   const completedIds = selected.filter((s) => s.status === 'completed').map((s) => s.course?.id);
   const nameById = Object.fromEntries(catalog.map((c) => [c.id, c.name]));
 
-  const available = catalog.filter(
-    (c) => !selectedIds.has(c.id) && (!levelFilter || String(c.default_level) === String(levelFilter))
-  );
+  // افتراضياً نعرض مقررات المستوى المتاحة فقط (غير المقفلة). المقفلة تظهر
+  // فقط عند تفعيل «إظهار غير المتوفرة»، وتبقى قابلة للإضافة بتأكيد المتطلب.
+  const available = catalog
+    .filter((c) => !selectedIds.has(c.id))
+    .filter((c) => !levelFilter || String(c.default_level) === String(levelFilter))
+    .filter((c) => showUnavailable || isCourseUnlocked(c, completedIds));
+
+  function prereqNamesFor(course) {
+    return (course.prerequisites || []).map((id) => nameById[id] || '؟').join('، ');
+  }
+
+  function requestAdd(course) {
+    if (isCourseUnlocked(course, completedIds)) handleSelect(course);
+    else setConfirmCourse(course); // مقفل — نطلب تأكيد اجتياز المتطلب
+  }
+
+  async function confirmAdd() {
+    const course = confirmCourse;
+    setConfirmCourse(null);
+    if (course) await handleSelect(course);
+  }
 
   async function handleSelect(course) {
     setBusy(true);
@@ -250,24 +277,35 @@ export default function Moadi() {
               {/* الكتالوج */}
               <div className="moadi-catalog-head">
                 <h2 className="moadi-section">أضف من الكتالوج</h2>
-                <select
-                  className="auth-input moadi-level"
-                  value={levelFilter}
-                  onChange={(e) => setLevelFilter(e.target.value)}
-                  aria-label="فلترة حسب المستوى"
-                >
-                  <option value="">كل المستويات</option>
-                  {LEVELS.map((l) => (
-                    <option key={l.value} value={l.value}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="moadi-filters">
+                  <label className="moadi-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={showUnavailable}
+                      onChange={(e) => setShowUnavailable(e.target.checked)}
+                    />
+                    إظهار المقررات غير المتوفرة لمستواك
+                  </label>
+                  <select
+                    className="auth-input moadi-level"
+                    value={levelFilter}
+                    onChange={(e) => setLevelFilter(e.target.value)}
+                    aria-label="فلترة حسب المستوى"
+                  >
+                    <option value="">كل المستويات</option>
+                    {LEVELS.map((l) => (
+                      <option key={l.value} value={l.value}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {available.length === 0 ? (
                 <p className="s-desc">
-                  لا مقررات في الكتالوج{levelFilter ? ' لهذا المستوى' : ''} — أضف مقرراً خاصاً بالأسفل.
+                  لا مقررات متاحة{levelFilter ? ' لهذا المستوى' : ''} الآن — فعّل «إظهار غير المتوفرة»
+                  أعلاه، أو أضف مقرراً خاصاً بالأسفل.
                 </p>
               ) : (
                 <div className="grid subjects moadi-grid">
@@ -298,8 +336,8 @@ export default function Moadi() {
                             <button
                               type="button"
                               className="btn"
-                              onClick={() => handleSelect(c)}
-                              disabled={busy || !unlocked}
+                              onClick={() => requestAdd(c)}
+                              disabled={busy}
                             >
                               <Icon name="check" /> أضف لمقرراتي
                             </button>
@@ -385,6 +423,27 @@ export default function Moadi() {
                 {busy ? 'جارٍ…' : 'تأكيد وبدء فصل جديد'}
               </button>
               <button type="button" className="btn ghost" onClick={() => setEndTerm(null)} disabled={busy}>
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* تأكيد إضافة مقرر مقفل (لم يُستوفَ متطلبه) */}
+      {confirmCourse && (
+        <div className="modal-overlay" role="dialog" aria-label="تأكيد المتطلب">
+          <div className="card modal-card anim">
+            <h2>تأكيد المتطلب</h2>
+            <p className="s-desc">
+              «{confirmCourse.name}» يتطلب إتمام: {prereqNamesFor(confirmCourse)}.
+              أضِفه فقط إن كنت قد اجتزت المتطلب.
+            </p>
+            <div className="moadi-actions">
+              <button type="button" className="btn" onClick={confirmAdd} disabled={busy}>
+                نعم، اجتزت المتطلب — أضِفه
+              </button>
+              <button type="button" className="btn ghost" onClick={() => setConfirmCourse(null)} disabled={busy}>
                 إلغاء
               </button>
             </div>

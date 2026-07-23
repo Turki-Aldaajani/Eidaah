@@ -734,6 +734,9 @@ select.auth-input{cursor:pointer;appearance:none;background-image:url("data:imag
 .moadi-section{font-size:1.05rem;font-weight:700;margin:26px 0 12px}
 .moadi-grid{margin-bottom:8px}
 .moadi-catalog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px}
+.moadi-filters{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.moadi-checkbox{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--mut);cursor:pointer}
+.moadi-checkbox input{width:15px;height:15px;accent-color:var(--pri);cursor:pointer}
 .moadi-level{max-width:200px}
 .moadi-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .moadi-actions .btn{padding:8px 16px;font-size:.85rem}

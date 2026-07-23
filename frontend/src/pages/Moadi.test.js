@@ -1,4 +1,4 @@
-// اختبارات صفحة موادي (مهمة S2): الاختيار، قفل المتطلبات، الإضافة، دورة الفصل
+// اختبارات صفحة مقرراتي (مهمة S2): الاختيار، مستوى الطالب، كشف غير المتوفرة، دورة الفصل
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Moadi from './Moadi';
@@ -32,13 +32,14 @@ function renderMoadi() {
   );
 }
 
+// الطالب في المستوى 2؛ c2 متاح، c3 مقفل بمتطلب c2 (كلاهما مستوى 2)
 const SELECTED = [
   { id: 'sc1', status: 'in_progress', course: { id: 'c1', name: 'مقدمة في البرمجة', elective_type: 'required', default_level: 1 } },
 ];
 const CATALOG = [
   { id: 'c1', name: 'مقدمة في البرمجة', elective_type: 'required', default_level: 1, prerequisites: [] },
   { id: 'c2', name: 'هياكل البيانات', elective_type: 'required', default_level: 2, prerequisites: [] },
-  { id: 'c3', name: 'الخوارزميات', elective_type: 'free_elective', default_level: 3, prerequisites: ['c2'] },
+  { id: 'c3', name: 'الخوارزميات', elective_type: 'free_elective', default_level: 2, prerequisites: ['c2'] },
 ];
 
 let saveProfile;
@@ -47,7 +48,7 @@ beforeEach(() => {
   useAuth.mockReturnValue({ session: { user: { id: 'u1', email: 'a@imamu.edu.sa' } }, account: null });
   saveProfile = jest.fn().mockResolvedValue({});
   useProfile.mockReturnValue({
-    profile: { university: 'جامعة الإمام', level: 3, current_term: '1447-1' },
+    profile: { university: 'جامعة الإمام', level: 2, current_term: '1447-1' },
     saveProfile,
   });
   courses.fetchCourseCatalog.mockResolvedValue(CATALOG);
@@ -58,29 +59,39 @@ beforeEach(() => {
   courses.updateStudentCourseStatus.mockResolvedValue({ id: 'sc1', status: 'completed' });
 });
 
-test('تعرض المقررات المختارة والكتالوج المتاح', async () => {
+test('الافتراضي يعرض مقررات مستوى الطالب المتاحة، ويُخفي المقفلة', async () => {
   renderMoadi();
-  expect(await screen.findByText('مقرراتي هذا الفصل (1)')).toBeInTheDocument();
-  // المختار يظهر، والمتاح من الكتالوج (المستبعد منه المختار) يظهر
-  expect(screen.getAllByText('مقدمة في البرمجة').length).toBeGreaterThan(0);
-  expect(screen.getByText('هياكل البيانات')).toBeInTheDocument();
+  // c2 (مستوى 2، متاح) يظهر
+  expect(await screen.findByText('هياكل البيانات')).toBeInTheDocument();
+  // c3 (مستوى 2، مقفل) مخفي افتراضياً — لا يظهر رماديّاً
+  expect(screen.queryByText('الخوارزميات')).not.toBeInTheDocument();
 });
 
-test('إضافة مقرر من الكتالوج يستدعي selectCourse بالفصل الحالي', async () => {
+test('إضافة مقرر متاح يستدعي selectCourse بالفصل الحالي', async () => {
   renderMoadi();
   await screen.findByText('هياكل البيانات');
-  const addButtons = screen.getAllByRole('button', { name: /أضف لمقرراتي/ });
-  fireEvent.click(addButtons[0]);
+  fireEvent.click(screen.getByRole('button', { name: /أضف لمقرراتي/ }));
   await waitFor(() => expect(courses.selectCourse).toHaveBeenCalledWith('c2', '1447-1'));
 });
 
-test('مقرر بمتطلب غير مكتمل يظهر مقفلاً مع «يتطلب»', async () => {
+test('«إظهار غير المتوفرة» يكشف المقفلة، وإضافتها تتطلب تأكيد المتطلب', async () => {
   renderMoadi();
-  expect(await screen.findByText(/يتطلب: هياكل البيانات/)).toBeInTheDocument();
-  // زر إضافة الخوارزميات (المقفل) معطّل
-  const algoCard = screen.getByText('الخوارزميات').closest('.subject-card');
-  const addBtn = algoCard.querySelector('button');
-  expect(addBtn).toBeDisabled();
+  await screen.findByText('هياكل البيانات');
+
+  // كشف المقفلة
+  fireEvent.click(screen.getByLabelText('إظهار المقررات غير المتوفرة لمستواك'));
+  expect(await screen.findByText('الخوارزميات')).toBeInTheDocument();
+  expect(screen.getByText(/يتطلب: هياكل البيانات/)).toBeInTheDocument();
+
+  // إضافة المقفل تفتح تأكيد المتطلب (لا تُضاف مباشرة)
+  const lockedCard = screen.getByText('الخوارزميات').closest('.subject-card');
+  fireEvent.click(lockedCard.querySelector('button'));
+  expect(await screen.findByText('تأكيد المتطلب')).toBeInTheDocument();
+  expect(courses.selectCourse).not.toHaveBeenCalled();
+
+  // التأكيد يُضيف المقرر
+  fireEvent.click(screen.getByRole('button', { name: /نعم، اجتزت المتطلب/ }));
+  await waitFor(() => expect(courses.selectCourse).toHaveBeenCalledWith('c3', '1447-1'));
 });
 
 test('إضافة مقرر خاص تستدعي addCustomCourse ثم selectCourse', async () => {
@@ -99,13 +110,11 @@ test('إضافة مقرر خاص تستدعي addCustomCourse ثم selectCourse'
 test('إنهاء الفصل يرقّي المستوى ويظهر تهنئة', async () => {
   renderMoadi();
   fireEvent.click(await screen.findByRole('button', { name: /أنهيت الفصل/ }));
-  // نافذة إنهاء الفصل ظهرت
   fireEvent.click(await screen.findByRole('button', { name: /تأكيد وبدء فصل جديد/ }));
 
   await waitFor(() => expect(courses.updateStudentCourseStatus).toHaveBeenCalledWith('sc1', 'completed'));
-  // المستوى يرتفع من 3 إلى 4 ويُحفظ فصل جديد
   expect(saveProfile).toHaveBeenCalledWith(
-    expect.objectContaining({ level: 4, current_term: expect.stringContaining('التالي') })
+    expect.objectContaining({ level: 3, current_term: expect.stringContaining('التالي') })
   );
   expect(await screen.findByText(/إجازة سعيدة/)).toBeInTheDocument();
 });
