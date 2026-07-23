@@ -2,7 +2,9 @@
 // الصف يُنشأ تلقائياً عند التسجيل (trigger في سكيما G1)، فالحفظ upsert آمن.
 import { getSupabaseClient } from './supabaseClient';
 
-export const PROFILE_FIELDS = ['university', 'college', 'major', 'level'];
+export const PROFILE_FIELDS = [
+  'university', 'college', 'major', 'level', 'cohort_year', 'current_term',
+];
 
 // الأونبوردنق يُعد «مكتملاً» بوجود الجامعة والمستوى — هما ما يفلتر المكتبة.
 export function isProfileComplete(profile) {
@@ -26,7 +28,7 @@ export function clearOnboardingSkip(userId) {
 
 // تطبيع قيمة حقل قبل الحفظ: قص النصوص، الفارغ → null، والمستوى رقم.
 function normalizeField(key, value) {
-  if (key === 'level') {
+  if (key === 'level' || key === 'cohort_year') {
     if (value === '' || value === null || value === undefined) return null;
     const n = Number(value);
     return Number.isFinite(n) ? n : null;
@@ -46,7 +48,7 @@ export async function fetchProfile() {
   if (!user) return null;
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, university, college, major, level')
+    .select('id, university, college, major, level, cohort_year, current_term')
     .eq('id', user.id)
     .maybeSingle();
   if (error) {
@@ -73,7 +75,7 @@ export async function saveProfile(fields) {
   const { data, error } = await supabase
     .from('profiles')
     .upsert(payload, { onConflict: 'id' })
-    .select('id, university, college, major, level')
+    .select('id, university, college, major, level, cohort_year, current_term')
     .single();
   if (error) {
     throw new Error(`تعذّر حفظ البيانات: ${error.message}`);
