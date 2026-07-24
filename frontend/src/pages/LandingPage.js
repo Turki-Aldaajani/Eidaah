@@ -176,8 +176,7 @@ export default function LandingPage() {
         <section className="home-id">
           <div className="container">
             <div className="home-id-in anim">
-              <span className="home-id-mark">إ</span>
-              <h2 className="home-id-t">إيضاح</h2>
+              <img className="home-id-logo" src="/eidaah-logo-dark.png" alt="إيضاح" />
               <p className="home-id-d">فريق الذكاء الاصطناعي بنادي إنجاز</p>
               <p className="home-id-u">جامعة الإمام محمد بن سعود الإسلامية</p>
               <p className="home-id-s">طلبة طموحون يسعون لتوظيف الذكاء الاصطناعي لخدمة المعرفة.</p>
