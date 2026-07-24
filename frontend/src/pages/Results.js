@@ -18,6 +18,9 @@ const T = {
     no_slides: "لم يتم العثور على شرائح. يرجى رفع ملف أولاً.", error: "حدث خطأ في التحليل",
     slide_of: "من", slide_word: "الشريحة", prev: "السابقة", next: "التالية",
     collapse: "طيّ الشريط", expand: "إظهار المراحل", auto_meta: "مُولّد بالذكاء الاصطناعي",
+    rail_sub: "اضغط على المرحلة للانتقال إليها",
+    topics_hint: "اختر موضوعاً واضغط «شرح» لعرض الشرح التحليلي والمثال والأسئلة التفاعلية.",
+    explain: "شرح",
     pick_topic: "اختر موضوعاً من الأعلى لتبدأ رحلة التعلّم (شرح ← مثال ← ملاحظات ← أسئلة).",
     gen_summary: "توليد الملخص", gen_quiz: "توليد أسئلة المراجعة", topic_prefix: "الموضوع:",
     correct: "إجابة صحيحة ✓", wrong: "الإجابة الصحيحة:", explain_label: "التعليل:",
@@ -28,14 +31,15 @@ const T = {
     no_slides: "No slides found. Please upload a file first.", error: "Error analyzing",
     slide_of: "of", slide_word: "Slide", prev: "Previous", next: "Next",
     collapse: "Collapse", expand: "Show stages", auto_meta: "AI generated",
+    rail_sub: "Click a stage to jump to it",
+    topics_hint: "Pick a topic and press “Explain” for the analysis, example and quiz.",
+    explain: "Explain",
     pick_topic: "Pick a topic above to start the learning flow (explain → example → notes → quiz).",
     gen_summary: "Generate summary", gen_quiz: "Generate review questions", topic_prefix: "Topic:",
     correct: "Correct ✓", wrong: "Correct answer:", explain_label: "Why:",
     stages: ["Slide", "Summary", "Topics", "Analytical", "Example", "Study notes", "Quiz"],
   },
 };
-
-const STAGE_ICONS = ["file-text", "layers", "book-open", "sparkles", "target", "note", "help"];
 
 function SlideCard({ slide }) {
   const lines = (slide.text || "").split("\n").map((l) => l.trim()).filter(Boolean);
@@ -230,7 +234,10 @@ export default function Results() {
         <aside className={`an-rail ${sidebarOpen ? "open" : "closed"}`}>
           <div className="an-rail-in">
             <div className="an-rail-head">
-              <span>مراحل التعلّم</span>
+              <div className="an-rail-titles">
+                <span className="an-rail-title">مراحل التعلّم</span>
+                <span className="an-rail-sub">{t.rail_sub}</span>
+              </div>
               <button type="button" className="an-icon-btn" onClick={() => setSidebarOpen(false)} title={t.collapse} aria-label={t.collapse}>
                 <Icon name="chev" className={startChev} />
               </button>
@@ -248,7 +255,7 @@ export default function Results() {
                       onClick={() => goToStep(step)}
                     >
                       <span className="an-stage-dot">
-                        {done ? <Icon name="check" /> : <Icon name={STAGE_ICONS[i]} />}
+                        {done ? <Icon name="check" /> : <span className="an-stage-num">{num(step)}</span>}
                       </span>
                       <span className="an-stage-label">{label}</span>
                     </button>
@@ -313,18 +320,28 @@ export default function Results() {
               <div className="an-card-head"><Icon name="book-open" /> <b>{t.stages[2]}</b></div>
               {!indexingComplete && sessionId && <p className="upload-filename">{t.loading}</p>}
               {topics.length > 0 && (
-                <div className="an-topics">
-                  {topics.map((topic) => (
-                    <button
-                      key={topic.topic_id}
-                      type="button"
-                      className={`an-topic-chip${selectedTopic?.topic_id === topic.topic_id ? " active" : ""}`}
-                      onClick={() => selectTopic(topic)}
-                    >
-                      {topic.label}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <p className="an-topics-hint">{t.topics_hint}</p>
+                  <div className="an-topic-rows">
+                    {topics.map((topic) => {
+                      const active = selectedTopic?.topic_id === topic.topic_id;
+                      return (
+                        <div className={`an-topic-row${active ? " active" : ""}`} key={topic.topic_id}>
+                          <span className="an-topic-q">{topic.label}</span>
+                          <button
+                            type="button"
+                            className="btn an-topic-explain"
+                            aria-label={`${t.explain} ${topic.label}`}
+                            onClick={() => selectTopic(topic)}
+                            disabled={topicLoading && active}
+                          >
+                            {topicLoading && active ? "..." : (<>{t.explain} <Icon name="arrow" /></>)}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
           </Stage>

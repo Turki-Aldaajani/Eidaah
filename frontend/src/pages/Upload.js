@@ -25,6 +25,7 @@ const translations = {
     uploading: "جارٍ الرفع...",
     processing: "جارٍ المعالجة...",
     error: "حدث خطأ في رفع الملف",
+    conn_error: "تعذّر الاتصال بخادم التحليل. تأكد أن الخادم (الباك اند) يعمل، أو حاول لاحقاً.",
   },
   en: {
     feature1_title: "Auto Organization",
@@ -42,6 +43,7 @@ const translations = {
     uploading: "Uploading...",
     processing: "Processing...",
     error: "Error uploading file",
+    conn_error: "Cannot reach the analysis server. Make sure the backend is running, or try again later.",
   },
 };
 
@@ -105,7 +107,9 @@ export default function Upload() {
       }, 500);
     } catch (err) {
       console.error("Upload error:", err);
-      setError(t.error);
+      // فشل الشبكة (الخادم غير مُتاح) يُرمى كـ TypeError، بخلاف خطأ الخادم (استجابة غير ناجحة)
+      const isNetwork = err instanceof TypeError || /failed to fetch|networkerror/i.test(err.message || "");
+      setError(isNetwork ? t.conn_error : t.error);
       setProgress(0);
     } finally {
       setUploading(false);

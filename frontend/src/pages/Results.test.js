@@ -89,14 +89,14 @@ test("shows the auto-generated title, description and AI badge from /status", as
 
 test("selecting a topic reveals the analytical explanation and example (real backend)", async () => {
   renderResults();
-  fireEvent.click(await screen.findByRole("button", { name: "موضوع النظم" }));
+  fireEvent.click(await screen.findByRole("button", { name: "شرح موضوع النظم" }));
   expect((await screen.findAllByText("شرح تحليلي مفصّل للموضوع.")).length).toBeGreaterThan(0);
   expect(screen.getByText("مثال واقعي على الموضوع")).toBeInTheDocument();
 });
 
 test("generating the quiz shows questions and grades an answer", async () => {
   renderResults();
-  fireEvent.click(await screen.findByRole("button", { name: "موضوع النظم" }));
+  fireEvent.click(await screen.findByRole("button", { name: "شرح موضوع النظم" }));
   await screen.findByText("مثال واقعي على الموضوع"); // إشارة جاهزية الموضوع
 
   fireEvent.click(screen.getByRole("button", { name: /توليد أسئلة المراجعة/ }));
