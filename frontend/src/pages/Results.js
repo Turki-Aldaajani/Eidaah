@@ -18,6 +18,8 @@ const T = {
     no_slides: "لم يتم العثور على شرائح. يرجى رفع ملف أولاً.", error: "حدث خطأ في التحليل",
     slide_of: "من", slide_word: "الشريحة", prev: "السابقة", next: "التالية",
     collapse: "طيّ الشريط", expand: "إظهار المراحل", auto_meta: "مُولّد بالذكاء الاصطناعي",
+    customize: "تخصيص", customize_title: "تخصيص مراحل التعلّم",
+    customize_hint: "اختر المراحل التي تريد إظهارها في رحلتك.", mandatory: "أساسية", done_btn: "تم",
     rail_sub: "اضغط على المرحلة للانتقال إليها",
     topics_hint: "اختر موضوعاً واضغط «شرح» لعرض الشرح التحليلي والمثال والأسئلة التفاعلية.",
     explain: "شرح",
@@ -31,6 +33,8 @@ const T = {
     no_slides: "No slides found. Please upload a file first.", error: "Error analyzing",
     slide_of: "of", slide_word: "Slide", prev: "Previous", next: "Next",
     collapse: "Collapse", expand: "Show stages", auto_meta: "AI generated",
+    customize: "Customize", customize_title: "Customize learning stages",
+    customize_hint: "Choose the stages to show in your flow.", mandatory: "core", done_btn: "Done",
     rail_sub: "Click a stage to jump to it",
     topics_hint: "Pick a topic and press “Explain” for the analysis, example and quiz.",
     explain: "Explain",
@@ -77,6 +81,11 @@ export default function Results() {
   const [maxStep, setMaxStep] = useState(1);
   const [activeStep, setActiveStep] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [hidden, setHidden] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("an_hidden_stages") || "[]")); }
+    catch { return new Set(); }
+  });
 
   const sectionEls = useRef({});
   const pollingRef = useRef(null);
@@ -140,6 +149,20 @@ export default function Results() {
     setMaxStep((s) => Math.max(s, step));
     setActiveStep(step);
   }, []);
+
+  // تخصيص المراحل: الشريحة (1) والمواضيع (3) أساسيتان، والبقية قابلة للإخفاء
+  const isHidden = (step) => hidden.has(step);
+  const isMandatory = (step) => step === 1 || step === 3;
+  const toggleStage = (step) => {
+    if (isMandatory(step)) return;
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(step)) next.delete(step);
+      else next.add(step);
+      localStorage.setItem("an_hidden_stages", JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   const goToStep = useCallback((step) => {
     completeStep(step);
@@ -238,13 +261,19 @@ export default function Results() {
                 <span className="an-rail-title">مراحل التعلّم</span>
                 <span className="an-rail-sub">{t.rail_sub}</span>
               </div>
-              <button type="button" className="an-icon-btn" onClick={() => setSidebarOpen(false)} title={t.collapse} aria-label={t.collapse}>
-                <Icon name="chev" className={startChev} />
-              </button>
+              <div className="an-rail-actions">
+                <button type="button" className="an-custom-btn" onClick={() => setCustomOpen(true)}>
+                  <Icon name="pen" /> {t.customize}
+                </button>
+                <button type="button" className="an-icon-btn" onClick={() => setSidebarOpen(false)} title={t.collapse} aria-label={t.collapse}>
+                  <Icon name="chev" className={startChev} />
+                </button>
+              </div>
             </div>
             <ol className="an-rail-list">
               {t.stages.map((label, i) => {
                 const step = i + 1;
+                if (isHidden(step)) return null;
                 const done = step <= maxStep;
                 const active = step === activeStep;
                 return (
@@ -303,16 +332,18 @@ export default function Results() {
           </Stage>
 
           {/* 2) ملخص الشريحة */}
-          <Stage step={2}>
-            <div className="an-card">
-              <div className="an-card-head"><Icon name="layers" /> <b>{t.stages[1]}</b></div>
-              {summary ? <p className="an-text">{summary}</p> : (
-                <button className="btn ghost" onClick={fetchSummary} disabled={summaryLoading}>
-                  {summaryLoading ? t.loading : t.gen_summary}
-                </button>
-              )}
-            </div>
-          </Stage>
+          {!isHidden(2) && (
+            <Stage step={2}>
+              <div className="an-card">
+                <div className="an-card-head"><Icon name="layers" /> <b>{t.stages[1]}</b></div>
+                {summary ? <p className="an-text">{summary}</p> : (
+                  <button className="btn ghost" onClick={fetchSummary} disabled={summaryLoading}>
+                    {summaryLoading ? t.loading : t.gen_summary}
+                  </button>
+                )}
+              </div>
+            </Stage>
+          )}
 
           {/* 3) المواضيع */}
           <Stage step={3}>
@@ -351,6 +382,7 @@ export default function Results() {
             <p className="an-hint">{t.pick_topic}</p>
           ) : (
             <>
+              {!isHidden(4) && (
               <Stage step={4}>
                 <div className="an-card">
                   <div className="an-card-head"><Icon name="sparkles" /> <b>{t.stages[3]}</b></div>
@@ -358,7 +390,9 @@ export default function Results() {
                     : <p className="an-text">{topicContent?.explanation}</p>}
                 </div>
               </Stage>
+              )}
 
+              {!isHidden(5) && (
               <Stage step={5}>
                 <div className="an-card">
                   <div className="an-card-head"><Icon name="target" /> <b>{t.stages[4]}</b></div>
@@ -366,7 +400,9 @@ export default function Results() {
                     : <p className="an-text">{topicContent?.examples?.[0]}</p>}
                 </div>
               </Stage>
+              )}
 
+              {!isHidden(6) && (
               <Stage step={6}>
                 <div className="an-card">
                   <div className="an-card-head"><Icon name="note" /> <b>{t.stages[5]}</b></div>
@@ -375,7 +411,9 @@ export default function Results() {
                   ) : <p className="upload-filename">{t.loading}</p>}
                 </div>
               </Stage>
+              )}
 
+              {!isHidden(7) && (
               <Stage step={7}>
                 <div className="an-card">
                   <div className="an-card-head"><Icon name="help" /> <b>{t.stages[6]}</b></div>
@@ -420,6 +458,7 @@ export default function Results() {
                   )}
                 </div>
               </Stage>
+              )}
             </>
           )}
         </main>
@@ -437,6 +476,34 @@ export default function Results() {
           </button>
         </div>
       </div>
+
+      {/* نافذة تخصيص المراحل (نمط الكنترول سنتر) */}
+      {customOpen && (
+        <div className="modal-overlay" role="dialog" aria-label={t.customize_title}>
+          <div className="card modal-card anim">
+            <h2>{t.customize_title}</h2>
+            <p className="s-desc">{t.customize_hint}</p>
+            <div className="an-custom-list">
+              {t.stages.map((label, i) => {
+                const step = i + 1;
+                return (
+                  <label key={step} className="an-custom-row">
+                    <input
+                      type="checkbox"
+                      checked={!isHidden(step)}
+                      disabled={isMandatory(step)}
+                      onChange={() => toggleStage(step)}
+                    />
+                    <span>{label}</span>
+                    {isMandatory(step) && <span className="an-custom-req">{t.mandatory}</span>}
+                  </label>
+                );
+              })}
+            </div>
+            <button type="button" className="btn" onClick={() => setCustomOpen(false)}>{t.done_btn}</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

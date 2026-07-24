@@ -94,6 +94,18 @@ test("selecting a topic reveals the analytical explanation and example (real bac
   expect(screen.getByText("مثال واقعي على الموضوع")).toBeInTheDocument();
 });
 
+test("customize lets the student hide an optional stage (core stages locked)", () => {
+  const { container } = renderResults();
+  expect(container.querySelectorAll(".an-stage-btn")).toHaveLength(7);
+
+  fireEvent.click(screen.getByRole("button", { name: /تخصيص/ }));
+  // المرحلة الأساسية معطّلة
+  expect(screen.getByRole("checkbox", { name: /عرض الشريحة/ })).toBeDisabled();
+  // إخفاء مرحلة اختيارية
+  fireEvent.click(screen.getByRole("checkbox", { name: "ملخص الشريحة" }));
+  expect(container.querySelectorAll(".an-stage-btn")).toHaveLength(6);
+});
+
 test("generating the quiz shows questions and grades an answer", async () => {
   renderResults();
   fireEvent.click(await screen.findByRole("button", { name: "شرح موضوع النظم" }));
