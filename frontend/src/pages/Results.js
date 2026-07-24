@@ -403,7 +403,7 @@ export default function Results() {
                   disabled={currentSlide === 0}
                   aria-label={t.prev_slide}
                 >
-                  <Icon name="chev" className="rot-r" />
+                  <Icon name="chev" className={language === "ar" ? "rot-r" : "rot-l"} />
                 </button>
                 <span className="slide-counter" aria-live="polite">
                   {t.slide} {arNum(currentSlide + 1)} / {arNum(slides.length)}
@@ -415,7 +415,7 @@ export default function Results() {
                   disabled={currentSlide === slides.length - 1}
                   aria-label={t.next_slide}
                 >
-                  <Icon name="chev" className="rot-l" />
+                  <Icon name="chev" className={language === "ar" ? "rot-l" : "rot-r"} />
                 </button>
               </div>
 
