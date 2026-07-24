@@ -1,460 +1,425 @@
-import Footer from "../Footer";
-import React, { useState, useEffect, useRef } from "react";
+// صفحة نتائج التحليل — تصميم «مراحل التعلم» (مطابق لتصميم ليان في base44).
+// سبع مراحل لكل شريحة مع شريط جانبي قابل للطي يقفز لأي مرحلة، وتنقّل سفلي.
+// موصولة بالباك اند الحقيقي (لا بيانات وهمية): /status · /summary ·
+// /analyze_slide · /analyze_topic · /generate_questions.
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import { useLanguage } from "../i18n/LanguageContext";
+import { toArabicDigits } from "../data/curriculum";
 import "../styles/analyzer.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
-const staticTranslations = {
+const T = {
   ar: {
-    home: "الرئيسية",
-    crumb_prefix: "حلّل ملفاتك",
-    back_button: "← رجوع",
-    slide: "شريحة",
-    explain_button: "شرح",
-    analytical_explanation: "شرح تحليلي:",
-    real_world_example: "مثال واقعي:",
-    loading: "جارٍ التحليل...",
-    no_slides: "لم يتم العثور على شرائح. يرجى رفع ملف أولاً.",
-    error: "حدث خطأ في التحليل",
-    topics_title: "المواضيع",
-    topics_loading: "جارٍ اكتشاف المواضيع...",
-    topics_none: "لم يتم اكتشاف مواضيع.",
-    analyze_topic: "شرح الموضوع",
-    summary_title: "ملخص العرض",
-    generate_summary: "عرض الملخص",
-    auto_meta: "مُولّد بالذكاء الاصطناعي",
+    home: "الرئيسية", crumb: "حلّل ملفاتك", back: "رجوع", loading: "جارٍ التحليل...",
+    no_slides: "لم يتم العثور على شرائح. يرجى رفع ملف أولاً.", error: "حدث خطأ في التحليل",
+    slide_of: "من", slide_word: "الشريحة", prev: "السابقة", next: "التالية",
+    collapse: "طيّ الشريط", expand: "إظهار المراحل", auto_meta: "مُولّد بالذكاء الاصطناعي",
+    pick_topic: "اختر موضوعاً من الأعلى لتبدأ رحلة التعلّم (شرح ← مثال ← ملاحظات ← أسئلة).",
+    gen_summary: "توليد الملخص", gen_quiz: "توليد أسئلة المراجعة", topic_prefix: "الموضوع:",
+    correct: "إجابة صحيحة ✓", wrong: "الإجابة الصحيحة:", explain_label: "التعليل:",
+    stages: ["عرض الشريحة", "ملخص الشريحة", "المواضيع", "شرح تحليلي", "مثال واقعي", "ملاحظات للمذاكرة", "أسئلة تفاعلية"],
   },
   en: {
-    home: "Home",
-    crumb_prefix: "Analyze your files",
-    back_button: "← Back",
-    slide: "Slide",
-    explain_button: "Explain",
-    analytical_explanation: "Analytical Explanation:",
-    real_world_example: "Real-World Example:",
-    loading: "Analyzing...",
-    no_slides: "No slides found. Please upload a file first.",
-    error: "Error analyzing slide",
-    topics_title: "Topics",
-    topics_loading: "Discovering topics...",
-    topics_none: "No topics detected.",
-    analyze_topic: "Explain Topic",
-    summary_title: "Presentation Summary",
-    generate_summary: "Show Summary",
-    auto_meta: "AI generated",
+    home: "Home", crumb: "Analyze your files", back: "Back", loading: "Analyzing...",
+    no_slides: "No slides found. Please upload a file first.", error: "Error analyzing",
+    slide_of: "of", slide_word: "Slide", prev: "Previous", next: "Next",
+    collapse: "Collapse", expand: "Show stages", auto_meta: "AI generated",
+    pick_topic: "Pick a topic above to start the learning flow (explain → example → notes → quiz).",
+    gen_summary: "Generate summary", gen_quiz: "Generate review questions", topic_prefix: "Topic:",
+    correct: "Correct ✓", wrong: "Correct answer:", explain_label: "Why:",
+    stages: ["Slide", "Summary", "Topics", "Analytical", "Example", "Study notes", "Quiz"],
   },
 };
 
-function SlideCard({ slide, label }) {
-  const lines = slide.text.split("\n").map((l) => l.trim()).filter(Boolean);
-  const title = lines[0] || "";
-  const body = lines.slice(1).join("\n");
+const STAGE_ICONS = ["file-text", "layers", "book-open", "sparkles", "target", "note", "help"];
 
+function SlideCard({ slide }) {
+  const lines = (slide.text || "").split("\n").map((l) => l.trim()).filter(Boolean);
   return (
-    <div className="result-slide">
-      <div className="result-slide-accent" />
-      <div className="result-slide-body">
-        {title && <b>{title}</b>}
-        {body && <p>{body}</p>}
-      </div>
-      <div className="result-slide-foot">
-        {label} {slide.slide_number}
-      </div>
+    <div className="an-slide-card">
+      {lines[0] && <b>{lines[0]}</b>}
+      {lines.slice(1).length > 0 && <p>{lines.slice(1).join("\n")}</p>}
     </div>
   );
 }
 
 export default function Results() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = T[language];
 
-  const { language, toggleLanguage } = useLanguage();
   const [slides, setSlides] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [warning, setWarning] = useState("");
-
   const [sessionId] = useState(() => localStorage.getItem("session_id") || "");
-  // A4 (#25): auto-generated title + description, delivered by /status (no extra call).
   const [docTitle, setDocTitle] = useState(() => localStorage.getItem("title") || "");
   const [docDescription, setDocDescription] = useState("");
-  const [docAutoGenerated, setDocAutoGenerated] = useState(false);
-  const [topics, setTopics] = useState([]);
-  const [summary, setSummary] = useState("");
-  const [showSummary, setShowSummary] = useState(false);
-  const [indexingComplete, setIndexingComplete] = useState(false);
+  const [docAuto, setDocAuto] = useState(false);
   const [slideImages, setSlideImages] = useState({});
-  const [activeTopicId, setActiveTopicId] = useState(null);
-  const [topicAnalysis, setTopicAnalysis] = useState(null);
-  const [topicLoading, setTopicLoading] = useState(false);
+  const [topics, setTopics] = useState([]);
+  const [indexingComplete, setIndexingComplete] = useState(false);
+  const [summary, setSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const pollingRef = useRef(null);
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [topicContent, setTopicContent] = useState(null); // {explanation, examples}
+  const [topicLoading, setTopicLoading] = useState(false);
+  const [quiz, setQuiz] = useState(null); // [{q,o,a,e}]
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizPicks, setQuizPicks] = useState({}); // { qIndex: optionIndex }
+  const [maxStep, setMaxStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const sectionEls = useRef({});
+  const pollingRef = useRef(null);
+  const registerRef = (step) => (el) => {
+    if (el) sectionEls.current[step] = el;
+    else delete sectionEls.current[step];
+  };
+
+  // تحميل الشرائح من التخزين
   useEffect(() => {
-    const storedSlides = localStorage.getItem("slides");
-    if (storedSlides) {
-      try {
-        setSlides(JSON.parse(storedSlides));
-      } catch (err) {
-        console.error("Error parsing slides:", err);
-        setError(staticTranslations[language].no_slides);
-      }
+    const stored = localStorage.getItem("slides");
+    if (stored) {
+      try { setSlides(JSON.parse(stored)); }
+      catch { setError(t.no_slides); }
     } else {
-      setError(staticTranslations[language].no_slides);
+      setError(t.no_slides);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // استطلاع الحالة: صور الشرائح، المواضيع، الملخص، العنوان
   useEffect(() => {
     if (!sessionId) return;
-
-    const pollStatus = async () => {
+    const poll = async () => {
       try {
         const res = await fetch(`${API_URL}/api/session/${sessionId}/status`);
         if (!res.ok) return;
         const data = await res.json();
-
         if (data.slides) {
-          const imgMap = {};
-          data.slides.forEach((s) => {
-            if (s.image_url) imgMap[s.slide_number] = `${API_URL}${s.image_url}`;
-          });
-          setSlideImages(imgMap);
+          const map = {};
+          data.slides.forEach((s) => { if (s.image_url) map[s.slide_number] = `${API_URL}${s.image_url}`; });
+          setSlideImages(map);
         }
-
-        // Title is available immediately (filename fallback); description +
-        // AI flag arrive once the background pipeline has generated them.
         if (data.title) setDocTitle(data.title);
         if (data.description) setDocDescription(data.description);
-        if (data.auto_generated) setDocAutoGenerated(true);
-
+        if (data.auto_generated) setDocAuto(true);
         if (data.indexing_complete) {
           setIndexingComplete(true);
-          if (data.topics && data.topics.length > 0) {
-            setTopics(data.topics);
-          }
-          if (data.summary) {
-            setSummary(data.summary);
-          }
-          if (pollingRef.current) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-          }
+          if (data.topics?.length) setTopics(data.topics);
+          if (data.summary) setSummary(data.summary);
+          if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
         }
-      } catch (err) {
-        console.error("Polling error:", err);
-      }
+      } catch { /* تجاهل */ }
     };
-
-    pollStatus();
-    pollingRef.current = setInterval(pollStatus, 2000);
-
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
+    poll();
+    pollingRef.current = setInterval(poll, 2000);
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [sessionId]);
 
-  const fetchSummary = async (lang) => {
-    if (!sessionId) return;
+  // كل شريحة تبدأ رحلة تعلّم جديدة
+  useEffect(() => {
+    setSelectedTopic(null);
+    setTopicContent(null);
+    setQuiz(null);
+    setQuizPicks({});
+    setMaxStep(1);
+    setActiveStep(1);
+  }, [currentSlide]);
+
+  const completeStep = useCallback((step) => {
+    setMaxStep((s) => Math.max(s, step));
+    setActiveStep(step);
+  }, []);
+
+  const goToStep = useCallback((step) => {
+    completeStep(step);
+    const el = sectionEls.current[step] || sectionEls.current[3];
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [completeStep]);
+
+  const fetchSummary = useCallback(async () => {
+    if (!sessionId || summary) return completeStep(2);
     setSummaryLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/session/${sessionId}/summary`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: lang }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setSummary(data.summary);
-      }
-    } catch (err) {
-      console.error("Summary fetch error:", err);
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
+      if (res.ok) setSummary((await res.json()).summary);
+    } catch { /* تجاهل */ } finally { setSummaryLoading(false); completeStep(2); }
+  }, [sessionId, summary, language, completeStep]);
 
-  const handleShowSummary = async () => {
-    setShowSummary(true);
-    await fetchSummary(language);
-  };
-
-  // When the shared language changes (from any page), refetch the summary in
-  // the new language if it is currently displayed. Skips the initial mount.
-  const didMountLangRef = useRef(false);
-  useEffect(() => {
-    if (!didMountLangRef.current) {
-      didMountLangRef.current = true;
-      return;
-    }
-    if (showSummary && sessionId) {
-      fetchSummary(language);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
-
-  const handleExplain = async () => {
-    if (!slides[currentSlide]) return;
-    setLoading(true);
-    setError("");
-    setWarning("");
-    setAnalysis(null);
-
-    try {
-      const res = await fetch(`${API_URL}/api/analyze_slide`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: slides[currentSlide].text, language }),
-      });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data = await res.json();
-      setAnalysis(data);
-      setWarning(data.warning || "");
-
-      const updatedSlides = [...slides];
-      updatedSlides[currentSlide].explanation = data.analysis;
-      updatedSlides[currentSlide].example = data.examples[0] || "";
-      setSlides(updatedSlides);
-      localStorage.setItem("slides", JSON.stringify(updatedSlides));
-    } catch (err) {
-      console.error("Analysis error:", err);
-      setError(staticTranslations[language].error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAnalyzeTopic = async (topic) => {
-    setActiveTopicId(topic.topic_id);
-    setTopicAnalysis(null);
+  const selectTopic = useCallback(async (topic) => {
+    setSelectedTopic(topic);
+    setTopicContent(null);
     setTopicLoading(true);
-    setError("");
-
+    completeStep(3);
     try {
       const res = await fetch(`${API_URL}/api/analyze_topic`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          topic_id: topic.topic_id,
-          language,
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId, topic_id: topic.topic_id, language }),
       });
-      if (res.status === 202) {
-        setTopicLoading(false);
-        return;
-      }
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data = await res.json();
-      setTopicAnalysis(data);
-    } catch (err) {
-      console.error("Topic analysis error:", err);
-      setError(staticTranslations[language].error);
-    } finally {
-      setTopicLoading(false);
-    }
-  };
+      if (res.ok) setTopicContent(await res.json());
+    } catch { setError(t.error); } finally { setTopicLoading(false); }
+  }, [sessionId, language, completeStep, t.error]);
 
-  const t = staticTranslations[language];
+  const fetchQuiz = useCallback(async () => {
+    completeStep(7);
+    if (quiz || !sessionId) return;
+    setQuizLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/generate_questions`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId, language }),
+      });
+      if (res.ok) setQuiz((await res.json()).questions || []);
+    } catch { /* تجاهل */ } finally { setQuizLoading(false); }
+  }, [quiz, sessionId, language, completeStep]);
 
-  if (slides.length === 0 && !error) {
+  // ملاحظات للمذاكرة: مشتقّة من الشرح التحليلي (نقاط)
+  const notes = topicContent?.explanation
+    ? topicContent.explanation.split(/(?<=[.،؟!])\s+/).map((s) => s.trim()).filter((s) => s.length > 12)
+    : [];
+
+  const num = (n) => (language === "ar" ? toArabicDigits(String(n)) : String(n));
+
+  if (slides.length === 0) {
     return (
       <>
         <TopNav />
-        <section className="view view-analyze">
-          <div className="container">
-            <p className="upload-filename">{t.loading}</p>
-          </div>
-        </section>
+        <section className="view"><div className="container" style={{ paddingTop: 40 }}>
+          {error ? (
+            <>
+              <p className="upload-error">{error}</p>
+              <button className="btn ghost" onClick={() => navigate("/analyze")}>{t.back}</button>
+            </>
+          ) : <p className="upload-filename">{t.loading}</p>}
+        </div></section>
       </>
     );
   }
 
-  if (error && slides.length === 0) {
-    return (
-      <>
-        <TopNav />
-        <section className="view view-analyze">
-          <div className="container">
-            <p className="upload-error">{error}</p>
-            <button type="button" className="btn ghost" onClick={() => navigate("/analyze")}>
-              {t.back_button}
-            </button>
-          </div>
-        </section>
-      </>
-    );
-  }
+  const slide = slides[currentSlide];
+  const isFirst = currentSlide === 0;
+  const isLast = currentSlide === slides.length - 1;
+  const startChev = language === "ar" ? "rot-r" : "rot-l";
+  const endChev = language === "ar" ? "rot-l" : "rot-r";
 
-  const currentSlideData = slides[currentSlide];
+  const Stage = ({ step, children }) => (
+    <div
+      data-step={step}
+      ref={registerRef(step)}
+      onClick={() => completeStep(step)}
+      className="an-stage anim"
+    >
+      {children}
+    </div>
+  );
 
   return (
-    <>
+    <div className="an-page">
       <TopNav />
-      <section className="view view-analyze">
-        <div className="container">
-          <div className="page-head">
-            <nav className="crumbs">
-              <Link to="/">{t.home}</Link>
-              <i className="sep">‹</i>
-              <Link to="/analyze">{t.crumb_prefix}</Link>
-              <i className="sep">‹</i>
-              <span className="cur">{localStorage.getItem("filename") || ""}</span>
-            </nav>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-              <button type="button" className="btn ghost" onClick={() => navigate("/analyze")}>
-                {t.back_button}
-              </button>
-              <button type="button" className="btn ghost" onClick={toggleLanguage}>
-                {language === "ar" ? "English" : "العربية"}
+      <div className="an-shell">
+        {/* الشريط الجانبي: مراحل التعلم (قابل للطي) */}
+        <aside className={`an-rail ${sidebarOpen ? "open" : "closed"}`}>
+          <div className="an-rail-in">
+            <div className="an-rail-head">
+              <span>مراحل التعلّم</span>
+              <button type="button" className="an-icon-btn" onClick={() => setSidebarOpen(false)} title={t.collapse} aria-label={t.collapse}>
+                <Icon name="chev" className={startChev} />
               </button>
             </div>
-          </div>
-
-          {/* A4 (#25): auto-generated title + description at the top of the results */}
-          {(docTitle || docDescription) && (
-            <div className="result-doc-head" data-testid="result-doc-head">
-              <h1 className="result-doc-title">
-                {docTitle || localStorage.getItem("filename") || ""}
-                {docAutoGenerated && (
-                  <span className="ai-badge" title={t.auto_meta}>🤖 {t.auto_meta}</span>
-                )}
-              </h1>
-              {docDescription && <p className="result-doc-desc">{docDescription}</p>}
-            </div>
-          )}
-
-          <div className="result-grid">
-            {/* عمود الشرح التحليلي — أولاً في الـ DOM، يظهر يميناً تحت dir=rtl */}
-            <div className="card result-card">
-              <h2>{t.analytical_explanation}</h2>
-
-              {(loading || topicLoading) && <p className="upload-filename">{t.loading}</p>}
-
-              {error && !loading && !topicLoading && <p className="upload-error">{error}</p>}
-
-              {!topicLoading && !loading && !error && topicAnalysis && (
-                <div className="result-explain-box">
-                  <h3>{topicAnalysis.topic_label}</h3>
-                  <h3>{t.analytical_explanation}</h3>
-                  <p>{topicAnalysis.explanation}</p>
-                  {topicAnalysis.examples && topicAnalysis.examples[0] && (
-                    <>
-                      <h3>{t.real_world_example}</h3>
-                      <p>{topicAnalysis.examples[0]}</p>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {!topicLoading && !loading && !error && !topicAnalysis && analysis && (
-                <div className="result-explain-box">
-                  {warning && <p className="upload-warning">{warning}</p>}
-                  <h3>{t.analytical_explanation}</h3>
-                  <p>{analysis.analysis}</p>
-                  <h3>{t.real_world_example}</h3>
-                  <p>{analysis.examples[0] || ""}</p>
-                </div>
-              )}
-
-              {!topicLoading && !loading && !error && !topicAnalysis && !analysis && currentSlideData.explanation && (
-                <div className="result-explain-box">
-                  <h3>{t.analytical_explanation}</h3>
-                  <p>{currentSlideData.explanation}</p>
-                  <h3>{t.real_world_example}</h3>
-                  <p>{currentSlideData.example}</p>
-                </div>
-              )}
-
-              {!topicLoading && !loading && !error && !topicAnalysis && !analysis && !currentSlideData.explanation && (
-                <div className="result-explain-box">
-                  <p className="upload-filename">
-                    {language === "ar"
-                      ? "انقر على 'شرح' لتحليل شريحة، أو 'شرح الموضوع' لتحليل موضوع"
-                      : "Click 'Explain' for a slide, or 'Explain Topic' for a topic"}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* عمود الشريحة + المواضيع — ثانياً في الـ DOM، يظهر يساراً تحت dir=rtl */}
-            <div className="card result-card">
-              <select
-                className="result-select"
-                value={currentSlide}
-                onChange={(e) => {
-                  setCurrentSlide(Number(e.target.value));
-                  setAnalysis(null);
-                }}
-              >
-                {slides.map((slide, index) => (
-                  <option key={index} value={index}>
-                    {t.slide} {slide.slide_number}
-                  </option>
-                ))}
-              </select>
-
-              {slideImages[currentSlideData.slide_number] ? (
-                <img
-                  src={slideImages[currentSlideData.slide_number]}
-                  alt={`${t.slide} ${currentSlideData.slide_number}`}
-                  className="result-slide-img"
-                  loading="lazy"
-                />
-              ) : (
-                <SlideCard slide={currentSlideData} label={t.slide} />
-              )}
-
-              <button type="button" className="btn" style={{ width: "100%", marginTop: 12, opacity: loading ? 0.6 : 1 }} onClick={handleExplain} disabled={loading}>
-                <Icon name="sparkles" /> {loading ? t.loading : t.explain_button}
-              </button>
-
-              <hr style={{ border: 0, borderTop: "1px solid var(--line)", margin: "20px 0 12px" }} />
-
-              {!indexingComplete && sessionId && <p className="upload-filename">{t.topics_loading}</p>}
-
-              {indexingComplete && topics.length > 0 && (
-                <>
-                  <h3 style={{ color: "var(--pri)", fontSize: ".95rem", marginBottom: 10 }}>{t.topics_title}</h3>
-
-                  {!showSummary && (
-                    <button type="button" className="btn ghost" style={{ width: "100%", marginBottom: 14, opacity: summaryLoading ? 0.6 : 1 }} onClick={handleShowSummary} disabled={summaryLoading}>
-                      {summaryLoading ? t.loading : t.generate_summary}
+            <ol className="an-rail-list">
+              {t.stages.map((label, i) => {
+                const step = i + 1;
+                const done = step <= maxStep;
+                const active = step === activeStep;
+                return (
+                  <li key={step}>
+                    <button
+                      type="button"
+                      className={`an-stage-btn${done ? " done" : ""}${active ? " active" : ""}`}
+                      onClick={() => goToStep(step)}
+                    >
+                      <span className="an-stage-dot">
+                        {done ? <Icon name="check" /> : <Icon name={STAGE_ICONS[i]} />}
+                      </span>
+                      <span className="an-stage-label">{label}</span>
                     </button>
-                  )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </aside>
 
-                  {showSummary && (
-                    <div className="result-summary">{summaryLoading ? t.loading : summary}</div>
-                  )}
+        {!sidebarOpen && (
+          <button type="button" className="an-expand" onClick={() => setSidebarOpen(true)} title={t.expand} aria-label={t.expand}>
+            <Icon name="chev" className={endChev} />
+          </button>
+        )}
 
-                  {topics.map((topic) => (
-                    <div className="result-topic" key={topic.topic_id}>
-                      <span>{topic.label}</span>
-                      <button
-                        type="button"
-                        className="btn"
-                        style={{ padding: "6px 14px", opacity: topicLoading && activeTopicId === topic.topic_id ? 0.6 : 1 }}
-                        disabled={topicLoading && activeTopicId === topic.topic_id}
-                        onClick={() => handleAnalyzeTopic(topic)}
-                      >
-                        {topicLoading && activeTopicId === topic.topic_id ? "..." : t.analyze_topic}
-                      </button>
-                    </div>
-                  ))}
-                </>
-              )}
+        {/* المحتوى الرئيسي */}
+        <main className="an-main">
+          <nav className="crumbs">
+            <Link to="/">{t.home}</Link>
+            <i className="sep">‹</i>
+            <Link to="/analyze">{t.crumb}</Link>
+            <i className="sep">‹</i>
+            <span className="cur">{docTitle || localStorage.getItem("filename") || ""}</span>
+          </nav>
 
-              {indexingComplete && topics.length === 0 && sessionId && <p className="upload-filename">{t.topics_none}</p>}
+          <div className="an-file-head">
+            <span className="an-file-ic"><Icon name="file-text" /></span>
+            <div>
+              <h1>{docTitle || localStorage.getItem("filename") || ""}
+                {docAuto && <span className="ai-badge" title={t.auto_meta}> 🤖 {t.auto_meta}</span>}
+              </h1>
+              {docDescription && <p className="an-file-desc">{docDescription}</p>}
             </div>
           </div>
+
+          {/* 1) عرض الشريحة */}
+          <Stage step={1}>
+            <div className="an-card">
+              <div className="an-card-head"><Icon name="file-text" /> <b>{t.stages[0]}</b></div>
+              {slideImages[slide.slide_number] ? (
+                <img className="an-slide-img" src={slideImages[slide.slide_number]} alt={`${t.slide_word} ${slide.slide_number}`} loading="lazy" />
+              ) : <SlideCard slide={slide} />}
+            </div>
+          </Stage>
+
+          {/* 2) ملخص الشريحة */}
+          <Stage step={2}>
+            <div className="an-card">
+              <div className="an-card-head"><Icon name="layers" /> <b>{t.stages[1]}</b></div>
+              {summary ? <p className="an-text">{summary}</p> : (
+                <button className="btn ghost" onClick={fetchSummary} disabled={summaryLoading}>
+                  {summaryLoading ? t.loading : t.gen_summary}
+                </button>
+              )}
+            </div>
+          </Stage>
+
+          {/* 3) المواضيع */}
+          <Stage step={3}>
+            <div className="an-card">
+              <div className="an-card-head"><Icon name="book-open" /> <b>{t.stages[2]}</b></div>
+              {!indexingComplete && sessionId && <p className="upload-filename">{t.loading}</p>}
+              {topics.length > 0 && (
+                <div className="an-topics">
+                  {topics.map((topic) => (
+                    <button
+                      key={topic.topic_id}
+                      type="button"
+                      className={`an-topic-chip${selectedTopic?.topic_id === topic.topic_id ? " active" : ""}`}
+                      onClick={() => selectTopic(topic)}
+                    >
+                      {topic.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Stage>
+
+          {/* 4-7: تظهر بعد اختيار موضوع */}
+          {!selectedTopic ? (
+            <p className="an-hint">{t.pick_topic}</p>
+          ) : (
+            <>
+              <Stage step={4}>
+                <div className="an-card">
+                  <div className="an-card-head"><Icon name="sparkles" /> <b>{t.stages[3]}</b></div>
+                  {topicLoading ? <p className="upload-filename">{t.loading}</p>
+                    : <p className="an-text">{topicContent?.explanation}</p>}
+                </div>
+              </Stage>
+
+              <Stage step={5}>
+                <div className="an-card">
+                  <div className="an-card-head"><Icon name="target" /> <b>{t.stages[4]}</b></div>
+                  {topicLoading ? <p className="upload-filename">{t.loading}</p>
+                    : <p className="an-text">{topicContent?.examples?.[0]}</p>}
+                </div>
+              </Stage>
+
+              <Stage step={6}>
+                <div className="an-card">
+                  <div className="an-card-head"><Icon name="note" /> <b>{t.stages[5]}</b></div>
+                  {notes.length > 0 ? (
+                    <ul className="an-notes">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+                  ) : <p className="upload-filename">{t.loading}</p>}
+                </div>
+              </Stage>
+
+              <Stage step={7}>
+                <div className="an-card">
+                  <div className="an-card-head"><Icon name="help" /> <b>{t.stages[6]}</b></div>
+                  {!quiz ? (
+                    <button className="btn" onClick={fetchQuiz} disabled={quizLoading}>
+                      <Icon name="sparkles" /> {quizLoading ? t.loading : t.gen_quiz}
+                    </button>
+                  ) : (
+                    <div className="an-quiz">
+                      {quiz.map((q, qi) => {
+                        const picked = quizPicks[qi];
+                        const answered = picked != null;
+                        return (
+                          <div className="an-q" key={qi}>
+                            <b>{num(qi + 1)}. {q.q}</b>
+                            <div className="an-q-opts">
+                              {q.o.map((opt, oi) => {
+                                let cls = "an-opt";
+                                if (answered) {
+                                  if (oi === q.a) cls += " correct";
+                                  else if (oi === picked) cls += " wrong";
+                                }
+                                return (
+                                  <button key={oi} type="button" className={cls}
+                                    disabled={answered}
+                                    onClick={() => setQuizPicks((p) => ({ ...p, [qi]: oi }))}>
+                                    {opt}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {answered && (
+                              <p className="an-q-fb">
+                                {picked === q.a ? t.correct : `${t.wrong} ${q.o[q.a]}`}
+                                {q.e && <span className="an-q-why"> — {t.explain_label} {q.e}</span>}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </Stage>
+            </>
+          )}
+        </main>
+      </div>
+
+      {/* شريط التنقّل السفلي */}
+      <div className="an-bottom">
+        <span className="an-bottom-count">{t.slide_word} {num(currentSlide + 1)} {t.slide_of} {num(slides.length)}</span>
+        <div className="an-bottom-btns">
+          <button className="btn ghost" onClick={() => !isFirst && setCurrentSlide((s) => s - 1)} disabled={isFirst}>
+            <Icon name="chev" className={startChev} /> {t.prev}
+          </button>
+          <button className="btn" onClick={() => !isLast && setCurrentSlide((s) => s + 1)} disabled={isLast}>
+            {t.next} <Icon name="chev" className={endChev} />
+          </button>
         </div>
-      </section>
-      <Footer />
-    </>
+      </div>
+    </div>
   );
 }
