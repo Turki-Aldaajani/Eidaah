@@ -394,6 +394,8 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .home-id::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;border:2px solid rgba(255,255,255,.08);bottom:-150px;inset-inline-end:-80px}
 .home-id-in{position:relative;z-index:1;text-align:center;padding:56px 22px;color:#fff;max-width:640px;margin-inline:auto}
 .home-id-mark{width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;font-weight:700;font-size:1.8rem;margin:0 auto 18px}
+/* F3: شعار إيضاح — الفن أبيض على خلفية سوداء، وscreen يُخفي الأسود فيظهر على الأخضر */
+.home-id-logo{height:160px;width:auto;max-width:80%;display:block;margin:0 auto 14px;mix-blend-mode:screen}
 .home-id-t{font-size:1.9rem;font-weight:700}
 .home-id-d{font-size:1.02rem;font-weight:600;margin-top:10px;color:#EAF2EF}
 .home-id-u{font-size:.9rem;color:#CDE0DA;margin-top:2px}
