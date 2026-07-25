@@ -5,6 +5,8 @@ import Icon from "../components/Icon";
 import Footer from "../Footer";
 import { AIF } from "../data/curriculum";
 import { LP_WHY, LP_JOURNEY, LP_SOON } from "../data/landing";
+import { useTheme } from "../theme/ThemeContext";
+
 
 function HeroIllustration() {
   return (
@@ -83,7 +85,8 @@ function SoonCard({ item }) {
 }
 
 export default function LandingPage() {
-  return (
+  const { theme } = useTheme();
+  const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";  return (
     <>
       <TopNav />
       <section className="view view-landing">
@@ -176,7 +179,7 @@ export default function LandingPage() {
         <section className="home-id">
           <div className="container">
             <div className="home-id-in anim">
-              <img className="home-id-logo" src="/eidaah-logo-dark.png" alt="إيضاح" />
+              <img className="home-id-logo" src={logoSrc} alt="إيضاح" />
               <p className="home-id-d">فريق الذكاء الاصطناعي بنادي إنجاز</p>
               <p className="home-id-u">جامعة الإمام محمد بن سعود الإسلامية</p>
               <p className="home-id-s">طلبة طموحون يسعون لتوظيف الذكاء الاصطناعي لخدمة المعرفة.</p>
