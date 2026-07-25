@@ -34,3 +34,15 @@ export function useLanguage() {
   if (!ctx) throw new Error("useLanguage must be used within a LanguageProvider");
   return ctx;
 }
+
+// نسخة آمنة لا ترمي استثناءً بدون مزوّد — تُستخدم في مكوّنات مشتركة (TopNav)
+// قد تُعرض في اختبارات لا تغلّف LanguageProvider.
+export function useOptionalLanguage() {
+  return (
+    useContext(LanguageContext) || {
+      language: "ar",
+      setLanguage: () => {},
+      toggleLanguage: () => {},
+    }
+  );
+}

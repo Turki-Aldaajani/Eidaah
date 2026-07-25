@@ -8,6 +8,7 @@ import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import { useLanguage } from "../i18n/LanguageContext";
 import { toArabicDigits } from "../data/curriculum";
+import { burstConfetti, playCorrect, playWrong } from "../lib/celebrate";
 import "../styles/analyzer.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
@@ -19,10 +20,15 @@ const T = {
     slide_of: "من", slide_word: "الشريحة", prev: "السابقة", next: "التالية",
     collapse: "طيّ الشريط", expand: "إظهار المراحل", auto_meta: "مُولّد بالذكاء الاصطناعي",
     customize: "تخصيص", customize_title: "تخصيص مراحل التعلّم",
-    customize_hint: "اختر المراحل التي تريد إظهارها في رحلتك.", mandatory: "أساسية", done_btn: "تم",
-    rail_sub: "اضغط على المرحلة للانتقال إليها",
+    customize_hint: "رتّب المراحل بالسحب أو بالأسهم، وأظهِر أو أخفِ ما تريد.", mandatory: "أساسية", done_btn: "تم",
+    move_up: "تحريك لأعلى", move_down: "تحريك لأسفل", drag_hint: "اسحب لإعادة الترتيب",
+    rail_sub: "اضغط على المرحلة لإبرازها وتفعيل محتواها",
     topics_hint: "اختر موضوعاً واضغط «شرح» لعرض الشرح التحليلي والمثال والأسئلة التفاعلية.",
     explain: "شرح",
+    session_expired: "انتهت الجلسة (أُعيد تشغيل الخادم أو مرّ وقت طويل). يرجى إعادة رفع الملف.",
+    reupload: "إعادة رفع الملف",
+    lang_changed: "غيّرت اللغة — أعد توليد الملخص أو الشرح أو الأسئلة لعرضها بالعربية.",
+    dismiss: "إغلاق",
     pick_topic: "اختر موضوعاً من الأعلى لتبدأ رحلة التعلّم (شرح ← مثال ← ملاحظات ← أسئلة).",
     gen_summary: "توليد الملخص", gen_quiz: "توليد أسئلة المراجعة", topic_prefix: "الموضوع:",
     correct: "إجابة صحيحة ✓", wrong: "الإجابة الصحيحة:", explain_label: "التعليل:",
@@ -34,16 +40,23 @@ const T = {
     slide_of: "of", slide_word: "Slide", prev: "Previous", next: "Next",
     collapse: "Collapse", expand: "Show stages", auto_meta: "AI generated",
     customize: "Customize", customize_title: "Customize learning stages",
-    customize_hint: "Choose the stages to show in your flow.", mandatory: "core", done_btn: "Done",
-    rail_sub: "Click a stage to jump to it",
+    customize_hint: "Reorder by dragging or the arrows, and show or hide stages.", mandatory: "core", done_btn: "Done",
+    move_up: "Move up", move_down: "Move down", drag_hint: "Drag to reorder",
+    rail_sub: "Click a stage to highlight & activate it",
     topics_hint: "Pick a topic and press “Explain” for the analysis, example and quiz.",
     explain: "Explain",
+    session_expired: "Session expired (server restarted or too much time passed). Please re-upload the file.",
+    reupload: "Re-upload file",
+    lang_changed: "Language changed — regenerate the summary, analysis or quiz to view them in English.",
+    dismiss: "Dismiss",
     pick_topic: "Pick a topic above to start the learning flow (explain → example → notes → quiz).",
     gen_summary: "Generate summary", gen_quiz: "Generate review questions", topic_prefix: "Topic:",
     correct: "Correct ✓", wrong: "Correct answer:", explain_label: "Why:",
     stages: ["Slide", "Summary", "Topics", "Analytical", "Example", "Study notes", "Quiz"],
   },
 };
+
+const STAGE_STEPS = [1, 2, 3, 4, 5, 6, 7];
 
 function SlideCard({ slide }) {
   const lines = (slide.text || "").split("\n").map((l) => l.trim()).filter(Boolean);
@@ -70,6 +83,7 @@ export default function Results() {
   const [slideImages, setSlideImages] = useState({});
   const [topics, setTopics] = useState([]);
   const [indexingComplete, setIndexingComplete] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [summary, setSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -78,17 +92,31 @@ export default function Results() {
   const [quiz, setQuiz] = useState(null); // [{q,o,a,e}]
   const [quizLoading, setQuizLoading] = useState(false);
   const [quizPicks, setQuizPicks] = useState({}); // { qIndex: optionIndex }
-  const [maxStep, setMaxStep] = useState(1);
+  const [doneSteps, setDoneSteps] = useState(() => new Set([1]));
   const [activeStep, setActiveStep] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [flashStep, setFlashStep] = useState(null);
+  const [langNotice, setLangNotice] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [hidden, setHidden] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem("an_hidden_stages") || "[]")); }
     catch { return new Set(); }
   });
+  const [order, setOrder] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("an_stage_order") || "null");
+      if (Array.isArray(saved) && saved.length === STAGE_STEPS.length &&
+          STAGE_STEPS.every((s) => saved.includes(s))) return saved;
+    } catch { /* تجاهل */ }
+    return [...STAGE_STEPS];
+  });
+  const [dragStep, setDragStep] = useState(null);
 
   const sectionEls = useRef({});
   const pollingRef = useRef(null);
+  const flashTimer = useRef(null);
+  const langInit = useRef(true);
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
   const registerRef = (step) => (el) => {
     if (el) sectionEls.current[step] = el;
     else delete sectionEls.current[step];
@@ -112,6 +140,12 @@ export default function Results() {
     const poll = async () => {
       try {
         const res = await fetch(`${API_URL}/api/session/${sessionId}/status`);
+        if (res.status === 404) {
+          // الجلسة انتهت أو أُعيد تشغيل الخادم — أوقف الاستطلاع بدل التعليق للأبد
+          setSessionExpired(true);
+          if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+          return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         if (data.slides) {
@@ -141,12 +175,26 @@ export default function Results() {
     setTopicContent(null);
     setQuiz(null);
     setQuizPicks({});
-    setMaxStep(1);
+    setDoneSteps(new Set([1]));
     setActiveStep(1);
   }, [currentSlide]);
 
+  // تغيير اللغة أثناء عرض النتائج: المحتوى المولّد (ملخص/شرح/مثال/أسئلة) بقي باللغة
+  // القديمة. نُعيد ضبطه ليُعاد توليده باللغة الجديدة، مع تنبيه بسيط للمستخدم.
+  useEffect(() => {
+    if (langInit.current) { langInit.current = false; return; }
+    setSummary("");
+    setSelectedTopic(null);
+    setTopicContent(null);
+    setQuiz(null);
+    setQuizPicks({});
+    setDoneSteps(new Set([1]));
+    setActiveStep(1);
+    setLangNotice(true);
+  }, [language]);
+
   const completeStep = useCallback((step) => {
-    setMaxStep((s) => Math.max(s, step));
+    setDoneSteps((prev) => new Set(prev).add(step));
     setActiveStep(step);
   }, []);
 
@@ -164,11 +212,26 @@ export default function Results() {
     });
   };
 
-  const goToStep = useCallback((step) => {
-    completeStep(step);
-    const el = sectionEls.current[step] || sectionEls.current[3];
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [completeStep]);
+  // إعادة ترتيب المراحل (كنترول سنتر): أزرار سهم أعلى/أسفل + سحب وإفلات
+  const persistOrder = (arr) => { localStorage.setItem("an_stage_order", JSON.stringify(arr)); return arr; };
+  const moveStage = (step, dir) => setOrder((prev) => {
+    const i = prev.indexOf(step);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= prev.length) return prev;
+    const arr = [...prev];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    return persistOrder(arr);
+  });
+  const dropOnStage = (target) => {
+    setOrder((prev) => {
+      if (dragStep == null || dragStep === target) return prev;
+      const arr = prev.filter((s) => s !== dragStep);
+      const idx = arr.indexOf(target);
+      arr.splice(idx, 0, dragStep);
+      return persistOrder(arr);
+    });
+    setDragStep(null);
+  };
 
   const fetchSummary = useCallback(async () => {
     if (!sessionId || summary) return completeStep(2);
@@ -209,6 +272,25 @@ export default function Results() {
     } catch { /* تجاهل */ } finally { setQuizLoading(false); }
   }, [quiz, sessionId, language, completeStep]);
 
+  // كنترول سنتر: الضغط على مرحلة يُبرزها بصرياً + يُفعّل محتواها + يمرّر إليها
+  const goToStep = useCallback((step) => {
+    // المراحل 4–7 تحتاج موضوعاً مختاراً — نفتح المسار تلقائياً بأول موضوع
+    if (step >= 4 && !selectedTopic && topics.length > 0) selectTopic(topics[0]);
+    // تفعيل محتوى المرحلة مباشرةً (لا زر منفصل)
+    if (step === 2) fetchSummary();
+    if (step === 7) fetchQuiz();
+    completeStep(step);
+    // وميض إبراز مؤقّت على القسم المقصود
+    setFlashStep(step);
+    window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlashStep(null), 1500);
+    // تمرير بعد رسم القسم (خصوصاً بعد فتح المسار)
+    requestAnimationFrame(() => {
+      const el = sectionEls.current[step] || sectionEls.current[3];
+      el?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    });
+  }, [completeStep, selectedTopic, topics, selectTopic, fetchSummary, fetchQuiz]);
+
   // ملاحظات للمذاكرة: مشتقّة من الشرح التحليلي (نقاط)
   const notes = topicContent?.explanation
     ? topicContent.explanation.split(/(?<=[.،؟!])\s+/).map((s) => s.trim()).filter((s) => s.length > 12)
@@ -238,16 +320,131 @@ export default function Results() {
   const startChev = language === "ar" ? "rot-r" : "rot-l";
   const endChev = language === "ar" ? "rot-l" : "rot-r";
 
-  const Stage = ({ step, children }) => (
-    <div
-      data-step={step}
-      ref={registerRef(step)}
-      onClick={() => completeStep(step)}
-      className="an-stage anim"
-    >
-      {children}
-    </div>
-  );
+  // دالة أصناف بدل مكوّن داخلي: يمنع إعادة إنشاء الأقسام (remount) عند كل تغيير حالة
+  // — وهو ما كان يُقفز التمرير للأعلى عند الإجابة على الأسئلة.
+  const stageCls = (step) =>
+    `an-stage anim${step === activeStep ? " is-active" : ""}${step === flashStep ? " flash" : ""}`;
+
+  // يعرض قسم مرحلة واحدة حسب رقمها — يُستدعى من مصفوفة الترتيب (order) ليدعم إعادة الترتيب.
+  // البوابات: (٢) قابلة للإخفاء، و(٤–٧) تحتاج موضوعاً مختاراً.
+  const renderStage = (step) => {
+    if (step === 2 && isHidden(2)) return null;
+    if (step >= 4 && (isHidden(step) || !selectedTopic)) return null;
+
+    const wrap = (icon, labelIdx, body) => (
+      <div key={step} className={stageCls(step)} data-step={step} ref={registerRef(step)} onClick={() => completeStep(step)}>
+        <div className="an-card">
+          <div className="an-card-head"><Icon name={icon} /> <b>{t.stages[labelIdx]}</b></div>
+          {body}
+        </div>
+      </div>
+    );
+
+    switch (step) {
+      case 1:
+        return wrap("file-text", 0,
+          slideImages[slide.slide_number]
+            ? <img className="an-slide-img" src={slideImages[slide.slide_number]} alt={`${t.slide_word} ${slide.slide_number}`} loading="lazy" />
+            : <SlideCard slide={slide} />);
+      case 2:
+        return wrap("layers", 1,
+          summary ? <p className="an-text">{summary}</p> : (
+            <button className="btn ghost" onClick={fetchSummary} disabled={summaryLoading}>
+              {summaryLoading ? t.loading : t.gen_summary}
+            </button>));
+      case 3:
+        return wrap("book-open", 2, (
+          <>
+            {sessionExpired ? (
+              <div className="an-expired">
+                <p>{t.session_expired}</p>
+                <button className="btn" onClick={() => navigate("/analyze")}>{t.reupload}</button>
+              </div>
+            ) : (!indexingComplete && sessionId && <p className="upload-filename">{t.loading}</p>)}
+            {topics.length > 0 && (
+              <>
+                <p className="an-topics-hint">{t.topics_hint}</p>
+                <div className="an-topic-rows">
+                  {topics.map((topic) => {
+                    const active = selectedTopic?.topic_id === topic.topic_id;
+                    return (
+                      <div className={`an-topic-row${active ? " active" : ""}`} key={topic.topic_id}>
+                        <span className="an-topic-q">{topic.label}</span>
+                        <button type="button" className="btn an-topic-explain"
+                          aria-label={`${t.explain} ${topic.label}`}
+                          onClick={() => selectTopic(topic)}
+                          disabled={topicLoading && active}>
+                          {topicLoading && active ? "..." : (<>{t.explain} <Icon name="arrow" /></>)}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </>));
+      case 4:
+        return wrap("sparkles", 3,
+          topicLoading ? <p className="upload-filename">{t.loading}</p> : <p className="an-text">{topicContent?.explanation}</p>);
+      case 5:
+        return wrap("target", 4,
+          topicLoading ? <p className="upload-filename">{t.loading}</p> : <p className="an-text">{topicContent?.examples?.[0]}</p>);
+      case 6:
+        return wrap("note", 5,
+          notes.length > 0
+            ? <ul className="an-notes">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+            : <p className="upload-filename">{t.loading}</p>);
+      case 7:
+        return wrap("help", 6,
+          !quiz ? (
+            <button className="btn" onClick={fetchQuiz} disabled={quizLoading}>
+              <Icon name="sparkles" /> {quizLoading ? t.loading : t.gen_quiz}
+            </button>
+          ) : (
+            <div className="an-quiz">
+              {quiz.map((q, qi) => {
+                const picked = quizPicks[qi];
+                const answered = picked != null;
+                return (
+                  <div className="an-q" key={qi}>
+                    <b>{num(qi + 1)}. {q.q}</b>
+                    <div className="an-q-opts">
+                      {q.o.map((opt, oi) => {
+                        let cls = "an-opt";
+                        if (answered) {
+                          if (oi === q.a) cls += " correct";
+                          else if (oi === picked) cls += " wrong";
+                          else cls += " muted";
+                        }
+                        return (
+                          <button key={oi} type="button" className={cls}
+                            disabled={answered}
+                            onClick={(e) => {
+                              if (answered) return;
+                              setQuizPicks((p) => ({ ...p, [qi]: oi }));
+                              if (oi === q.a) { burstConfetti(e.clientX, e.clientY); playCorrect(); }
+                              else { playWrong(); }
+                            }}>
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {answered && (
+                      <p className="an-q-fb">
+                        {picked === q.a ? t.correct : `${t.wrong} ${q.o[q.a]}`}
+                        {q.e && <span className="an-q-why"> — {t.explain_label} {q.e}</span>}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ));
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="an-page">
@@ -271,10 +468,10 @@ export default function Results() {
               </div>
             </div>
             <ol className="an-rail-list">
-              {t.stages.map((label, i) => {
-                const step = i + 1;
+              {order.map((step) => {
+                const label = t.stages[step - 1];
                 if (isHidden(step)) return null;
-                const done = step <= maxStep;
+                const done = doneSteps.has(step);
                 const active = step === activeStep;
                 return (
                   <li key={step}>
@@ -321,146 +518,19 @@ export default function Results() {
             </div>
           </div>
 
-          {/* 1) عرض الشريحة */}
-          <Stage step={1}>
-            <div className="an-card">
-              <div className="an-card-head"><Icon name="file-text" /> <b>{t.stages[0]}</b></div>
-              {slideImages[slide.slide_number] ? (
-                <img className="an-slide-img" src={slideImages[slide.slide_number]} alt={`${t.slide_word} ${slide.slide_number}`} loading="lazy" />
-              ) : <SlideCard slide={slide} />}
+          {langNotice && (
+            <div className="an-lang-notice" role="status">
+              <Icon name="sparkles" />
+              <span>{t.lang_changed}</span>
+              <button type="button" className="an-notice-x" onClick={() => setLangNotice(false)} aria-label={t.dismiss}>✕</button>
             </div>
-          </Stage>
-
-          {/* 2) ملخص الشريحة */}
-          {!isHidden(2) && (
-            <Stage step={2}>
-              <div className="an-card">
-                <div className="an-card-head"><Icon name="layers" /> <b>{t.stages[1]}</b></div>
-                {summary ? <p className="an-text">{summary}</p> : (
-                  <button className="btn ghost" onClick={fetchSummary} disabled={summaryLoading}>
-                    {summaryLoading ? t.loading : t.gen_summary}
-                  </button>
-                )}
-              </div>
-            </Stage>
           )}
 
-          {/* 3) المواضيع */}
-          <Stage step={3}>
-            <div className="an-card">
-              <div className="an-card-head"><Icon name="book-open" /> <b>{t.stages[2]}</b></div>
-              {!indexingComplete && sessionId && <p className="upload-filename">{t.loading}</p>}
-              {topics.length > 0 && (
-                <>
-                  <p className="an-topics-hint">{t.topics_hint}</p>
-                  <div className="an-topic-rows">
-                    {topics.map((topic) => {
-                      const active = selectedTopic?.topic_id === topic.topic_id;
-                      return (
-                        <div className={`an-topic-row${active ? " active" : ""}`} key={topic.topic_id}>
-                          <span className="an-topic-q">{topic.label}</span>
-                          <button
-                            type="button"
-                            className="btn an-topic-explain"
-                            aria-label={`${t.explain} ${topic.label}`}
-                            onClick={() => selectTopic(topic)}
-                            disabled={topicLoading && active}
-                          >
-                            {topicLoading && active ? "..." : (<>{t.explain} <Icon name="arrow" /></>)}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          </Stage>
+          {/* المراحل تُعرض من مصفوفة الترتيب (order) لدعم إعادة الترتيب من التخصيص */}
+          {order.map(renderStage)}
 
-          {/* 4-7: تظهر بعد اختيار موضوع */}
-          {!selectedTopic ? (
-            <p className="an-hint">{t.pick_topic}</p>
-          ) : (
-            <>
-              {!isHidden(4) && (
-              <Stage step={4}>
-                <div className="an-card">
-                  <div className="an-card-head"><Icon name="sparkles" /> <b>{t.stages[3]}</b></div>
-                  {topicLoading ? <p className="upload-filename">{t.loading}</p>
-                    : <p className="an-text">{topicContent?.explanation}</p>}
-                </div>
-              </Stage>
-              )}
-
-              {!isHidden(5) && (
-              <Stage step={5}>
-                <div className="an-card">
-                  <div className="an-card-head"><Icon name="target" /> <b>{t.stages[4]}</b></div>
-                  {topicLoading ? <p className="upload-filename">{t.loading}</p>
-                    : <p className="an-text">{topicContent?.examples?.[0]}</p>}
-                </div>
-              </Stage>
-              )}
-
-              {!isHidden(6) && (
-              <Stage step={6}>
-                <div className="an-card">
-                  <div className="an-card-head"><Icon name="note" /> <b>{t.stages[5]}</b></div>
-                  {notes.length > 0 ? (
-                    <ul className="an-notes">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
-                  ) : <p className="upload-filename">{t.loading}</p>}
-                </div>
-              </Stage>
-              )}
-
-              {!isHidden(7) && (
-              <Stage step={7}>
-                <div className="an-card">
-                  <div className="an-card-head"><Icon name="help" /> <b>{t.stages[6]}</b></div>
-                  {!quiz ? (
-                    <button className="btn" onClick={fetchQuiz} disabled={quizLoading}>
-                      <Icon name="sparkles" /> {quizLoading ? t.loading : t.gen_quiz}
-                    </button>
-                  ) : (
-                    <div className="an-quiz">
-                      {quiz.map((q, qi) => {
-                        const picked = quizPicks[qi];
-                        const answered = picked != null;
-                        return (
-                          <div className="an-q" key={qi}>
-                            <b>{num(qi + 1)}. {q.q}</b>
-                            <div className="an-q-opts">
-                              {q.o.map((opt, oi) => {
-                                let cls = "an-opt";
-                                if (answered) {
-                                  if (oi === q.a) cls += " correct";
-                                  else if (oi === picked) cls += " wrong";
-                                }
-                                return (
-                                  <button key={oi} type="button" className={cls}
-                                    disabled={answered}
-                                    onClick={() => setQuizPicks((p) => ({ ...p, [qi]: oi }))}>
-                                    {opt}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            {answered && (
-                              <p className="an-q-fb">
-                                {picked === q.a ? t.correct : `${t.wrong} ${q.o[q.a]}`}
-                                {q.e && <span className="an-q-why"> — {t.explain_label} {q.e}</span>}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </Stage>
-              )}
-            </>
-          )}
+          {/* دعوة لاختيار موضوع عندما لا يوجد موضوع مختار بعد */}
+          {!selectedTopic && <p className="an-hint">{t.pick_topic}</p>}
         </main>
       </div>
 
@@ -484,19 +554,36 @@ export default function Results() {
             <h2>{t.customize_title}</h2>
             <p className="s-desc">{t.customize_hint}</p>
             <div className="an-custom-list">
-              {t.stages.map((label, i) => {
-                const step = i + 1;
+              {order.map((step, idx) => {
+                const label = t.stages[step - 1];
                 return (
-                  <label key={step} className="an-custom-row">
-                    <input
-                      type="checkbox"
-                      checked={!isHidden(step)}
-                      disabled={isMandatory(step)}
-                      onChange={() => toggleStage(step)}
-                    />
-                    <span>{label}</span>
+                  <div
+                    key={step}
+                    className={`an-custom-row${dragStep === step ? " dragging" : ""}`}
+                    draggable
+                    onDragStart={() => setDragStep(step)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => dropOnStage(step)}
+                    onDragEnd={() => setDragStep(null)}
+                  >
+                    <span className="an-drag-handle" title={t.drag_hint} aria-hidden="true">↕</span>
+                    <span className="an-reorder-btns">
+                      <button type="button" className="an-mini-btn" aria-label={t.move_up} title={t.move_up}
+                        onClick={() => moveStage(step, -1)} disabled={idx === 0}>▲</button>
+                      <button type="button" className="an-mini-btn" aria-label={t.move_down} title={t.move_down}
+                        onClick={() => moveStage(step, 1)} disabled={idx === order.length - 1}>▼</button>
+                    </span>
+                    <label className="an-custom-check">
+                      <input
+                        type="checkbox"
+                        checked={!isHidden(step)}
+                        disabled={isMandatory(step)}
+                        onChange={() => toggleStage(step)}
+                      />
+                      <span>{label}</span>
+                    </label>
                     {isMandatory(step) && <span className="an-custom-req">{t.mandatory}</span>}
-                  </label>
+                  </div>
                 );
               })}
             </div>

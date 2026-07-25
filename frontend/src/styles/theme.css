@@ -46,6 +46,7 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .topnav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nav-in{display:flex;align-items:center;justify-content:space-between;height:60px}
 .brand{display:flex;align-items:center;gap:10px}
+.brand-logo{height:44px;width:auto;max-width:150px;object-fit:contain;display:block}
 .brand-mark{width:34px;height:34px;border-radius:9px;background:var(--pri);color:#fff;font-weight:700;font-size:1rem;display:grid;place-items:center}
 .brand-txt{display:flex;flex-direction:column;line-height:1.2}
 .brand-txt b{font-size:1.05rem;font-weight:700}
@@ -447,6 +448,7 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .theme-toggle{width:32px;height:32px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--bg-h);color:var(--mut);display:grid;place-items:center;transition:.2s;cursor:pointer}
 .theme-toggle:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-soft)}
 .theme-toggle .ic{width:16px;height:16px}
+.nav-lang{font-weight:800;font-size:.78rem;letter-spacing:.02em}
 
 /* الوضع الليلي */
 [data-theme="dark"]{

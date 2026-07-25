@@ -106,6 +106,43 @@ test("customize lets the student hide an optional stage (core stages locked)", (
   expect(container.querySelectorAll(".an-stage-btn")).toHaveLength(6);
 });
 
+test("customize can reorder stages (moving a stage down updates the rail order)", () => {
+  const { container } = renderResults();
+  const railLabels = () => [...container.querySelectorAll(".an-rail-list .an-stage-label")].map((e) => e.textContent);
+  expect(railLabels()[0]).toBe("عرض الشريحة");
+
+  fireEvent.click(screen.getByRole("button", { name: /تخصيص/ }));
+  // حرّك المرحلة الأولى (عرض الشريحة) لأسفل
+  fireEvent.click(screen.getAllByRole("button", { name: "تحريك لأسفل" })[0]);
+  expect(railLabels()[0]).toBe("ملخص الشريحة");
+  expect(JSON.parse(localStorage.getItem("an_stage_order"))[0]).toBe(2);
+});
+
+test("shows a re-upload prompt when the session has expired (status 404)", async () => {
+  global.fetch = jest.fn().mockResolvedValue({ status: 404, ok: false, json: async () => ({}) });
+  renderResults();
+  expect(await screen.findByText(/انتهت الجلسة/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "إعادة رفع الملف" })).toBeInTheDocument();
+});
+
+test("clicking the Quiz stage in the rail auto-opens the flow and generates questions", async () => {
+  const { container } = renderResults();
+  // انتظر تحميل المواضيع من /status
+  await screen.findByRole("button", { name: "شرح موضوع النظم" });
+  // اضغط مرحلة «أسئلة تفاعلية» في الشريط مباشرةً دون اختيار موضوع يدوياً
+  fireEvent.click(screen.getByRole("button", { name: /أسئلة تفاعلية/ }));
+  // تظهر الأسئلة تلقائياً (اختير أول موضوع + تولّدت الأسئلة)
+  expect(await screen.findByText(/ما وظيفة النظام؟/)).toBeInTheDocument();
+  // القسم السابع صار «نشطاً» (إبراز الكنترول سنتر)
+  expect(container.querySelector('.an-stage[data-step="7"]').className).toMatch(/is-active/);
+});
+
+test("clicking a rail stage highlights its section as active", async () => {
+  const { container } = renderResults();
+  fireEvent.click(screen.getByRole("button", { name: /ملخص الشريحة/ }));
+  expect(container.querySelector('.an-stage[data-step="2"]').className).toMatch(/is-active/);
+});
+
 test("generating the quiz shows questions and grades an answer", async () => {
   renderResults();
   fireEvent.click(await screen.findByRole("button", { name: "شرح موضوع النظم" }));

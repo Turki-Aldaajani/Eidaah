@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import PointsWidget from "./PointsWidget";
 import { useTheme } from "../theme/ThemeContext";
+import { useOptionalLanguage } from "../i18n/LanguageContext";
 import { useAuth } from "../auth/AuthContext";
 import { isAdminEmail } from "../data/admins";
 
 export default function TopNav() {
   const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage } = useOptionalLanguage();
   const { session, account } = useAuth();
   const isDark = theme === "dark";
   const isAdmin = isAdminEmail(session?.user?.email);
@@ -15,11 +17,12 @@ export default function TopNav() {
   return (
     <header className="topnav">
       <div className="container nav-in">
-        <Link className="brand" to="/">
-          <span className="brand-mark">إ</span>
-          <span className="brand-txt">
-            <b>إيضاح</b>
-          </span>
+        <Link className="brand" to="/" aria-label="إيضاح">
+          <img
+            className="brand-logo"
+            src={isDark ? "/brand-logo-dark.png" : "/brand-logo-light.png"}
+            alt="إيضاح"
+          />
         </Link>
         <div className="nav-side">
           <Link className="nav-auth" to="/library">
@@ -63,6 +66,15 @@ export default function TopNav() {
               <span>تسجيل الدخول</span>
             </Link>
           )}
+          <button
+            type="button"
+            className="theme-toggle nav-lang"
+            aria-label="تبديل اللغة"
+            title={language === "ar" ? "English" : "العربية"}
+            onClick={toggleLanguage}
+          >
+            {language === "ar" ? "EN" : "ع"}
+          </button>
           <button
             type="button"
             className="theme-toggle"
