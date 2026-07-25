@@ -32,9 +32,9 @@ afterEach(() => {
 test("renders the drop zone and both entry points from TopNav", () => {
   renderUpload();
   expect(screen.getByText("ارفع ملف بصيغة PDF أو PPTX")).toBeInTheDocument();
-  // Footer also renders its own hardcoded "إيضاح" logo text, so scope this
-  // assertion to the TopNav brand mark specifically to avoid an ambiguous match.
-  expect(document.querySelector(".topnav .brand-txt b")).toHaveTextContent("إيضاح");
+  // TopNav's brand is now a theme-aware logo image (alt="إيضاح"); scope to the
+  // topnav to avoid matching the Footer's own logo.
+  expect(document.querySelector(".topnav .brand-logo")).toBeInTheDocument();
 });
 
 test("toggling language switches the headline to English and persists it", () => {

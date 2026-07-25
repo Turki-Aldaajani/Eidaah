@@ -23,9 +23,9 @@ beforeEach(() => {
   useAuth.mockReturnValue({ session: null, account: null });
 });
 
-test("renders the brand name", () => {
+test("renders the brand logo", () => {
   renderTopNav();
-  expect(screen.getByText("إيضاح")).toBeInTheDocument();
+  expect(screen.getByAltText("إيضاح")).toBeInTheDocument();
 });
 
 test("لا يعرض السلوقن القديم تحت اللوقو", () => {
