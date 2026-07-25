@@ -24,6 +24,15 @@
 @media(max-width:860px){.result-grid{grid-template-columns:1fr}}
 .result-card{padding:20px}
 .result-select{width:100%;padding:9px 12px;border-radius:var(--r-s);border:1px solid var(--line2);background:var(--card);font-size:.85rem;font-weight:600;color:var(--ink);font-family:inherit}
+/* F4: تنقّل الشرائح بأسهم وعدّاد «٣ / ١٢» بدل القائمة المنسدلة */
+.result-slide-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px}
+.slide-nav-btn{width:36px;height:36px;flex:0 0 auto;border-radius:var(--r-s);border:1px solid var(--line2);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.15s}
+.slide-nav-btn:hover:not(:disabled){border-color:var(--pri);color:var(--pri);background:var(--pri-soft)}
+.slide-nav-btn:disabled{opacity:.4;cursor:not-allowed}
+.slide-nav-btn .ic{width:18px;height:18px}
+.rot-r{transform:rotate(-90deg)}
+.rot-l{transform:rotate(90deg)}
+.slide-counter{font-weight:700;font-size:.9rem;color:var(--pri);text-align:center;min-width:90px}
 .result-slide{margin-top:12px;border-radius:var(--r-s);overflow:hidden;border:1px solid var(--line)}
 .result-slide-accent{height:4px;background:linear-gradient(90deg,var(--pri),var(--pri-h))}
 .result-slide-body{padding:16px 18px;min-height:120px;background:var(--bg-h)}
