@@ -27,7 +27,7 @@ export default function Login() {
       const { email: normalized } = await sendOtpCode(email);
       setEmail(normalized);
       setStep('code');
-      setNotice('أرسلنا رمز التحقق إلى بريدك — تفقد الوارد (والمزعج أحياناً)');
+      setNotice('أرسلنا رمز التحقق إلى بريدك. تفقد الوارد (والمزعج أحياناً)');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -130,7 +130,7 @@ export default function Login() {
         <div className="container auth-wrap">
           <div className="card auth-card anim">
             <span className="hero-kicker">
-              <Icon name="sparkles" /> بدون باسوورد — رمز يصلك على بريدك
+              <Icon name="sparkles" /> بدون باسوورد، رمز يصلك على بريدك
             </span>
             <h1 className="auth-title">تسجيل الدخول</h1>
 
