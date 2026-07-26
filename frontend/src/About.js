@@ -78,19 +78,23 @@ export default function About() {
                 <div className={`tm-cards${g.members.length === 1 ? " solo" : ""}`}>
                   {g.members.map((m) => (
                     <div className="tm-card" key={m.name}>
-                      <span className="tm-ava">{m.name.trim().charAt(0)}</span>
-                      <b className="tm-name">{m.name}</b>
-                      {m.linkedin && (
+                      {m.linkedin ? (
                         <a
-                          className="tm-linkedin"
+                          className="tm-ava tm-ava-link"
                           href={m.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`${m.name} - LinkedIn`}
                         >
-                          <Icon name="linkedin" filled />
+                          {m.name.trim().charAt(0)}
+                          <span className="tm-ava-badge">
+                            <Icon name="linkedin" filled />
+                          </span>
                         </a>
+                      ) : (
+                        <span className="tm-ava">{m.name.trim().charAt(0)}</span>
                       )}
+                      <b className="tm-name">{m.name}</b>
                     </div>
                   ))}
                 </div>
