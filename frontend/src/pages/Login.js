@@ -66,7 +66,7 @@ export default function Login() {
     setBusy(true);
     try {
       await sendOtpCode(email);
-      setNotice('أُعيد إرسال الرمز — انتظر دقيقة قبل طلبه مجدداً');
+      setNotice('أُعيد إرسال الرمز، انتظر دقيقة قبل طلبه مجدداً');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -103,7 +103,7 @@ export default function Login() {
               <p className="auth-sub">{session.user?.email}</p>
               <p className="auth-note">
                 {sessionAccount?.type === 'university'
-                  ? `حساب جامعي${sessionAccount.university ? ` — ${sessionAccount.university}` : ''} · مكتبة جامعتك مفتوحة`
+                  ? `حساب جامعي${sessionAccount.university ? ` (${sessionAccount.university})` : ''} · مكتبة جامعتك مفتوحة`
                   : 'حساب تجربة حرة'}
               </p>
               {error && <p className="auth-error" role="alert">{error}</p>}
@@ -137,7 +137,7 @@ export default function Login() {
             {step === 'email' && (
               <form onSubmit={handleSendCode} className="auth-form">
                 <p className="auth-sub">
-                  أدخل بريدك الإلكتروني — البريد الجامعي (.edu.sa) يفتح مكتبة جامعتك،
+                  أدخل بريدك الإلكتروني. البريد الجامعي (.edu.sa) يفتح مكتبة جامعتك،
                   وأي بريد آخر يدخل بالتجربة الحرة.
                 </p>
                 <label className="auth-label" htmlFor="login-email">
@@ -168,7 +168,7 @@ export default function Login() {
                 </p>
                 <p className="auth-note">
                   {account.type === 'university'
-                    ? `بريد جامعي${account.university ? ` — ${account.university}` : ''} · ستُفتح مكتبة جامعتك`
+                    ? `بريد جامعي${account.university ? ` (${account.university})` : ''} · ستُفتح مكتبة جامعتك`
                     : 'بريد غير جامعي · ستدخل بالتجربة الحرة'}
                 </p>
                 <label className="auth-label" htmlFor="login-code">
