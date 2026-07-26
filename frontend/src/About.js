@@ -7,21 +7,21 @@ import { useLanguage } from './i18n/LanguageContext';
 
 const team = {
   ar: {
-    aiNlp: { name: "ريان الحربي", role: "مهندس AI/NLP" },
-    projectManager: { name: "تركي الدعجاني", role: "مدير المشروع" },
-    backend: { name: "عبدالعزيز الضيف", role: "الواجهة الخلفية (Backend)" },
+    aiNlp: { name: "ريان الحربي", role: "مهندس AI/NLP", linkedin: "https://www.linkedin.com/in/rayan-alharbi-b82s27/" },
+    projectManager: { name: "تركي الدعجاني", role: "مدير المشروع", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
+    backend: { name: "عبدالعزيز الضيف", role: "الواجهة الخلفية (Backend)", linkedin: "https://www.linkedin.com/in/abdulaziz-aldhaif-a09786218/" },
     ui_ux: [
-      { name: "ليان القباني", role: "تصميم الواجهة (UI/UX)" },
-      { name: "ناهد المطيري", role: "تصميم الواجهة (UI/UX)" }
+      { name: "ليان القباني", role: "تصميم الواجهة (UI/UX)", linkedin: "https://sa.linkedin.com/in/layan-alqabbani-8b631729a" },
+      { name: "ناهد المطيري", role: "تصميم الواجهة (UI/UX)", linkedin: "https://sa.linkedin.com/in/nahed-almutairi-b3559835b" }
     ]
   },
   en: {
-    aiNlp: { name: "Rayan Al-Harbi", role: "AI/NLP Engineer" },
-    projectManager: { name: "Turki Al-Dajani", role: "Project Manager" },
-    backend: { name: "Abdulaziz Al-Dhaif", role: "Backend" },
+    aiNlp: { name: "Rayan Al-Harbi", role: "AI/NLP Engineer", linkedin: "https://www.linkedin.com/in/rayan-alharbi-b82s27/" },
+    projectManager: { name: "Turki Al-Dajani", role: "Project Manager", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
+    backend: { name: "Abdulaziz Al-Dhaif", role: "Backend", linkedin: "https://www.linkedin.com/in/abdulaziz-aldhaif-a09786218/" },
     ui_ux: [
-      { name: "Layan Al-Qabbani", role: "UI/UX Design" },
-      { name: "Nahid Al-Mutairi", role: "UI/UX Design" }
+      { name: "Layan Al-Qabbani", role: "UI/UX Design", linkedin: "https://sa.linkedin.com/in/layan-alqabbani-8b631729a" },
+      { name: "Nahid Al-Mutairi", role: "UI/UX Design", linkedin: "https://sa.linkedin.com/in/nahed-almutairi-b3559835b" }
     ]
   }
 };
@@ -38,10 +38,10 @@ export default function About() {
   const t = staticTranslations[language];
 
   const groups = [
-    { role: currentTeam.aiNlp.role, icon: "atom", members: [currentTeam.aiNlp.name] },
-    { role: currentTeam.projectManager.role, icon: "sparkles", members: [currentTeam.projectManager.name] },
-    { role: currentTeam.backend.role, icon: "server", members: [currentTeam.backend.name] },
-    { role: t.ui_title, icon: "pen", members: currentTeam.ui_ux.map((m) => m.name) },
+    { role: currentTeam.aiNlp.role, icon: "atom", members: [currentTeam.aiNlp] },
+    { role: currentTeam.projectManager.role, icon: "sparkles", members: [currentTeam.projectManager] },
+    { role: currentTeam.backend.role, icon: "server", members: [currentTeam.backend] },
+    { role: t.ui_title, icon: "pen", members: currentTeam.ui_ux },
   ];
 
   return (
@@ -76,10 +76,25 @@ export default function About() {
                   <h3>{g.role}</h3>
                 </div>
                 <div className={`tm-cards${g.members.length === 1 ? " solo" : ""}`}>
-                  {g.members.map((name) => (
-                    <div className="tm-card" key={name}>
-                      <span className="tm-ava">{name.trim().charAt(0)}</span>
-                      <b className="tm-name">{name}</b>
+                  {g.members.map((m) => (
+                    <div className="tm-card" key={m.name}>
+                      {m.linkedin ? (
+                        <a
+                          className="tm-ava tm-ava-link"
+                          href={m.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${m.name} - LinkedIn`}
+                        >
+                          {m.name.trim().charAt(0)}
+                          <span className="tm-ava-badge">
+                            <Icon name="linkedin" filled />
+                          </span>
+                        </a>
+                      ) : (
+                        <span className="tm-ava">{m.name.trim().charAt(0)}</span>
+                      )}
+                      <b className="tm-name">{m.name}</b>
                     </div>
                   ))}
                 </div>
