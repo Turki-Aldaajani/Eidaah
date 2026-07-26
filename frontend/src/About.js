@@ -7,54 +7,28 @@ import { useLanguage } from './i18n/LanguageContext';
 
 const team = {
   ar: {
-    clubLead: { name: "ليان المطيويع", role: "قائدة نادي إنجاز" },
-    teamLead: { name: "ريان الحربي", role: "قائد الفريق ومهندس AI/NLP" },
+    aiNlp: { name: "ريان الحربي", role: "مهندس AI/NLP" },
     projectManager: { name: "تركي الدعجاني", role: "مدير المشروع" },
+    backend: { name: "عبدالعزيز الضيف", role: "الواجهة الخلفية (Backend)" },
     ui_ux: [
-      { name: "ناهد المطيري", role: "تصميم واجهة المستخدم (UI/UX)" },
-      { name: "ليان القباني", role: "تصميم واجهة المستخدم (UI/UX)" }
-    ],
-    frontend: [
-      { name: "عبدالعزيز الضيف", role: "الواجهة الأمامية (Frontend)" },
-      { name: "رسيل الصمعاني", role: "الواجهة الأمامية (Frontend)" }
-    ],
-    backend: [
-      { name: "عبدالعزيز القحطاني", role: "الواجهة الخلفية (Backend)" },
-      { name: "سلطان الراجح", role: "الواجهة الخلفية (Backend)" }
-    ],
-    ai_nlp: [
-      { name: "زياد المنيف", role: "الذكاء الاصطناعي (AI/NLP)" },
-      { name: "ياسر الشريف", role: "الذكاء الاصطناعي (AI/NLP)" }
-    ],
-    qa: { name: "فيصل التويجري", role: "اختبار الجودة (QA)" }
+      { name: "ليان القباني", role: "تصميم الواجهة (UI/UX)" },
+      { name: "ناهد المطيري", role: "تصميم الواجهة (UI/UX)" }
+    ]
   },
   en: {
-    clubLead: { name: "Layan Al-Mutaiwie", role: "Enjaz Club Leader" },
-    teamLead: { name: "Rayan Al-Harbi", role: "Team Lead & AI/NLP Engineer" },
+    aiNlp: { name: "Rayan Al-Harbi", role: "AI/NLP Engineer" },
     projectManager: { name: "Turki Al-Dajani", role: "Project Manager" },
+    backend: { name: "Abdulaziz Al-Dhaif", role: "Backend" },
     ui_ux: [
-      { name: "Nahid Al-Mutairi", role: "UI/UX Design" },
-      { name: "Layan Al-Qabbani", role: "UI/UX Design" }
-    ],
-    frontend: [
-      { name: "Abdulaziz Al-Dhaif", role: "Frontend Developer" },
-      { name: "Raseel Al-Samaani", role: "Frontend Developer" }
-    ],
-    backend: [
-      { name: "Abdulaziz Al-Qahtani", role: "Backend Developer" },
-      { name: "Sultan Al-Rajeh", role: "Backend Developer" },
-    ],
-    ai_nlp: [
-      { name: "Ziyad Al-Muneef", role: "AI/NLP Engineer" },
-      { name: "Yasser Al-Shareef", role: "AI/NLP Engineer" }
-    ],
-    qa: { name: "Faisal Al-Tuwaijri", role: "QA Tester" }
+      { name: "Layan Al-Qabbani", role: "UI/UX Design" },
+      { name: "Nahid Al-Mutairi", role: "UI/UX Design" }
+    ]
   }
 };
 
 const staticTranslations = {
-  ar: { page_title: "فريق عمل إيضاح", ui_title: "تصميم الواجهة (UI/UX)", fe_title: "الواجهة الأمامية (Frontend)", be_title: "الواجهة الخلفية (Backend)", ai_title: "الذكاء الاصطناعي (AI/NLP)", home: "الرئيسية" },
-  en: { page_title: "The Eidaah Team", ui_title: "UI/UX Design", fe_title: "Frontend", be_title: "Backend", ai_title: "AI/NLP", home: "Home" }
+  ar: { page_title: "فريق عمل إيضاح", ui_title: "تصميم الواجهة (UI/UX)", home: "الرئيسية" },
+  en: { page_title: "The Eidaah Team", ui_title: "UI/UX Design", home: "Home" }
 };
 
 export default function About() {
@@ -64,14 +38,10 @@ export default function About() {
   const t = staticTranslations[language];
 
   const groups = [
-    { role: currentTeam.clubLead.role, icon: "crown", members: [currentTeam.clubLead.name] },
-    { role: currentTeam.teamLead.role, icon: "sparkles", members: [currentTeam.teamLead.name] },
+    { role: currentTeam.aiNlp.role, icon: "atom", members: [currentTeam.aiNlp.name] },
     { role: currentTeam.projectManager.role, icon: "sparkles", members: [currentTeam.projectManager.name] },
+    { role: currentTeam.backend.role, icon: "server", members: [currentTeam.backend.name] },
     { role: t.ui_title, icon: "pen", members: currentTeam.ui_ux.map((m) => m.name) },
-    { role: t.fe_title, icon: "code", members: currentTeam.frontend.map((m) => m.name) },
-    { role: t.be_title, icon: "server", members: currentTeam.backend.map((m) => m.name) },
-    { role: t.ai_title, icon: "atom", members: currentTeam.ai_nlp.map((m) => m.name) },
-    { role: currentTeam.qa.role, icon: "shield", members: [currentTeam.qa.name] },
   ];
 
   return (

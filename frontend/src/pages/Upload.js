@@ -10,17 +10,18 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 const translations = {
   ar: {
-    feature1_title: "تنظيم تلقائي",
-    feature1_desc: "نظم محتوى عرضك تلقائيًا باستخدام كشف الهيكل المدعوم بالذكاء الاصطناعي وترتيب الشرائح الذكي.",
+    feature1_title: "أسئلة تفاعلية",
+    feature1_desc: "أجب عن أسئلة تفاعلية مبنية على محتوى عرضك لاختبار فهمك وتثبيت المعلومات.",
     feature2_title: "تحليل سريع",
     feature2_desc: "تحليل تلقائي سريع لشرائحك مع رؤى فورية واستخلاص النقاط الرئيسية لفهم أسرع.",
-    feature3_title: "ملاحظات المتحدث",
-    feature3_desc: "أنشئ ملاحظات شاملة لكل شريحة مع نقاط حوار، انتقالات، ونصائح للعرض التقديمي.",
+    feature3_title: "أمثلة من الواقع",
+    feature3_desc: "احصل على أمثلة واقعية توضح أفكار عرضك وتُسهّل ربطها بالحياة العملية.",
     home: "الرئيسية",
     crumb: "حلّل ملفاتك",
     headline: "افهم وقدم عرضك بوضوح",
     subheadline: "حوّل الشرائح المعقدة إلى محتوى سهل الفهم مع إيضاح",
     drop_text: "ارفع ملف بصيغة PDF أو PPTX",
+    drop_hint: "(يفضل PDF)",
     choose_file: "اختر ملف",
     uploading: "جارٍ الرفع...",
     processing: "جارٍ المعالجة...",
@@ -28,17 +29,18 @@ const translations = {
     conn_error: "تعذّر الاتصال بخادم التحليل. تأكد أن الخادم (الباك اند) يعمل، أو حاول لاحقاً.",
   },
   en: {
-    feature1_title: "Auto Organization",
-    feature1_desc: "Automatically organize your presentation content with AI-powered structure detection and intelligent slide ordering.",
+    feature1_title: "Interactive Questions",
+    feature1_desc: "Answer interactive questions generated from your slides to test your understanding and reinforce key ideas.",
     feature2_title: "Fast Analysis",
     feature2_desc: "Quick automatic analysis of your slides with instant insights and key point extraction for faster understanding.",
-    feature3_title: "Speaker Notes",
-    feature3_desc: "Generate comprehensive speaker notes for each slide with talking points, transitions, and presentation tips.",
+    feature3_title: "Real-World Examples",
+    feature3_desc: "Get real-world examples that clarify your presentation's ideas and make them easier to relate to.",
     home: "Home",
     crumb: "Analyze your files",
     headline: "Understand and Present Clearly",
     subheadline: "Transform complex slides into easy-to-understand content with Eidaah",
     drop_text: "Drop a PDF or PPTX file",
+    drop_hint: "(PDF preferred)",
     choose_file: "Choose File",
     uploading: "Uploading...",
     processing: "Processing...",
@@ -180,6 +182,7 @@ export default function Upload() {
             onDrop={handleDrop}
           >
             <p>{t.drop_text}</p>
+            <p className="upload-hint">{t.drop_hint}</p>
             <label className="btn" style={{ opacity: uploading ? 0.6 : 1 }}>
               <Icon name="file-text" /> {t.choose_file}
               <input type="file" accept=".pdf,.pptx" onChange={handleFileChange} style={{ display: "none" }} disabled={uploading} />
