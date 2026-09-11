@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import Footer from "../Footer";
@@ -86,7 +86,19 @@ function SoonCard({ item }) {
 
 export default function LandingPage() {
   const { theme } = useTheme();
-  const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";  return (
+  const navigate = useNavigate();
+  const [showLearnNotice, setShowLearnNotice] = useState(false);
+  const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";
+
+  function handleLearnClick(e) {
+    const isMobile = window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
+    if (isMobile) {
+      e.preventDefault();
+      setShowLearnNotice(true);
+    }
+  }
+
+  return (
     <>
       <TopNav />
       <section className="view view-landing">
@@ -111,7 +123,8 @@ export default function LandingPage() {
         </div>
         <div className="container" style={{ paddingBottom: 80 }}>
           <div className="entry-grid">
-            <Link to="/learn" className="entry-card anim">
+            <Link to="/learn" className="entry-card anim" onClick={handleLearnClick}>
+              <span className="entry-badge-incomplete">غير مكتمل</span>
               <span className="entry-ic">
                 <Icon name="grad-cap" />
               </span>
@@ -195,6 +208,31 @@ export default function LandingPage() {
           </div>
         </section>
       </section>
+      {showLearnNotice && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="تنبيه">
+          <div className="card modal-card anim" style={{ textAlign: "center" }}>
+            <h2>القسم لا يزال قيد التطوير</h2>
+            <p className="s-desc">
+              قسم المناهج التعليمية غير مكتمل حالياً، وتتوفر حالياً فقط بعض مواد المرحلة المتوسطة للتجربة.
+            </p>
+            <div className="endterm-choices">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setShowLearnNotice(false);
+                  navigate("/learn");
+                }}
+              >
+                متابعة على أي حال
+              </button>
+              <button type="button" className="btn ghost" onClick={() => setShowLearnNotice(false)}>
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </>
   );
