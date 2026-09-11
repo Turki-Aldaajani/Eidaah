@@ -8,7 +8,7 @@ import { useLanguage } from './i18n/LanguageContext';
 const team = {
   ar: {
     aiNlp: { name: "ريان الحربي", role: "مهندس AI/NLP", linkedin: "https://www.linkedin.com/in/rayan-alharbi-b82s27/" },
-    projectManager: { name: "تركي الدعجاني", role: "مدير المشروع", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
+    projectLead: { name: "تركي الدعجاني", role: "قائد المشروع", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
     backend: { name: "عبدالعزيز الضيف", role: "الواجهة الخلفية (Backend)", linkedin: "https://www.linkedin.com/in/abdulaziz-aldhaif-a09786218/" },
     ui_ux: [
       { name: "ليان القباني", role: "تصميم الواجهة (UI/UX)", linkedin: "https://sa.linkedin.com/in/layan-alqabbani-8b631729a" },
@@ -17,7 +17,7 @@ const team = {
   },
   en: {
     aiNlp: { name: "Rayan Al-Harbi", role: "AI/NLP Engineer", linkedin: "https://www.linkedin.com/in/rayan-alharbi-b82s27/" },
-    projectManager: { name: "Turki Al-Dajani", role: "Project Manager", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
+    projectLead: { name: "Turki Al-Dajani", role: "Project Lead", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
     backend: { name: "Abdulaziz Al-Dhaif", role: "Backend", linkedin: "https://www.linkedin.com/in/abdulaziz-aldhaif-a09786218/" },
     ui_ux: [
       { name: "Layan Al-Qabbani", role: "UI/UX Design", linkedin: "https://sa.linkedin.com/in/layan-alqabbani-8b631729a" },
@@ -37,10 +37,12 @@ export default function About() {
   const currentTeam = team[language];
   const t = staticTranslations[language];
 
+  // قائد المشروع يظهر أيضاً ضمن فريق الـ Backend بنفس الكائن، فيبقى الاسم ورابط
+  // لينكدإن مصدراً واحداً لا نسختين تفترقان عند أي تعديل لاحق.
   const groups = [
+    { role: currentTeam.projectLead.role, icon: "sparkles", members: [currentTeam.projectLead] },
     { role: currentTeam.aiNlp.role, icon: "atom", members: [currentTeam.aiNlp] },
-    { role: currentTeam.projectManager.role, icon: "sparkles", members: [currentTeam.projectManager] },
-    { role: currentTeam.backend.role, icon: "server", members: [currentTeam.backend] },
+    { role: currentTeam.backend.role, icon: "server", members: [currentTeam.backend, currentTeam.projectLead] },
     { role: t.ui_title, icon: "pen", members: currentTeam.ui_ux },
   ];
 
