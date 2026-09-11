@@ -9,7 +9,7 @@ export const LP_JOURNEY = [
   { icn: "video", t: "شاهد أفضل الشروحات أو ارفع ملفك" },
   { icn: "sparkles", t: "استخدم أدوات الذكاء الاصطناعي" },
   { icn: "target", t: "اختبر فهمك" },
-  { icn: "flame", t: "واصل تعلمك" },
+  { icn: "refresh", t: "واصل تعلمك" },
 ];
 
 export const LP_SOON = [

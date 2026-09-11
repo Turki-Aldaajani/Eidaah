@@ -56,21 +56,32 @@ function WhyItem({ text }) {
   );
 }
 
-function JourneyStep({ step, isLast }) {
+// مسار متعرج: الأيقونة تتناوب بين جهتي السطر والنص مقابلها، ويصل بينها منحنى SVG.
+// المسارات مكتوبة بإحداثيات LTR ثم تُعكس كاملة مع RTL، فتبقى مطابقة لتناوب الشبكة.
+const JR_LINK_OUT = "M 18 0 C 18 13 82 7 82 20";
+const JR_LINK_BACK = "M 82 0 C 82 13 18 7 18 20";
+
+function JourneyZigzag() {
   return (
-    <>
-      <div className="jr-step">
-        <span className="jr-ic">
-          <Icon name={step.icn} />
-        </span>
-        <span className="jr-t">{step.t}</span>
-      </div>
-      {!isLast && (
-        <span className="jr-sep">
-          <Icon name="chev" />
-        </span>
-      )}
-    </>
+    <div className="jrz">
+      {LP_JOURNEY.map((step, i) => (
+        <React.Fragment key={step.t}>
+          <div className={i % 2 ? "jrz-row alt" : "jrz-row"}>
+            <span className="jrz-lane">
+              <span className="jr-ic">
+                <Icon name={step.icn} />
+              </span>
+            </span>
+            <span className="jr-t">{step.t}</span>
+          </div>
+          {i < LP_JOURNEY.length - 1 && (
+            <svg className="jrz-link" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+              <path d={i % 2 === 0 ? JR_LINK_OUT : JR_LINK_BACK} vectorEffect="non-scaling-stroke" />
+            </svg>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
   );
 }
 
@@ -166,11 +177,7 @@ export default function LandingPage() {
         <section className="lp-sec">
           <div className="container">
             <h2 className="lp-t">رحلتك مع إيضاح</h2>
-            <div className="jr">
-              {LP_JOURNEY.map((step, i) => (
-                <JourneyStep step={step} isLast={i === LP_JOURNEY.length - 1} key={step.t} />
-              ))}
-            </div>
+            <JourneyZigzag />
           </div>
         </section>
 

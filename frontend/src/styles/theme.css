@@ -582,17 +582,23 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .why-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 22px;font-weight:600;font-size:.92rem;box-shadow:var(--sh)}
 .why-item .ic{width:19px;height:19px;color:var(--suc)}
 
-.jr{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:30px}
-.jr-step{display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;max-width:170px;padding:0 8px}
+/* "رحلتك مع إيضاح": مسار متعرج — الأيقونة تتناوب بين الجهتين والنص مقابلها (#94) */
+.jrz{max-width:720px;margin-inline:auto;margin-top:26px}
+.jrz-row{display:grid;grid-template-columns:36% 1fr;align-items:center;gap:14px}
+.jrz-row.alt{grid-template-columns:1fr 36%}
+.jrz-row.alt .jrz-lane{order:2}
+.jrz-lane{display:grid;place-items:center}
 .jr-ic{width:54px;height:54px;border-radius:50%;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:var(--sh-m)}
 .jr-ic .ic{width:23px;height:23px}
-.jr-t{font-size:.83rem;font-weight:600;color:var(--mut);line-height:1.7}
-.jr-sep{color:var(--faint);display:inline-flex;padding:2px}
-.jr-sep .ic{width:18px;height:18px}
-@media(min-width:920px){
- .jr{flex-direction:row;align-items:flex-start;justify-content:center;gap:0}
- .jr-sep{align-self:flex-start;margin-top:15px}
- .jr-sep .ic{transform:rotate(90deg)}
+.jr-t{font-size:.86rem;font-weight:600;color:var(--mut);line-height:1.7}
+/* الأيقونة في وسط عمود 36%، أي عند 18% من العرض — وهي نفس نقطتا بداية المنحنى ونهايته */
+.jrz-link{display:block;width:100%;height:40px;overflow:visible}
+.jrz-link path{fill:none;stroke:var(--pri-line);stroke-width:3;stroke-linecap:round;stroke-dasharray:5 7}
+[dir="rtl"] .jrz-link{transform:scaleX(-1)}
+@media(min-width:768px){
+  .jrz-row{gap:18px}
+  .jrz-link{height:54px}
+  .jr-t{font-size:.92rem}
 }
 
 .soon-grid{display:grid;gap:12px;margin-top:26px;grid-template-columns:repeat(auto-fill,minmax(185px,1fr))}
