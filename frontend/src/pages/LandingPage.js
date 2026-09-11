@@ -211,12 +211,10 @@ export default function LandingPage() {
       {showLearnNotice && (
         <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="تنبيه">
           <div className="card modal-card anim" style={{ textAlign: "center" }}>
-            <span className="s-icon" style={{ margin: "0 auto" }}>
-              <Icon name="alert" />
-            </span>
             <h2>القسم لا يزال قيد التطوير</h2>
             <p className="s-desc">
-              قسم المناهج التعليمية غير مكتمل حالياً وبعض المحتوى قد يكون ناقصاً. بإمكانك المتابعة والاطلاع عليه من الآن.
+              قسم المناهج التعليمية غير مكتمل حالياً، وتتوفر حالياً فقط بعض مواد المرحلة المتوسطة (الرياضيات والمهارات
+              الرقمية) للتجربة، بينما بقية المراحل والمواد لا تزال قيد الإضافة.
             </p>
             <div className="endterm-choices">
               <button
