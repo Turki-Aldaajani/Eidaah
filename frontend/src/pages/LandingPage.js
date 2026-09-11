@@ -91,11 +91,8 @@ export default function LandingPage() {
   const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";
 
   function handleLearnClick(e) {
-    const isMobile = window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
-    if (isMobile) {
-      e.preventDefault();
-      setShowLearnNotice(true);
-    }
+    e.preventDefault();
+    setShowLearnNotice(true);
   }
 
   return (
