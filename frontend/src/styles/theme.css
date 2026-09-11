@@ -521,8 +521,12 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 
 /* الصفحة الرئيسية الجديدة: بطاقتا الدخول (المناهج / حلّل ملفاتك) */
 .entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
-@media(max-width:640px){.entry-grid{grid-template-columns:1fr}}
-.entry-card{border:1px solid var(--line);border-radius:var(--r);padding:28px 22px;text-align:center;background:var(--card);transition:.2s;display:block}
+@media(max-width:640px){
+  .entry-grid{grid-template-columns:1fr}
+  .entry-grid .entry-card{order:2}
+  .entry-grid .entry-card.alt{order:1}
+}
+.entry-card{position:relative;border:1px solid var(--line);border-radius:var(--r);padding:28px 22px;text-align:center;background:var(--card);transition:.2s;display:block}
 .entry-card:hover{border-color:var(--pri);box-shadow:var(--sh-m)}
 .entry-ic{width:56px;height:56px;border-radius:50%;background:var(--pri-soft);border:1px solid var(--pri-line);color:var(--pri);display:grid;place-items:center;margin:0 auto 16px}
 .entry-ic .ic{width:26px;height:26px}
@@ -532,6 +536,10 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .entry-tag{display:inline-block;margin-top:14px;font-size:.75rem;font-weight:600;color:var(--pri);border:1px solid var(--pri-line);background:var(--pri-soft);padding:4px 12px;border-radius:var(--r-s)}
 .entry-card.alt .entry-tag{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,#fff);background:var(--accent-soft)}
 [data-theme="dark"] .entry-card{border-color:var(--line)}
+.entry-badge-incomplete{display:none}
+@media(max-width:640px){
+  .entry-badge-incomplete{display:inline-block;position:absolute;top:12px;inset-inline-start:12px;font-size:.62rem;font-weight:700;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-line);padding:3px 10px;border-radius:999px;z-index:1}
+}
 
 /* الصفحة الرئيسية: أقسام إضافية (رسمة الهيرو، المميزات، لماذا، الرحلة، قريباً) */
 .lp-hero-grid{display:block}
