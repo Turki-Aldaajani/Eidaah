@@ -34,6 +34,13 @@ test("قسم «ماذا يقدم إيضاح؟» يعرض كل المزايا ك�
   expect(container.querySelectorAll(".stack-card")).toHaveLength(AIF.length);
 });
 
+test("مؤشر التمرير يظهر على الكرت الأول وحده", () => {
+  const { container } = renderLanding();
+  const cues = container.querySelectorAll(".scroll-cue");
+  expect(cues).toHaveLength(1);
+  expect(container.querySelectorAll(".stack-card")[0]).toContainElement(cues[0]);
+});
+
 test("يعرض سلوقن إيضاح الجديد في الهوم بيج", () => {
   renderLanding();
   expect(screen.getByText(/كل خطوة أوضح وكل هدف أقرب/)).toBeInTheDocument();

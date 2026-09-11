@@ -581,11 +581,15 @@ h2 .ic.h-ico{width:21px;height:21px;color:var(--pri)}
 .sticky-stack{position:relative;padding-bottom:22vh}
 .stack-card{position:sticky;transform-origin:top center;max-width:620px;margin-inline:auto;box-shadow:var(--sh-m);transition:border-color .2s,box-shadow .2s}
 .stack-card+.stack-card{margin-top:70vh}
+/* مؤشر "انزل للأسفل" أسفل الكرت الأول مباشرة، عند الحافة اليسرى (نهاية السطر في RTL) */
+.scroll-cue{position:absolute;top:calc(100% + 10px);inset-inline-end:12px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--pri);background:var(--pri-soft);border:1px solid var(--pri-line);pointer-events:none}
+.scroll-cue .ic{width:16px;height:16px}
 @media(prefers-reduced-motion:reduce){
   .stack-head{position:static;padding-block:0}
   .sticky-stack{padding-bottom:0;margin-top:28px}
   .stack-card{position:static;transform:none!important}
   .stack-card+.stack-card{margin-top:14px}
+  .scroll-cue{display:none}
 }
 .feat-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;transition:transform .2s,border-color .2s,box-shadow .2s}
 .feat-card:hover{transform:translateY(-3px);border-color:var(--pri-line);box-shadow:var(--sh-m)}

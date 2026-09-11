@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import Footer from "../Footer";
@@ -36,8 +36,29 @@ function HeroIllustration() {
   );
 }
 
+// الفراغ تحت الكرت الأول هو مسار التمرير الذي تحتاجه الكروت لتتراكم، فيبدو للوهلة
+// الأولى وكأن القسم انتهى — هذا المؤشر يوضّح أن هناك ما يستحق النزول إليه.
+function ScrollCue({ hidden }) {
+  const reduced = useReducedMotion();
+
+  return (
+    <motion.span
+      className="scroll-cue"
+      aria-hidden="true"
+      animate={
+        hidden || reduced ? { opacity: hidden ? 0 : 0.9, y: 0 } : { opacity: [0.6, 1, 0.6], y: [0, -8, 0] }
+      }
+      transition={
+        hidden || reduced ? { duration: 0.35 } : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+      }
+    >
+      <Icon name="chev" />
+    </motion.span>
+  );
+}
+
 // كل كرت يلتصق أسفل الكرت الذي قبله، ويتصغّر إلى 0.92 بينما يزحف التالي فوقه.
-function StickyFeatureCard({ feature, index, total, progress }) {
+function StickyFeatureCard({ feature, index, total, progress, cueHidden }) {
   const isLast = index === total - 1;
   const scale = useTransform(
     progress,
@@ -55,6 +76,7 @@ function StickyFeatureCard({ feature, index, total, progress }) {
       </span>
       <h4>{feature.t}</h4>
       <p>{feature.d}</p>
+      {index === 0 && <ScrollCue hidden={cueHidden} />}
     </motion.div>
   );
 }
@@ -102,6 +124,11 @@ export default function LandingPage() {
   const [showLearnNotice, setShowLearnNotice] = useState(false);
   const stackRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: stackRef, offset: ["start start", "end end"] });
+  const [cueHidden, setCueHidden] = useState(false);
+  // نربطه بتقدّم القسم نفسه لا بأول scroll في الصفحة، وإلا اختفى المؤشر قبل أن يصل المستخدم إليه.
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v > 0.02 && !cueHidden) setCueHidden(true);
+  });
   const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";
 
   function handleLearnClick(e) {
@@ -167,6 +194,7 @@ export default function LandingPage() {
                   index={i}
                   total={AIF.length}
                   progress={scrollYProgress}
+                  cueHidden={cueHidden}
                   key={feature.k}
                 />
               ))}
