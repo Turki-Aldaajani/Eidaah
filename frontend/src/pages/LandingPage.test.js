@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { ThemeProvider } from "../theme/ThemeContext";
 import { LP_JOURNEY } from "../data/landing";
+import { AIF } from "../data/curriculum";
 
 function renderLanding() {
   return render(
@@ -35,6 +36,19 @@ test("مسار «رحلتك مع إيضاح» يتعرّج: صفوف متناو�
     expect(screen.getByText(step.t)).toBeInTheDocument();
     expect(rows[i].classList.contains("alt")).toBe(i % 2 === 1);
   });
+test("قسم «ماذا يقدم إيضاح؟» يعرض كل المزايا ككروت لاصقة", () => {
+  const { container } = renderLanding();
+  AIF.forEach((feature) => {
+    expect(screen.getByText(feature.t)).toBeInTheDocument();
+  });
+  expect(container.querySelectorAll(".stack-card")).toHaveLength(AIF.length);
+});
+
+test("مؤشر التمرير يظهر على الكرت الأول وحده", () => {
+  const { container } = renderLanding();
+  const cues = container.querySelectorAll(".scroll-cue");
+  expect(cues).toHaveLength(1);
+  expect(container.querySelectorAll(".stack-card")[0]).toContainElement(cues[0]);
 });
 
 test("يعرض سلوقن إيضاح الجديد في الهوم بيج", () => {
