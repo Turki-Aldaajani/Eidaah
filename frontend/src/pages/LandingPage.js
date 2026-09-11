@@ -41,19 +41,23 @@ function HeroIllustration() {
 function ScrollCue({ hidden }) {
   const reduced = useReducedMotion();
 
+  // الغلاف الثابت يتولى التوسيط الأفقي (left:50% + translateX(-50%))، لأن Framer Motion
+  // يكتب خاصية transform كاملة بنفسه لتحريك y — لو وُضع التوسيط على العنصر المتحرك نفسه
+  // كان يُستبدل بتحويل الارتداد في كل إطار، فيرجع السهم يسار الشاشة بسبب RTL.
   return (
-    <motion.span
-      className="scroll-cue"
-      aria-hidden="true"
-      animate={
-        hidden || reduced ? { opacity: hidden ? 0 : 0.9, y: 0 } : { opacity: [0.6, 1, 0.6], y: [0, -8, 0] }
-      }
-      transition={
-        hidden || reduced ? { duration: 0.35 } : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-      }
-    >
-      <Icon name="chev" />
-    </motion.span>
+    <span className="scroll-cue" aria-hidden="true">
+      <motion.span
+        className="scroll-cue-ic"
+        animate={
+          hidden || reduced ? { opacity: hidden ? 0 : 0.9, y: 0 } : { opacity: [0.6, 1, 0.6], y: [0, -8, 0] }
+        }
+        transition={
+          hidden || reduced ? { duration: 0.35 } : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+        }
+      >
+        <Icon name="chev" />
+      </motion.span>
+    </span>
   );
 }
 
