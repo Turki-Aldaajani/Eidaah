@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Lenis from "@studio-freight/lenis";
 import { ThemeProvider } from "./theme/ThemeContext";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { AuthProvider } from "./auth/AuthContext";
@@ -25,6 +26,19 @@ import Lessons from "./pages/curriculum/Lessons";
 import Lesson from "./pages/curriculum/Lesson";
 
 function App() {
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const lenis = new Lenis();
+    let frame = requestAnimationFrame(function raf(time) {
+      lenis.raf(time);
+      frame = requestAnimationFrame(raf);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      lenis.destroy();
+    };
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>

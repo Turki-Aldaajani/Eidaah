@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion, useScroll, useTransform } from "framer-motion";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import Footer from "../Footer";
@@ -35,15 +36,26 @@ function HeroIllustration() {
   );
 }
 
-function FeatureCard({ feature }) {
+// كل كرت يلتصق أسفل الكرت الذي قبله، ويتصغّر إلى 0.92 بينما يزحف التالي فوقه.
+function StickyFeatureCard({ feature, index, total, progress }) {
+  const isLast = index === total - 1;
+  const scale = useTransform(
+    progress,
+    [index / total, (index + 1) / total],
+    isLast ? [1, 1] : [1, 0.92]
+  );
+
   return (
-    <div className="feat-card anim">
+    <motion.div
+      className="feat-card stack-card"
+      style={{ scale, top: `calc(20vh + ${index * 14}px)`, zIndex: index + 1 }}
+    >
       <span className="feat-ic">
         <Icon name={feature.i} />
       </span>
       <h4>{feature.t}</h4>
       <p>{feature.d}</p>
-    </div>
+    </motion.div>
   );
 }
 
@@ -88,6 +100,8 @@ export default function LandingPage() {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [showLearnNotice, setShowLearnNotice] = useState(false);
+  const stackRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: stackRef, offset: ["start start", "end end"] });
   const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";
 
   function handleLearnClick(e) {
@@ -142,11 +156,19 @@ export default function LandingPage() {
 
         <section className="lp-sec">
           <div className="container">
-            <h2 className="lp-t">ماذا يقدم إيضاح؟</h2>
-            <p className="lp-ts">أدوات ذكية ترافقك في كل درس وكل ملف</p>
-            <div className="feat4">
-              {AIF.map((feature) => (
-                <FeatureCard feature={feature} key={feature.k} />
+            <div className="stack-head">
+              <h2 className="lp-t">ماذا يقدم إيضاح؟</h2>
+              <p className="lp-ts">أدوات ذكية ترافقك في كل درس وكل ملف</p>
+            </div>
+            <div className="sticky-stack" ref={stackRef}>
+              {AIF.map((feature, i) => (
+                <StickyFeatureCard
+                  feature={feature}
+                  index={i}
+                  total={AIF.length}
+                  progress={scrollYProgress}
+                  key={feature.k}
+                />
               ))}
             </div>
           </div>

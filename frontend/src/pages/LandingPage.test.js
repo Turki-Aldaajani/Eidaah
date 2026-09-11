@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { ThemeProvider } from "../theme/ThemeContext";
+import { AIF } from "../data/curriculum";
 
 function renderLanding() {
   return render(
@@ -23,6 +24,14 @@ test("the curriculum card links to /learn and the analyzer card links to /analyz
   renderLanding();
   expect(screen.getByText("المناهج التعليمية").closest("a")).toHaveAttribute("href", "/learn");
   expect(screen.getByText("حلّل ملفاتك التعليمية").closest("a")).toHaveAttribute("href", "/analyze");
+});
+
+test("قسم «ماذا يقدم إيضاح؟» يعرض كل المزايا ككروت لاصقة", () => {
+  const { container } = renderLanding();
+  AIF.forEach((feature) => {
+    expect(screen.getByText(feature.t)).toBeInTheDocument();
+  });
+  expect(container.querySelectorAll(".stack-card")).toHaveLength(AIF.length);
 });
 
 test("يعرض سلوقن إيضاح الجديد في الهوم بيج", () => {
