@@ -13,7 +13,6 @@ export const LP_JOURNEY = [
 ];
 
 export const LP_SOON = [
-  { icn: "layers", t: "بنك الأسئلة" },
   { icn: "file-text", t: "الملخصات الذكية" },
   { icn: "target", t: "الاختبارات التكيفية" },
   { icn: "calendar", t: "خطط المذاكرة" },
