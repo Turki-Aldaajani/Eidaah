@@ -36,6 +36,8 @@ test("مسار «رحلتك مع إيضاح» يتعرّج: صفوف متناو�
     expect(screen.getByText(step.t)).toBeInTheDocument();
     expect(rows[i].classList.contains("alt")).toBe(i % 2 === 1);
   });
+});
+
 test("قسم «ماذا يقدم إيضاح؟» يعرض كل المزايا ككروت لاصقة", () => {
   const { container } = renderLanding();
   AIF.forEach((feature) => {
