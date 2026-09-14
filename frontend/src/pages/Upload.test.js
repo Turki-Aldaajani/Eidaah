@@ -72,6 +72,37 @@ test("a successful upload stores slides/filename/session_id and navigates to /an
   await waitFor(() => expect(screen.getByText("results page")).toBeInTheDocument());
 });
 
+// #105: the backend generates the auto summary/description right after upload,
+// so the upload request itself must carry the UI language.
+function uploadAndGetSentLanguage() {
+  global.fetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({ session_id: "sess-1", filename: "deck.pdf", slides: [] }),
+  });
+  const file = new File(["dummy"], "deck.pdf", { type: "application/pdf" });
+  fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
+  return waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1)).then(() =>
+    global.fetch.mock.calls[0][1].body.get("language")
+  );
+}
+
+test("the upload request sends the Arabic UI language by default (#105)", async () => {
+  renderUpload();
+  expect(await uploadAndGetSentLanguage()).toBe("ar");
+});
+
+test("after switching the UI to English the upload request sends English (#105)", async () => {
+  renderUpload();
+  fireEvent.click(screen.getByText("English"));
+  expect(await uploadAndGetSentLanguage()).toBe("en");
+});
+
+test("a saved language preference is sent on the very first upload (#105)", async () => {
+  localStorage.setItem("language", "en");
+  renderUpload();
+  expect(await uploadAndGetSentLanguage()).toBe("en");
+});
+
 test("a failed upload shows the error message instead of navigating", async () => {
   global.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
   renderUpload();

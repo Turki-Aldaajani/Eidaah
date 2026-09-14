@@ -73,6 +73,9 @@ export default function Upload() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      // #105: the summary/description are generated in the background right
+      // after upload, so the backend needs the current UI language now.
+      formData.append("language", language);
 
       setProgress(30);
 
