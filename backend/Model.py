@@ -1,5 +1,5 @@
 # Model.py
-# AI Model Integration - Groq API (GPT-OSS 120B)
+# AI Model Integration - DeepSeek API (deepseek-flash)
 # Extended for Phase 3: RAG + topic analysis
 
 import os
@@ -11,20 +11,20 @@ load_dotenv()
 # ---------------------
 # Configuration
 # ---------------------
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL_NAME = "openai/gpt-oss-120b"
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+MODEL_NAME = "deepseek-flash"
 
-if not GROQ_API_KEY:
-    print("⚠️  WARNING: GROQ_API_KEY not found in .env file!")
-    print("   Get a free key at: https://console.groq.com/keys")
-    print("   Then add it to your .env file: GROQ_API_KEY=your_key_here\n")
+if not DEEPSEEK_API_KEY:
+    print("⚠️  WARNING: DEEPSEEK_API_KEY not found in .env file!")
+    print("   Get a key at: https://platform.deepseek.com")
+    print("   Then add it to your .env file: DEEPSEEK_API_KEY=your_key_here\n")
     client = None
 else:
     client = OpenAI(
-        api_key=GROQ_API_KEY,
-        base_url="https://api.groq.com/openai/v1",
+        api_key=DEEPSEEK_API_KEY,
+        base_url="https://api.deepseek.com",
     )
-    print(f"✅ Groq AI model configured successfully! (using {MODEL_NAME})")
+    print(f"✅ DeepSeek AI model configured successfully! (using {MODEL_NAME})")
 
 
 # ---------------------
@@ -60,7 +60,7 @@ Slide content:
 
 
 # ---------------------
-# Core: Call Groq API (shared utility)
+# Core: Call LLM API (shared utility)
 # ---------------------
 def call_groq(
     prompt: str,
@@ -69,10 +69,13 @@ def call_groq(
     system_prompt: str = None,
     reasoning_effort: str = "medium",
 ) -> str:
-    """Make a single call to the Groq API. Used by all modules."""
+    """Make a single call to the DeepSeek API. Used by all modules."""
     if not client:
-        return "AI model is not configured. Please add GROQ_API_KEY to .env."
+        return "AI model is not configured. Please add DEEPSEEK_API_KEY to .env."
 
+    # reasoning_effort is kept in the signature so callers don't change, but is
+    # not forwarded: deepseek-flash thinks by default, and thinking tokens count
+    # against max_tokens — the small budgets callers pass would come back empty.
     response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[
@@ -81,11 +84,7 @@ def call_groq(
         ],
         max_tokens=max_tokens,
         temperature=temperature,
-        reasoning_effort=reasoning_effort,
-        # reasoning_format is a Groq-only extension (not in the OpenAI SDK's
-        # typed params), so it must go through extra_body. Without it, gpt-oss's
-        # chain-of-thought leaks into message.content and breaks every json.loads().
-        extra_body={"reasoning_format": "hidden"},
+        extra_body={"thinking": {"type": "disabled"}},
     )
     return response.choices[0].message.content.strip()
 
@@ -108,8 +107,8 @@ def generate_explanation_and_example(text: str, language: str = None):
 
     if not client:
         return (
-            "AI model is not configured. Please add GROQ_API_KEY to the .env file.",
-            "Visit https://console.groq.com/keys to get a free API key."
+            "AI model is not configured. Please add DEEPSEEK_API_KEY to the .env file.",
+            "Visit https://platform.deepseek.com to get an API key."
         )
 
     system = SYSTEM_PROMPT
@@ -131,9 +130,9 @@ def generate_explanation_and_example(text: str, language: str = None):
 
     except Exception as e:
         error_msg = str(e)
-        print(f"❌ Groq API Error: {error_msg}")
+        print(f"❌ DeepSeek API Error: {error_msg}")
         if "401" in error_msg or "invalid" in error_msg.lower():
-            return "Invalid API key. Please check your GROQ_API_KEY.", ""
+            return "Invalid API key. Please check your DEEPSEEK_API_KEY.", ""
         elif "429" in error_msg or "rate" in error_msg.lower():
             return "Rate limit reached. Please wait a moment and try again.", ""
         else:
