@@ -72,6 +72,36 @@ test("a successful upload stores slides/filename/session_id and navigates to /an
   await waitFor(() => expect(screen.getByText("results page")).toBeInTheDocument());
 });
 
+// ‏#105: الباك اند يولّد الملخص/الوصف التلقائي مباشرة بعد الرفع، فلا بد أن
+// يحمل طلب الرفع نفسه لغة الواجهة — وإلا اختار النموذج اللغة من محتوى الملف.
+async function uploadAndReadSentLanguage() {
+  global.fetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({ session_id: "sess-1", filename: "deck.pdf", slides: [] }),
+  });
+  const file = new File(["dummy"], "deck.pdf", { type: "application/pdf" });
+  fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
+  await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+  return global.fetch.mock.calls[0][1].body.get("language");
+}
+
+test("الرفع يرسل العربية افتراضياً (#105)", async () => {
+  renderUpload();
+  expect(await uploadAndReadSentLanguage()).toBe("ar");
+});
+
+test("بعد التبديل للإنجليزية يرسل الرفع en (#105)", async () => {
+  renderUpload();
+  fireEvent.click(screen.getByText("English"));
+  expect(await uploadAndReadSentLanguage()).toBe("en");
+});
+
+test("لغة محفوظة مسبقاً تُرسل من أول رفعة بلا تبديل يدوي (#105)", async () => {
+  localStorage.setItem("language", "en");
+  renderUpload();
+  expect(await uploadAndReadSentLanguage()).toBe("en");
+});
+
 test("a failed upload shows the error message instead of navigating", async () => {
   global.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
   renderUpload();
