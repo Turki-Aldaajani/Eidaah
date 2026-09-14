@@ -26,8 +26,8 @@ MAX_DESC_LEN = 300
 SOURCE_CHAR_CAP = 1500
 
 _LANG_RULE = {
-    "ar": "اكتب العنوان والوصف بالعربية الفصحى فقط.",
-    "en": "Write both the title and the description in English only.",
+    "ar": "CRITICAL INSTRUCTION: You MUST write BOTH the title and the description ENTIRELY in Arabic (العربية) regardless of the language of the input content. Do not use any English words.",
+    "en": "CRITICAL INSTRUCTION: You MUST write BOTH the title and the description ENTIRELY in English regardless of the language of the input content. Do not use any Arabic words.",
 }
 
 _DEFAULT_TITLE = "مستند بدون عنوان"

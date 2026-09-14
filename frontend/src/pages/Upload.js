@@ -73,6 +73,7 @@ export default function Upload() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("language", language);
 
       setProgress(30);
 
