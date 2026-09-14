@@ -1,7 +1,7 @@
 # main.py
 # Eidaah Phase 3 — Topic Detection + Analysis (LLM-only, no local embeddings)
 
-from fastapi import FastAPI, File, UploadFile, Request, HTTPException, BackgroundTasks, Header
+from fastapi import FastAPI, File, Form, UploadFile, Request, HTTPException, BackgroundTasks, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
@@ -119,7 +119,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20MB
 
 
-def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, filename: str):
+def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, filename: str, language: str = "ar"):
     """
     Background task: render images, chunk text, detect topics via LLM.
     Updates the session in-place.
@@ -144,12 +144,12 @@ def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, f
         if chunks:
             # 3. Detect topics via LLM (no embeddings!)
             print(f"🏷️  [{session_id}] Detecting topics via LLM...")
-            topics = detect_topics(chunks, call_groq)
+            topics = detect_topics(chunks, call_groq, language)
             session.topics = topics
 
             # 4. Generate global summary
             print(f"📝 [{session_id}] Generating summary...")
-            session.summary = generate_summary(all_text, call_groq)
+            session.summary = generate_summary(all_text, call_groq, language)
 
             print(f"✅ [{session_id}] Pipeline complete! ({len(chunks)} chunks, {len(topics)} topics)")
 
@@ -165,7 +165,7 @@ def _run_semantic_pipeline(session_id: str, file_bytes: bytes, file_type: str, f
     #    afterwards with no further LLM call.
     try:
         print(f"🏷️  [{session_id}] Generating title & description...")
-        meta = generate_material_metadata(all_text, session.filename, call_groq)
+        meta = generate_material_metadata(all_text, session.filename, call_groq, language=language)
         session.title = meta["title"]
         session.description = meta["description"]
         session.metadata_auto = meta["auto_generated"]
@@ -184,6 +184,7 @@ async def upload_file(
     request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="PDF or PPTX file"),
+    language: str = Form("ar", description="UI language: 'ar' or 'en'"),
 ):
     """Upload a PDF/PPTX. Returns slides immediately. Topics detected in background."""
     file_contents = await file.read()
@@ -202,6 +203,7 @@ async def upload_file(
     # Provisional title from the filename so the results page has something to
     # show instantly; the background pipeline replaces it with the AI title.
     session.title = fallback_title_from_filename(file.filename)
+    session.language = language if language in ("ar", "en") else "ar"
 
     background_tasks.add_task(
         _run_semantic_pipeline,
@@ -209,6 +211,7 @@ async def upload_file(
         file_contents,
         file.content_type,
         file.filename,
+        session.language,
     )
 
     return {
@@ -344,6 +347,9 @@ async def get_summary(request: Request, session_id: str, payload: SummaryRequest
         call_groq,
         payload.language,
     )
+
+    # Persist so /status returns the regenerated version too (#105).
+    session.summary = summary
 
     return {"summary": summary}
 

@@ -33,6 +33,7 @@ class Session:
     title: str = ""
     description: str = ""
     metadata_auto: bool = False                 # True when the LLM produced them
+    language: str = "ar"                         # UI language at upload time (#105)
     indexing_complete: bool = False
     created_at: float = field(default_factory=time.time)
 

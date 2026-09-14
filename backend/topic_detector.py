@@ -4,8 +4,13 @@
 
 import json
 
+LANGUAGE_INSTRUCTIONS = {
+    "ar": "CRITICAL INSTRUCTION: You MUST write ALL topic labels ENTIRELY in Arabic (العربية) regardless of the language of the input content. Do not use any English words.",
+    "en": "CRITICAL INSTRUCTION: You MUST write ALL topic labels ENTIRELY in English regardless of the language of the input content. Do not use any Arabic words.",
+}
 
-def detect_topics(chunks: list, call_groq_fn) -> list:
+
+def detect_topics(chunks: list, call_groq_fn, language: str = "ar") -> list:
     """
     Use the LLM to identify distinct topics from the presentation chunks.
     Returns a list of topic dicts: [{"topic_id": 0, "label": "..."}, ...]
@@ -22,12 +27,13 @@ def detect_topics(chunks: list, call_groq_fn) -> list:
 
     combined = "\n".join(chunk_summaries)
 
+    lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS["ar"])
     prompt = (
         "Analyze this presentation content and identify the 2-6 main topics discussed.\n"
         "For each topic, give a short label (3-6 words).\n"
-        "If the content is in Arabic, give Arabic labels. If English, give English labels.\n\n"
+        f"{lang_instruction}\n\n"
         "Respond ONLY with a JSON array of strings, nothing else. Example:\n"
-        '[\"Introduction to Machine Learning\", \"Neural Network Architectures\", \"Training Methods\"]\n\n'
+        '["Introduction to Machine Learning", "Neural Network Architectures", "Training Methods"]\n\n'
         f"Content:\n{combined[:3000]}"
     )
 
@@ -65,4 +71,4 @@ def detect_topics(chunks: list, call_groq_fn) -> list:
     except Exception as e:
         print(f"⚠️  Topic detection failed: {e}")
         # Fallback: single topic
-        return [{"topic_id": 0, "label": "General"}]
+        return [{"topic_id": 0, "label": "عام" if language == "ar" else "General"}]
