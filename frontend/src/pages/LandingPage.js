@@ -1,5 +1,6 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import TopNav from "../components/TopNav";
 import Icon from "../components/Icon";
 import Footer from "../Footer";
@@ -35,15 +36,52 @@ function HeroIllustration() {
   );
 }
 
-function FeatureCard({ feature }) {
+// الفراغ تحت الكرت الأول هو مسار التمرير الذي تحتاجه الكروت لتتراكم، فيبدو للوهلة
+// الأولى وكأن القسم انتهى — هذا المؤشر يوضّح أن هناك ما يستحق النزول إليه.
+function ScrollCue({ hidden }) {
+  const reduced = useReducedMotion();
+
+  // الغلاف الثابت يتولى التوسيط الأفقي (left:50% + translateX(-50%))، لأن Framer Motion
+  // يكتب خاصية transform كاملة بنفسه لتحريك y — لو وُضع التوسيط على العنصر المتحرك نفسه
+  // كان يُستبدل بتحويل الارتداد في كل إطار، فيرجع السهم يسار الشاشة بسبب RTL.
   return (
-    <div className="feat-card anim">
+    <span className="scroll-cue" aria-hidden="true">
+      <motion.span
+        className="scroll-cue-ic"
+        animate={
+          hidden || reduced ? { opacity: hidden ? 0 : 0.9, y: 0 } : { opacity: [0.6, 1, 0.6], y: [0, -8, 0] }
+        }
+        transition={
+          hidden || reduced ? { duration: 0.35 } : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+        }
+      >
+        <Icon name="chev" />
+      </motion.span>
+    </span>
+  );
+}
+
+// كل كرت يلتصق أسفل الكرت الذي قبله، ويتصغّر إلى 0.92 بينما يزحف التالي فوقه.
+function StickyFeatureCard({ feature, index, total, progress, cueHidden }) {
+  const isLast = index === total - 1;
+  const scale = useTransform(
+    progress,
+    [index / total, (index + 1) / total],
+    isLast ? [1, 1] : [1, 0.92]
+  );
+
+  return (
+    <motion.div
+      className="feat-card stack-card"
+      style={{ scale, top: `calc(20vh + ${index * 14}px)`, zIndex: index + 1 }}
+    >
       <span className="feat-ic">
         <Icon name={feature.i} />
       </span>
       <h4>{feature.t}</h4>
       <p>{feature.d}</p>
-    </div>
+      {index === 0 && <ScrollCue hidden={cueHidden} />}
+    </motion.div>
   );
 }
 
@@ -56,21 +94,32 @@ function WhyItem({ text }) {
   );
 }
 
-function JourneyStep({ step, isLast }) {
+// مسار متعرج: الأيقونة تتناوب بين جهتي السطر والنص مقابلها، ويصل بينها منحنى SVG.
+// المسارات مكتوبة بإحداثيات LTR ثم تُعكس كاملة مع RTL، فتبقى مطابقة لتناوب الشبكة.
+const JR_LINK_OUT = "M 18 0 C 18 13 82 7 82 20";
+const JR_LINK_BACK = "M 82 0 C 82 13 18 7 18 20";
+
+function JourneyZigzag() {
   return (
-    <>
-      <div className="jr-step">
-        <span className="jr-ic">
-          <Icon name={step.icn} />
-        </span>
-        <span className="jr-t">{step.t}</span>
-      </div>
-      {!isLast && (
-        <span className="jr-sep">
-          <Icon name="chev" />
-        </span>
-      )}
-    </>
+    <div className="jrz">
+      {LP_JOURNEY.map((step, i) => (
+        <React.Fragment key={step.t}>
+          <div className={i % 2 ? "jrz-row alt" : "jrz-row"}>
+            <span className="jrz-lane">
+              <span className="jr-ic">
+                <Icon name={step.icn} />
+              </span>
+            </span>
+            <span className="jr-t">{step.t}</span>
+          </div>
+          {i < LP_JOURNEY.length - 1 && (
+            <svg className="jrz-link" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+              <path d={i % 2 === 0 ? JR_LINK_OUT : JR_LINK_BACK} vectorEffect="non-scaling-stroke" />
+            </svg>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
   );
 }
 
@@ -86,7 +135,23 @@ function SoonCard({ item }) {
 
 export default function LandingPage() {
   const { theme } = useTheme();
-  const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";  return (
+  const navigate = useNavigate();
+  const [showLearnNotice, setShowLearnNotice] = useState(false);
+  const stackRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: stackRef, offset: ["start start", "end end"] });
+  const [cueHidden, setCueHidden] = useState(false);
+  // نربطه بتقدّم القسم نفسه لا بأول scroll في الصفحة، وإلا اختفى المؤشر قبل أن يصل المستخدم إليه.
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v > 0.02 && !cueHidden) setCueHidden(true);
+  });
+  const logoSrc = theme === "dark" ? "/eidaah-logo-dark.png" : "/eidaah-logo-light.png";
+
+  function handleLearnClick(e) {
+    e.preventDefault();
+    setShowLearnNotice(true);
+  }
+
+  return (
     <>
       <TopNav />
       <section className="view view-landing">
@@ -111,7 +176,8 @@ export default function LandingPage() {
         </div>
         <div className="container" style={{ paddingBottom: 80 }}>
           <div className="entry-grid">
-            <Link to="/learn" className="entry-card anim">
+            <Link to="/learn" className="entry-card anim" onClick={handleLearnClick}>
+              <span className="entry-badge-incomplete">غير مكتمل</span>
               <span className="entry-ic">
                 <Icon name="grad-cap" />
               </span>
@@ -132,11 +198,20 @@ export default function LandingPage() {
 
         <section className="lp-sec">
           <div className="container">
-            <h2 className="lp-t">ماذا يقدم إيضاح؟</h2>
-            <p className="lp-ts">أدوات ذكية ترافقك في كل درس وكل ملف</p>
-            <div className="feat4">
-              {AIF.map((feature) => (
-                <FeatureCard feature={feature} key={feature.k} />
+            <div className="stack-head">
+              <h2 className="lp-t">ماذا يقدم إيضاح؟</h2>
+              <p className="lp-ts">أدوات ذكية ترافقك في كل درس وكل ملف</p>
+            </div>
+            <div className="sticky-stack" ref={stackRef}>
+              {AIF.map((feature, i) => (
+                <StickyFeatureCard
+                  feature={feature}
+                  index={i}
+                  total={AIF.length}
+                  progress={scrollYProgress}
+                  cueHidden={cueHidden}
+                  key={feature.k}
+                />
               ))}
             </div>
           </div>
@@ -156,11 +231,7 @@ export default function LandingPage() {
         <section className="lp-sec">
           <div className="container">
             <h2 className="lp-t">رحلتك مع إيضاح</h2>
-            <div className="jr">
-              {LP_JOURNEY.map((step, i) => (
-                <JourneyStep step={step} isLast={i === LP_JOURNEY.length - 1} key={step.t} />
-              ))}
-            </div>
+            <JourneyZigzag />
           </div>
         </section>
 
@@ -195,6 +266,31 @@ export default function LandingPage() {
           </div>
         </section>
       </section>
+      {showLearnNotice && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="تنبيه">
+          <div className="card modal-card anim" style={{ textAlign: "center" }}>
+            <h2>القسم لا يزال قيد التطوير</h2>
+            <p className="s-desc">
+              قسم المناهج التعليمية غير مكتمل حالياً، وتتوفر حالياً فقط بعض مواد المرحلة المتوسطة للتجربة.
+            </p>
+            <div className="endterm-choices">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setShowLearnNotice(false);
+                  navigate("/learn");
+                }}
+              >
+                متابعة على أي حال
+              </button>
+              <button type="button" className="btn ghost" onClick={() => setShowLearnNotice(false)}>
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </>
   );

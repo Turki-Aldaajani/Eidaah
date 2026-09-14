@@ -7,54 +7,28 @@ import { useLanguage } from './i18n/LanguageContext';
 
 const team = {
   ar: {
-    clubLead: { name: "ليان المطيويع", role: "قائدة نادي إنجاز" },
-    teamLead: { name: "ريان الحربي", role: "قائد الفريق ومهندس AI/NLP" },
-    projectManager: { name: "تركي الدعجاني", role: "مدير المشروع" },
+    aiNlp: { name: "ريان الحربي", role: "مهندس AI/NLP", linkedin: "https://www.linkedin.com/in/rayan-alharbi-b82s27/" },
+    projectLead: { name: "تركي الدعجاني", role: "قائد المشروع", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
+    backend: { name: "عبدالعزيز الضيف", role: "الواجهة الخلفية (Backend)", linkedin: "https://www.linkedin.com/in/abdulaziz-aldhaif-a09786218/" },
     ui_ux: [
-      { name: "ناهد المطيري", role: "تصميم واجهة المستخدم (UI/UX)" },
-      { name: "ليان القباني", role: "تصميم واجهة المستخدم (UI/UX)" }
-    ],
-    frontend: [
-      { name: "عبدالعزيز الضيف", role: "الواجهة الأمامية (Frontend)" },
-      { name: "رسيل الصمعاني", role: "الواجهة الأمامية (Frontend)" }
-    ],
-    backend: [
-      { name: "عبدالعزيز القحطاني", role: "الواجهة الخلفية (Backend)" },
-      { name: "سلطان الراجح", role: "الواجهة الخلفية (Backend)" }
-    ],
-    ai_nlp: [
-      { name: "زياد المنيف", role: "الذكاء الاصطناعي (AI/NLP)" },
-      { name: "ياسر الشريف", role: "الذكاء الاصطناعي (AI/NLP)" }
-    ],
-    qa: { name: "فيصل التويجري", role: "اختبار الجودة (QA)" }
+      { name: "ليان القباني", role: "تصميم الواجهة (UI/UX)", linkedin: "https://sa.linkedin.com/in/layan-alqabbani-8b631729a" },
+      { name: "ناهد المطيري", role: "تصميم الواجهة (UI/UX)", linkedin: "https://sa.linkedin.com/in/nahed-almutairi-b3559835b" }
+    ]
   },
   en: {
-    clubLead: { name: "Layan Al-Mutaiwie", role: "Enjaz Club Leader" },
-    teamLead: { name: "Rayan Al-Harbi", role: "Team Lead & AI/NLP Engineer" },
-    projectManager: { name: "Turki Al-Dajani", role: "Project Manager" },
+    aiNlp: { name: "Rayan Al-Harbi", role: "AI/NLP Engineer", linkedin: "https://www.linkedin.com/in/rayan-alharbi-b82s27/" },
+    projectLead: { name: "Turki Al-Dajani", role: "Project Lead", linkedin: "https://www.linkedin.com/in/turki-al-daajani-a0bb2a32b/" },
+    backend: { name: "Abdulaziz Al-Dhaif", role: "Backend", linkedin: "https://www.linkedin.com/in/abdulaziz-aldhaif-a09786218/" },
     ui_ux: [
-      { name: "Nahid Al-Mutairi", role: "UI/UX Design" },
-      { name: "Layan Al-Qabbani", role: "UI/UX Design" }
-    ],
-    frontend: [
-      { name: "Abdulaziz Al-Dhaif", role: "Frontend Developer" },
-      { name: "Raseel Al-Samaani", role: "Frontend Developer" }
-    ],
-    backend: [
-      { name: "Abdulaziz Al-Qahtani", role: "Backend Developer" },
-      { name: "Sultan Al-Rajeh", role: "Backend Developer" },
-    ],
-    ai_nlp: [
-      { name: "Ziyad Al-Muneef", role: "AI/NLP Engineer" },
-      { name: "Yasser Al-Shareef", role: "AI/NLP Engineer" }
-    ],
-    qa: { name: "Faisal Al-Tuwaijri", role: "QA Tester" }
+      { name: "Layan Al-Qabbani", role: "UI/UX Design", linkedin: "https://sa.linkedin.com/in/layan-alqabbani-8b631729a" },
+      { name: "Nahid Al-Mutairi", role: "UI/UX Design", linkedin: "https://sa.linkedin.com/in/nahed-almutairi-b3559835b" }
+    ]
   }
 };
 
 const staticTranslations = {
-  ar: { page_title: "فريق عمل إيضاح", ui_title: "تصميم الواجهة (UI/UX)", fe_title: "الواجهة الأمامية (Frontend)", be_title: "الواجهة الخلفية (Backend)", ai_title: "الذكاء الاصطناعي (AI/NLP)", home: "الرئيسية" },
-  en: { page_title: "The Eidaah Team", ui_title: "UI/UX Design", fe_title: "Frontend", be_title: "Backend", ai_title: "AI/NLP", home: "Home" }
+  ar: { page_title: "فريق عمل إيضاح", ui_title: "تصميم الواجهة (UI/UX)", home: "الرئيسية" },
+  en: { page_title: "The Eidaah Team", ui_title: "UI/UX Design", home: "Home" }
 };
 
 export default function About() {
@@ -63,15 +37,13 @@ export default function About() {
   const currentTeam = team[language];
   const t = staticTranslations[language];
 
+  // قائد المشروع يظهر أيضاً ضمن فريق الـ Backend بنفس الكائن، فيبقى الاسم ورابط
+  // لينكدإن مصدراً واحداً لا نسختين تفترقان عند أي تعديل لاحق.
   const groups = [
-    { role: currentTeam.clubLead.role, icon: "crown", members: [currentTeam.clubLead.name] },
-    { role: currentTeam.teamLead.role, icon: "sparkles", members: [currentTeam.teamLead.name] },
-    { role: currentTeam.projectManager.role, icon: "sparkles", members: [currentTeam.projectManager.name] },
-    { role: t.ui_title, icon: "pen", members: currentTeam.ui_ux.map((m) => m.name) },
-    { role: t.fe_title, icon: "code", members: currentTeam.frontend.map((m) => m.name) },
-    { role: t.be_title, icon: "server", members: currentTeam.backend.map((m) => m.name) },
-    { role: t.ai_title, icon: "atom", members: currentTeam.ai_nlp.map((m) => m.name) },
-    { role: currentTeam.qa.role, icon: "shield", members: [currentTeam.qa.name] },
+    { role: currentTeam.projectLead.role, icon: "sparkles", members: [currentTeam.projectLead] },
+    { role: currentTeam.aiNlp.role, icon: "atom", members: [currentTeam.aiNlp] },
+    { role: currentTeam.backend.role, icon: "server", members: [currentTeam.backend, currentTeam.projectLead] },
+    { role: t.ui_title, icon: "pen", members: currentTeam.ui_ux },
   ];
 
   return (
@@ -106,10 +78,25 @@ export default function About() {
                   <h3>{g.role}</h3>
                 </div>
                 <div className={`tm-cards${g.members.length === 1 ? " solo" : ""}`}>
-                  {g.members.map((name) => (
-                    <div className="tm-card" key={name}>
-                      <span className="tm-ava">{name.trim().charAt(0)}</span>
-                      <b className="tm-name">{name}</b>
+                  {g.members.map((m) => (
+                    <div className="tm-card" key={m.name}>
+                      {m.linkedin ? (
+                        <a
+                          className="tm-ava tm-ava-link"
+                          href={m.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${m.name} - LinkedIn`}
+                        >
+                          {m.name.trim().charAt(0)}
+                          <span className="tm-ava-badge">
+                            <Icon name="linkedin" filled />
+                          </span>
+                        </a>
+                      ) : (
+                        <span className="tm-ava">{m.name.trim().charAt(0)}</span>
+                      )}
+                      <b className="tm-name">{m.name}</b>
                     </div>
                   ))}
                 </div>
