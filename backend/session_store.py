@@ -34,6 +34,10 @@ class Session:
     description: str = ""
     metadata_auto: bool = False                 # True when the LLM produced them
     language: str = "ar"                         # UI language at upload time (#105)
+    # #109: per-slide learning content and quizzes, cached so revisiting a slide
+    # costs no LLM call. Keyed (kind, slide_number, topic_id, language).
+    generated: dict = field(default_factory=dict)
+    slide_visuals: dict = field(default_factory=dict)  # slide_number -> image reading ("" = none)
     indexing_complete: bool = False
     created_at: float = field(default_factory=time.time)
 

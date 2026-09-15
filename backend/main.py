@@ -12,13 +12,14 @@ import io
 import os
 import re
 import time
+from concurrent.futures import TimeoutError as FutureTimeout
 from dotenv import load_dotenv
 
 load_dotenv()
 
 import ai_logic
-from concurrency import executor, video_executor
-from Model import call_groq
+from concurrency import executor, video_executor, vision_executor
+from Model import call_groq, call_vision
 from slowapi.errors import RateLimitExceeded
 
 from rate_limit import (
@@ -32,6 +33,8 @@ from chunker import chunk_slides
 from topic_detector import detect_topics
 from metadata_generator import generate_material_metadata, fallback_title_from_filename
 from rag_generator import generate_summary, generate_topic_analysis  # noqa: F401 (generate_summary used in endpoint)
+from slide_context import build_slide_context, format_slide_context
+from slide_explainer import generate_slide_learning, describe_slide_visual
 from lesson_tool import generate_lesson_tool_content
 from question_generator import generate_review_questions
 import agent_store
@@ -355,6 +358,112 @@ async def get_summary(request: Request, session_id: str, payload: SummaryRequest
 
 
 # ---------------------------------------------------------
+# ENDPOINT: Slide Learning Content (#109)
+# ---------------------------------------------------------
+# The explanation, example and notes follow the slide the student is on and the
+# selected topic, not the file's first topic. They're grounded on the current
+# slide plus earlier slides as context (slide_context.py), and on a vision
+# reading of the slide image when its text is thin. Cached on the session per
+# (slide, topic, language) so revisiting costs no LLM call; `refresh`
+# regenerates on demand (the results page's regenerate button).
+VISION_DEADLINE_SECONDS = 40
+
+
+class SlideLearningRequest(BaseModel):
+    slide_number: int
+    topic_id: Optional[int] = None
+    language: str = "ar"
+    refresh: bool = False
+
+
+def _find_topic(session, topic_id):
+    if topic_id is None:
+        return None
+    return next((t for t in session.topics if t.get("topic_id") == topic_id), None)
+
+
+def _content_key(kind, slide_number, topic, language):
+    return (kind, slide_number, topic["topic_id"] if topic else None, language)
+
+
+def _slide_visual(session, slide_number, language, refresh=False):
+    """Blocking: the vision reading of a slide image, cached per slide ("" = none)."""
+    if slide_number in session.slide_visuals and not refresh:
+        return session.slide_visuals[slide_number]
+    image_file = f"{slide_number}.jpg"
+    if image_file not in session.slide_images:
+        return ""  # PPTX, or not rendered yet: don't cache, the image may still come
+
+    visual = ""
+    try:
+        with open(os.path.join(session.slide_images_dir, image_file), "rb") as f:
+            image_bytes = f.read()
+        # A wall-clock deadline, not only the HTTP timeout: a provider that
+        # trickles bytes defeats per-read timeouts, and the image is only context.
+        future = vision_executor.submit(describe_slide_visual, image_bytes, call_vision, language)
+        visual = future.result(timeout=VISION_DEADLINE_SECONDS)
+    except FutureTimeout:
+        print(f"⚠️  [{session.session_id}] Reading slide {slide_number}'s image timed out.")
+    except Exception as e:
+        print(f"⚠️  [{session.session_id}] Reading slide {slide_number}'s image failed: {e}")
+    session.slide_visuals[slide_number] = visual
+    return visual
+
+
+def _slide_context_for(session, slide_number, language, refresh=False):
+    """Blocking: build_slide_context plus its prompt text (with the image reading for a thin slide)."""
+    ctx = build_slide_context(session.slides, slide_number)
+    if ctx is None:
+        return None
+    visual = _slide_visual(session, slide_number, language, refresh) if ctx["thin"] else ""
+    ctx["used_visual"] = bool(visual)
+    ctx["text"] = format_slide_context(ctx, visual)
+    return ctx
+
+
+@app.post("/api/session/{session_id}/slide_learning", tags=["Step 2: Analyze"])
+@limiter.limit(ANALYZE_LIMIT)
+async def slide_learning(request: Request, session_id: str, payload: SlideLearningRequest):
+    """Explanation + example + study notes for one slide (and topic), cached per slide."""
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found or expired.")
+
+    topic = _find_topic(session, payload.topic_id)
+    key = _content_key("learning", payload.slide_number, topic, payload.language)
+    if key in session.generated and not payload.refresh:
+        return {**session.generated[key], "cached": True}
+
+    loop = asyncio.get_event_loop()
+    ctx = await loop.run_in_executor(
+        executor, _slide_context_for, session, payload.slide_number, payload.language, payload.refresh,
+    )
+    if ctx is None:
+        raise HTTPException(404, f"Slide {payload.slide_number} not found.")
+
+    result = await loop.run_in_executor(
+        executor, generate_slide_learning, ctx["text"], call_groq, payload.language,
+        topic["label"] if topic else None,
+    )
+    if result is None:
+        return JSONResponse(
+            status_code=502,
+            content={"detail": "تعذّر توليد الشرح الآن، حاول مرة أخرى."},
+        )
+
+    body = {
+        "slide_number": payload.slide_number,
+        "topic_id": topic["topic_id"] if topic else None,
+        "topic_label": topic["label"] if topic else None,
+        "context_slides": ctx["context_slides"],
+        "used_visual": ctx["used_visual"],
+        **result,
+    }
+    session.generated[key] = body
+    return {**body, "cached": False}
+
+
+# ---------------------------------------------------------
 # ENDPOINT: Analyze Slide (Legacy — backward compatible)
 # ---------------------------------------------------------
 class AnalyzeRequest(BaseModel):
@@ -446,6 +555,22 @@ class GenerateQuestionsRequest(BaseModel):
     session_id: Optional[str] = None
     content: Optional[str] = None
     language: str = "ar"
+    # #109: with a session_id, target this slide (and its context) instead of the
+    # whole document. Cached per (slide, topic, language); refresh regenerates.
+    slide_number: Optional[int] = None
+    topic_id: Optional[int] = None
+    refresh: bool = False
+
+
+def _slide_quiz_content(session, ctx, topic, language):
+    """The quiz source for one slide: its context, plus the explanation the student read if generated."""
+    parts = [f"TOPIC: {topic['label']}"] if topic else []
+    parts.append("Write the questions about the CURRENT slide's idea; the previous slides are context.")
+    parts.append(ctx["text"])
+    learning = session.generated.get(_content_key("learning", ctx["slide_number"], topic, language))
+    if learning:
+        parts.append(f"EXPLANATION THE STUDENT READ:\n{learning['explanation']}")
+    return "\n\n".join(parts)
 
 
 @app.post("/api/generate_questions", tags=["AI: Review Questions"])
@@ -455,22 +580,37 @@ async def generate_questions_endpoint(request: Request, payload: GenerateQuestio
     Generate 3–5 multiple-choice review questions from slide/document content.
 
     Provide either `content` (raw text) or a `session_id` (uses the session's
-    slide text). Returns a fixed JSON shape consumed by the frontend Quiz
-    component and the study agent (A1):
+    slide text; add `slide_number` to target the slide the student is on, with
+    its earlier slides as context). Returns a fixed JSON shape consumed by the
+    frontend Quiz component and the study agent (A1):
         {"questions": [{"q", "o": [4], "a": index, "e": explanation}, ...]}
     """
     content = (payload.content or "").strip()
+    loop = asyncio.get_event_loop()
+    slide_quiz = None  # (session, cache key, context) when targeting one slide
 
     if not content and payload.session_id:
         session = get_session(payload.session_id)
         if not session:
             raise HTTPException(404, "Session not found or expired.")
-        content = "\n\n".join(s["text"] for s in session.slides).strip()
+        if payload.slide_number is None:
+            content = "\n\n".join(s["text"] for s in session.slides).strip()
+        else:
+            topic = _find_topic(session, payload.topic_id)
+            key = _content_key("quiz", payload.slide_number, topic, payload.language)
+            if key in session.generated and not payload.refresh:
+                return {**session.generated[key], "cached": True}
+            ctx = await loop.run_in_executor(
+                executor, _slide_context_for, session, payload.slide_number, payload.language,
+            )
+            if ctx is None:
+                raise HTTPException(404, f"Slide {payload.slide_number} not found.")
+            content = _slide_quiz_content(session, ctx, topic, payload.language)
+            slide_quiz = (session, key, ctx)
 
     if not content:
         raise HTTPException(400, "Provide either 'content' or a valid 'session_id' with slide text.")
 
-    loop = asyncio.get_event_loop()
     questions = await loop.run_in_executor(
         executor,
         generate_review_questions,
@@ -484,6 +624,12 @@ async def generate_questions_endpoint(request: Request, payload: GenerateQuestio
             status_code=502,
             content={"detail": "تعذّر توليد الأسئلة الآن، حاول مرة أخرى."},
         )
+
+    if slide_quiz:
+        session, key, ctx = slide_quiz
+        body = {"questions": questions, "slide_number": ctx["slide_number"], "context_slides": ctx["context_slides"]}
+        session.generated[key] = body
+        return {**body, "cached": False}
 
     return {"questions": questions}
 

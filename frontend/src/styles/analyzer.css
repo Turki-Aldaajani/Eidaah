@@ -140,6 +140,11 @@
 .an-topic-chip.active{background:var(--pri);color:#fff}
 .an-notes{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:8px}
 .an-notes li{line-height:1.8;color:var(--ink)}
+/* #109: على ماذا بُني المحتوى المولّد + زر إعادة التوليد */
+.an-learn-meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--mut);font-size:.8rem;margin:-4px 0 10px}
+.an-regen-row{display:flex;justify-content:flex-end;margin-top:12px}
+.an-regen{display:inline-flex;align-items:center;gap:6px;font-size:.85rem}
+.an-regen .ic{width:16px;height:16px}
 
 /* الكويز */
 .an-quiz{display:flex;flex-direction:column;gap:18px}
