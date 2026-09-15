@@ -2,6 +2,7 @@
 # AI Model Integration - DeepSeek API (deepseek-flash)
 # Extended for Phase 3: RAG + topic analysis
 
+import base64
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -91,6 +92,49 @@ def call_groq(
 
 # Backward-compatible alias
 _call_groq = call_groq
+
+
+# ---------------------
+# Vision (#109): reads a slide IMAGE when its text is too thin to explain.
+# deepseek-flash is text-only, so this goes to a Groq vision model, the one the
+# model benchmark preprocesses slides with. Optional: without GROQ_API_KEY,
+# call_vision returns "" and the explanation uses the slide text alone.
+# ---------------------
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+VISION_MODEL = os.getenv("VISION_MODEL", "qwen/qwen3.8-27b")
+
+# Short timeout and no retries: the image is extra context, never worth a long wait.
+vision_client = (
+    OpenAI(api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1", timeout=30.0, max_retries=0)
+    if GROQ_API_KEY else None
+)
+
+
+def call_vision(
+    prompt: str,
+    image_bytes: bytes,
+    max_tokens: int = 700,
+    temperature: float = 0.2,
+    mime_type: str = "image/jpeg",
+) -> str:
+    """Ask the vision model about one image. Returns "" when vision isn't configured."""
+    if not vision_client or not image_bytes:
+        return ""
+
+    data_url = f"data:{mime_type};base64," + base64.b64encode(image_bytes).decode("ascii")
+    response = vision_client.chat.completions.create(
+        model=VISION_MODEL,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": data_url}},
+            ],
+        }],
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+    return (response.choices[0].message.content or "").strip()
 
 
 # ---------------------

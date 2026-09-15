@@ -73,10 +73,14 @@ def generate_topic_analysis(
 ) -> dict:
     """
     Generate explanation and example for a specific topic using chunks.
-    No vector retrieval — sends all chunk text directly to the LLM.
+    No vector retrieval — sends the topic's own chunk text directly to the LLM.
     """
-    # Use all chunk text (truncated to fit context)
-    all_content = "\n---\n".join(c["text"] for c in chunks)
+    # Only the chunks from the topic's own slides (#109). Sending every chunk,
+    # truncated to 4000 chars, explained later topics from the opening slides,
+    # i.e. from the first topic. Topics without slides still use every chunk.
+    topic_slides = set(topic.get("slides") or [])
+    own_chunks = [c for c in chunks if topic_slides & set(c.get("slides") or [])]
+    all_content = "\n---\n".join(c["text"] for c in (own_chunks or chunks))
     truncated_content = all_content[:4000]
 
     prompt = RAG_PROMPT_TEMPLATE.format(

@@ -27,6 +27,10 @@ executor = ThreadPoolExecutor(max_workers=16, thread_name_prefix="eidaah")
 # whatever happens to YouTube/Groq latency.
 video_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="eidaah-video")
 
+# #109 slide-image readings run here so the caller (already on `executor`) can
+# wait on them with a wall-clock deadline without blocking a pool on itself.
+vision_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="eidaah-vision")
+
 
 async def run_blocking(fn, *args, **kwargs):
     """Await a blocking callable on the shared pool, keeping the event loop free."""

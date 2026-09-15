@@ -1,7 +1,11 @@
 // صفحة نتائج التحليل — تصميم «مراحل التعلم» (مطابق لتصميم ليان في base44).
 // سبع مراحل لكل شريحة مع شريط جانبي قابل للطي يقفز لأي مرحلة، وتنقّل سفلي.
 // موصولة بالباك اند الحقيقي (لا بيانات وهمية): /status · /summary ·
-// /analyze_slide · /analyze_topic · /generate_questions.
+// /slide_learning · /generate_questions.
+//
+// #109: الشرح والمثال والملاحظات والأسئلة تتبع الشريحة المعروضة والموضوع المختار — لا أول
+// موضوع دائماً. كل محتوى مولّد محفوظ بمفتاح (شريحة|موضوع|لغة): الرجوع لشريحة سابقة لا يعيد
+// التوليد، وزر «إعادة التوليد» يطلب نسخة جديدة يدوياً.
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNav from "../components/TopNav";
@@ -31,6 +35,9 @@ const T = {
     dismiss: "إغلاق",
     pick_topic: "اختر موضوعاً من الأعلى لتبدأ رحلة التعلّم (شرح ← مثال ← ملاحظات ← أسئلة).",
     gen_summary: "توليد الملخص", gen_quiz: "توليد أسئلة المراجعة", topic_prefix: "الموضوع:",
+    regen_explain: "إعادة توليد الشرح", regen_quiz: "إعادة توليد الأسئلة", retry: "إعادة المحاولة",
+    gen_failed: "تعذّر توليد المحتوى الآن. حاول مرة أخرى.",
+    based_on: "مبني على الشرائح", based_on_one: "مبني على الشريحة", with_image: "مع قراءة صورة الشريحة",
     correct: "إجابة صحيحة ✓", wrong: "الإجابة الصحيحة:", explain_label: "التعليل:",
     stages: ["عرض الشريحة", "ملخص الشريحة", "المواضيع", "شرح تحليلي", "مثال واقعي", "ملاحظات للمذاكرة", "أسئلة تفاعلية"],
   },
@@ -51,12 +58,29 @@ const T = {
     dismiss: "Dismiss",
     pick_topic: "Pick a topic above to start the learning flow (explain → example → notes → quiz).",
     gen_summary: "Generate summary", gen_quiz: "Generate review questions", topic_prefix: "Topic:",
+    regen_explain: "Regenerate explanation", regen_quiz: "Regenerate questions", retry: "Try again",
+    gen_failed: "Couldn't generate this content right now. Please try again.",
+    based_on: "Based on slides", based_on_one: "Based on slide", with_image: "including the slide image",
     correct: "Correct ✓", wrong: "Correct answer:", explain_label: "Why:",
     stages: ["Slide", "Summary", "Topics", "Analytical", "Example", "Study notes", "Quiz"],
   },
 };
 
 const STAGE_STEPS = [1, 2, 3, 4, 5, 6, 7];
+
+// #109: مفتاح المحتوى المولّد — لكل (شريحة، موضوع، لغة) شرحه وأسئلته الخاصة
+const contentKey = (slideNumber, topicId, lang) => `${slideNumber}|${topicId ?? "-"}|${lang}`;
+
+// الموضوع الذي يغطي الشريحة (أو الأقرب إليها) حسب الشرائح التي يربطها الباك اند بكل موضوع
+function topicForSlide(topics, slideNumber) {
+  let best = null;
+  let bestDist = Infinity;
+  topics.forEach((topic) => (topic.slides || []).forEach((n) => {
+    const dist = Math.abs(n - slideNumber);
+    if (dist < bestDist) { best = topic; bestDist = dist; }
+  }));
+  return best;
+}
 
 function SlideCard({ slide }) {
   const lines = (slide.text || "").split("\n").map((l) => l.trim()).filter(Boolean);
@@ -86,12 +110,13 @@ export default function Results() {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [summary, setSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState(null);
-  const [topicContent, setTopicContent] = useState(null); // {explanation, examples}
-  const [topicLoading, setTopicLoading] = useState(false);
-  const [quiz, setQuiz] = useState(null); // [{q,o,a,e}]
-  const [quizLoading, setQuizLoading] = useState(false);
-  const [quizPicks, setQuizPicks] = useState({}); // { qIndex: optionIndex }
+  // مسار التعلّم (المراحل ٤–٧) يُفتح بلغة معيّنة ويبقى مفتوحاً مع التنقّل بين الشرائح؛
+  // تغيير اللغة يغلقه فوراً في نفس الرسم (فلا يُطلق توليد باللغة الجديدة دون طلب)
+  const [flowLanguage, setFlowLanguage] = useState(null);
+  const [selectedTopicId, setSelectedTopicId] = useState(null);
+  const [learning, setLearning] = useState({}); // key → {status: "loading"|"ready"|"error", data}
+  const [quizzes, setQuizzes] = useState({}); // key → {status, questions: [{q,o,a,e}]}
+  const [quizPicks, setQuizPicks] = useState({}); // key → { qIndex: optionIndex }
   const [doneSteps, setDoneSteps] = useState(() => new Set([1]));
   const [activeStep, setActiveStep] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -121,6 +146,14 @@ export default function Results() {
     if (el) sectionEls.current[step] = el;
     else delete sectionEls.current[step];
   };
+
+  // ما تعرضه المراحل ٤–٧ الآن: الشريحة الحالية + الموضوع المختار + اللغة
+  const flowOpen = flowLanguage === language;
+  const slideNumber = slides[currentSlide]?.slide_number;
+  const selectedTopic = topics.find((topic) => topic.topic_id === selectedTopicId) || null;
+  const activeKey = slideNumber == null ? null : contentKey(slideNumber, selectedTopicId, language);
+  const learnEntry = activeKey ? learning[activeKey] : undefined;
+  const quizEntry = activeKey ? quizzes[activeKey] : undefined;
 
   // تحميل الشرائح من التخزين
   useEffect(() => {
@@ -169,25 +202,12 @@ export default function Results() {
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [sessionId]);
 
-  // كل شريحة تبدأ رحلة تعلّم جديدة
-  useEffect(() => {
-    setSelectedTopic(null);
-    setTopicContent(null);
-    setQuiz(null);
-    setQuizPicks({});
-    setDoneSteps(new Set([1]));
-    setActiveStep(1);
-  }, [currentSlide]);
-
-  // تغيير اللغة أثناء عرض النتائج: المحتوى المولّد (ملخص/شرح/مثال/أسئلة) بقي باللغة
-  // القديمة. نُعيد ضبطه ليُعاد توليده باللغة الجديدة، مع تنبيه بسيط للمستخدم.
+  // تغيير اللغة أثناء عرض النتائج: الملخص بقي باللغة القديمة فنُعيد ضبطه، ومسار التعلّم يُغلق
+  // (محتواه محفوظ بمفتاح اللغة فلا يُخلط)، مع تنبيه بسيط للمستخدم.
   useEffect(() => {
     if (langInit.current) { langInit.current = false; return; }
     setSummary("");
-    setSelectedTopic(null);
-    setTopicContent(null);
-    setQuiz(null);
-    setQuizPicks({});
+    setSelectedTopicId(null);
     setDoneSteps(new Set([1]));
     setActiveStep(1);
     setLangNotice(true);
@@ -245,40 +265,92 @@ export default function Results() {
     } catch { /* تجاهل */ } finally { setSummaryLoading(false); completeStep(2); }
   }, [sessionId, summary, language, completeStep]);
 
-  const selectTopic = useCallback(async (topic) => {
-    setSelectedTopic(topic);
-    setTopicContent(null);
-    setTopicLoading(true);
-    completeStep(3);
+  // الشرح + المثال + الملاحظات لشريحة وموضوع. النتيجة تُحفظ تحت مفتاحها هي، فالرد المتأخر
+  // لشريحة سابقة لا يستبدل ما يُعرض الآن أبداً.
+  const loadLearning = useCallback(async (n, topicId, refresh = false) => {
+    if (!sessionId || n == null) return;
+    const key = contentKey(n, topicId, language);
+    setLearning((prev) => ({ ...prev, [key]: { ...prev[key], status: "loading" } }));
     try {
-      const res = await fetch(`${API_URL}/api/analyze_topic`, {
+      const res = await fetch(`${API_URL}/api/session/${sessionId}/slide_learning`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, topic_id: topic.topic_id, language }),
+        body: JSON.stringify({ slide_number: n, topic_id: topicId, language, refresh }),
       });
-      if (res.ok) setTopicContent(await res.json());
-    } catch { setError(t.error); } finally { setTopicLoading(false); }
-  }, [sessionId, language, completeStep, t.error]);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setLearning((prev) => ({ ...prev, [key]: { status: "ready", data } }));
+    } catch {
+      setLearning((prev) => ({ ...prev, [key]: { ...prev[key], status: "error" } }));
+    }
+  }, [sessionId, language]);
 
-  const fetchQuiz = useCallback(async () => {
+  // المسار مفتوح وتغيّرت الشريحة أو الموضوع ← اجلب محتوى المفتاح الجديد (مرة واحدة لكل مفتاح)
+  useEffect(() => {
+    if (!flowOpen || !activeKey || learning[activeKey]) return;
+    loadLearning(slideNumber, selectedTopicId);
+  }, [flowOpen, activeKey, learning, loadLearning, slideNumber, selectedTopicId]);
+
+  // أسئلة الشريحة الحالية — تُولَّد عند الطلب فقط، وكلٌّ محفوظ تحت مفتاحه
+  const fetchQuiz = useCallback(async (topicId, refresh = false) => {
     completeStep(7);
-    if (quiz || !sessionId) return;
-    setQuizLoading(true);
+    if (!sessionId || slideNumber == null) return;
+    const key = contentKey(slideNumber, topicId, language);
+    const entry = quizzes[key];
+    if (!refresh && entry && entry.status !== "error") return;
+    setQuizzes((prev) => ({ ...prev, [key]: { ...prev[key], status: "loading" } }));
+    setQuizPicks((prev) => ({ ...prev, [key]: {} }));
     try {
       const res = await fetch(`${API_URL}/api/generate_questions`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, language }),
+        body: JSON.stringify({ session_id: sessionId, slide_number: slideNumber, topic_id: topicId, language, refresh }),
       });
-      if (res.ok) setQuiz((await res.json()).questions || []);
-    } catch { /* تجاهل */ } finally { setQuizLoading(false); }
-  }, [quiz, sessionId, language, completeStep]);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const questions = (await res.json()).questions || [];
+      setQuizzes((prev) => ({ ...prev, [key]: { status: "ready", questions } }));
+    } catch {
+      setQuizzes((prev) => ({ ...prev, [key]: { ...prev[key], status: "error" } }));
+    }
+  }, [completeStep, sessionId, slideNumber, language, quizzes]);
+
+  // اختيار موضوع يفتح المسار له، ويقفز لأول شرائحه إن لم تكن الشريحة الحالية منها —
+  // فالشريحة المعروضة والشرح المولّد يبقيان متطابقين
+  const selectTopic = useCallback((topic) => {
+    setFlowLanguage(language);
+    setSelectedTopicId(topic.topic_id);
+    completeStep(3);
+    const own = topic.slides || [];
+    if (own.length && !own.includes(slides[currentSlide]?.slide_number)) {
+      const idx = slides.findIndex((s) => own.includes(s.slide_number));
+      if (idx >= 0) setCurrentSlide(idx);
+    }
+  }, [language, completeStep, slides, currentSlide]);
+
+  // التنقّل بين الشرائح: مراحل الشريحة تبدأ من جديد، والمسار المفتوح يتبعها — الموضوع يتحدّث
+  // لموضوع الشريحة الجديدة، فيُجلب شرحها (أو يُعرض من المحفوظ إن سبق توليده)
+  const goToSlide = (index) => {
+    if (index < 0 || index >= slides.length) return;
+    setCurrentSlide(index);
+    setDoneSteps(new Set([1]));
+    setActiveStep(1);
+    if (!flowOpen) return;
+    const n = slides[index].slide_number;
+    if (selectedTopic?.slides?.includes(n)) return;
+    const topic = topicForSlide(topics, n);
+    if (topic) setSelectedTopicId(topic.topic_id);
+  };
 
   // كنترول سنتر: الضغط على مرحلة يُبرزها بصرياً + يُفعّل محتواها + يمرّر إليها
   const goToStep = useCallback((step) => {
-    // المراحل 4–7 تحتاج موضوعاً مختاراً — نفتح المسار تلقائياً بأول موضوع
-    if (step >= 4 && !selectedTopic && topics.length > 0) selectTopic(topics[0]);
+    let topicId = selectedTopicId;
+    // المراحل 4–7 تحتاج المسار مفتوحاً — نفتحه بموضوع الشريحة المعروضة (لا أول موضوع دائماً)
+    if (step >= 4 && !flowOpen) {
+      topicId = topicForSlide(topics, slideNumber)?.topic_id ?? null;
+      setSelectedTopicId(topicId);
+      setFlowLanguage(language);
+    }
     // تفعيل محتوى المرحلة مباشرةً (لا زر منفصل)
     if (step === 2) fetchSummary();
-    if (step === 7) fetchQuiz();
+    if (step === 7) fetchQuiz(topicId);
     completeStep(step);
     // وميض إبراز مؤقّت على القسم المقصود
     setFlashStep(step);
@@ -289,12 +361,18 @@ export default function Results() {
       const el = sectionEls.current[step] || sectionEls.current[3];
       el?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     });
-  }, [completeStep, selectedTopic, topics, selectTopic, fetchSummary, fetchQuiz]);
+  }, [completeStep, flowOpen, selectedTopicId, topics, slideNumber, language, fetchSummary, fetchQuiz]);
 
-  // ملاحظات للمذاكرة: مشتقّة من الشرح التحليلي (نقاط)
-  const notes = topicContent?.explanation
-    ? topicContent.explanation.split(/(?<=[.،؟!])\s+/).map((s) => s.trim()).filter((s) => s.length > 12)
-    : [];
+  const learnData = learnEntry?.status === "ready" ? learnEntry.data : null;
+  const learnLoading = flowOpen && (!learnEntry || learnEntry.status === "loading");
+  const learnFailed = learnEntry?.status === "error";
+  // ملاحظات للمذاكرة: من النموذج مباشرةً، وإلا مشتقّة من الشرح التحليلي (نقاط)
+  const notes = learnData?.notes?.length
+    ? learnData.notes
+    : (learnData?.explanation || "").split(/(?<=[.،؟!])\s+/).map((s) => s.trim()).filter((s) => s.length > 12);
+  const quizLoading = quizEntry?.status === "loading";
+  const quizQuestions = quizEntry?.status === "ready" && quizEntry.questions.length ? quizEntry.questions : null;
+  const picks = (activeKey && quizPicks[activeKey]) || {};
 
   const num = (n) => (language === "ar" ? toArabicDigits(String(n)) : String(n));
 
@@ -325,11 +403,32 @@ export default function Results() {
   const stageCls = (step) =>
     `an-stage anim${step === activeStep ? " is-active" : ""}${step === flashStep ? " flash" : ""}`;
 
+  // على ماذا بُني الشرح: الموضوع + الشرائح المستخدمة كسياق (+ قراءة صورة الشريحة)
+  const learnMeta = () => {
+    const ctxSlides = learnData?.context_slides || [slideNumber];
+    const first = ctxSlides[0];
+    const last = ctxSlides[ctxSlides.length - 1];
+    return (
+      <p className="an-learn-meta">
+        {selectedTopic && <span>{t.topic_prefix} {selectedTopic.label}</span>}
+        <span>{ctxSlides.length > 1 ? `${t.based_on} ${num(first)}–${num(last)}` : `${t.based_on_one} ${num(first)}`}</span>
+        {learnData?.used_visual && <span>{t.with_image}</span>}
+      </p>
+    );
+  };
+
+  // جسم المراحل ٤–٦: تحميل، أو خطأ ظاهر (لا تحميل للأبد)، أو المحتوى
+  const learnBody = (content) => {
+    if (learnLoading) return <p className="upload-filename">{t.loading}</p>;
+    if (learnFailed) return <p className="upload-error">{t.gen_failed}</p>;
+    return content;
+  };
+
   // يعرض قسم مرحلة واحدة حسب رقمها — يُستدعى من مصفوفة الترتيب (order) ليدعم إعادة الترتيب.
-  // البوابات: (٢) قابلة للإخفاء، و(٤–٧) تحتاج موضوعاً مختاراً.
+  // البوابات: (٢) قابلة للإخفاء، و(٤–٧) تحتاج مسار التعلّم مفتوحاً.
   const renderStage = (step) => {
     if (step === 2 && isHidden(2)) return null;
-    if (step >= 4 && (isHidden(step) || !selectedTopic)) return null;
+    if (step >= 4 && (isHidden(step) || !flowOpen)) return null;
 
     const wrap = (icon, labelIdx, body) => (
       <div key={step} className={stageCls(step)} data-step={step} ref={registerRef(step)} onClick={() => completeStep(step)}>
@@ -366,15 +465,15 @@ export default function Results() {
                 <p className="an-topics-hint">{t.topics_hint}</p>
                 <div className="an-topic-rows">
                   {topics.map((topic) => {
-                    const active = selectedTopic?.topic_id === topic.topic_id;
+                    const active = flowOpen && selectedTopicId === topic.topic_id;
                     return (
                       <div className={`an-topic-row${active ? " active" : ""}`} key={topic.topic_id}>
                         <span className="an-topic-q">{topic.label}</span>
                         <button type="button" className="btn an-topic-explain"
                           aria-label={`${t.explain} ${topic.label}`}
                           onClick={() => selectTopic(topic)}
-                          disabled={topicLoading && active}>
-                          {topicLoading && active ? "..." : (<>{t.explain} <Icon name="arrow" /></>)}
+                          disabled={learnLoading && active}>
+                          {learnLoading && active ? "..." : (<>{t.explain} <Icon name="arrow" /></>)}
                         </button>
                       </div>
                     );
@@ -384,62 +483,78 @@ export default function Results() {
             )}
           </>));
       case 4:
-        return wrap("sparkles", 3,
-          topicLoading ? <p className="upload-filename">{t.loading}</p> : <p className="an-text">{topicContent?.explanation}</p>);
+        return wrap("sparkles", 3, (
+          <>
+            {learnMeta()}
+            {learnBody(<p className="an-text">{learnData?.explanation}</p>)}
+            <div className="an-regen-row">
+              <button type="button" className="btn ghost an-regen" disabled={learnLoading}
+                onClick={() => loadLearning(slideNumber, selectedTopicId, true)}>
+                <Icon name="sparkles" /> {learnFailed ? t.retry : t.regen_explain}
+              </button>
+            </div>
+          </>));
       case 5:
-        return wrap("target", 4,
-          topicLoading ? <p className="upload-filename">{t.loading}</p> : <p className="an-text">{topicContent?.examples?.[0]}</p>);
+        return wrap("target", 4, learnBody(<p className="an-text">{learnData?.examples?.[0]}</p>));
       case 6:
-        return wrap("note", 5,
-          notes.length > 0
-            ? <ul className="an-notes">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
-            : <p className="upload-filename">{t.loading}</p>);
+        return wrap("note", 5, learnBody(
+          <ul className="an-notes">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>));
       case 7:
         return wrap("help", 6,
-          !quiz ? (
-            <button className="btn" onClick={fetchQuiz} disabled={quizLoading}>
-              <Icon name="sparkles" /> {quizLoading ? t.loading : t.gen_quiz}
-            </button>
+          !quizQuestions ? (
+            <>
+              {quizEntry?.status === "error" && <p className="upload-error">{t.gen_failed}</p>}
+              <button className="btn" onClick={() => fetchQuiz(selectedTopicId)} disabled={quizLoading}>
+                <Icon name="sparkles" /> {quizLoading ? t.loading : t.gen_quiz}
+              </button>
+            </>
           ) : (
-            <div className="an-quiz">
-              {quiz.map((q, qi) => {
-                const picked = quizPicks[qi];
-                const answered = picked != null;
-                return (
-                  <div className="an-q" key={qi}>
-                    <b>{num(qi + 1)}. {q.q}</b>
-                    <div className="an-q-opts">
-                      {q.o.map((opt, oi) => {
-                        let cls = "an-opt";
-                        if (answered) {
-                          if (oi === q.a) cls += " correct";
-                          else if (oi === picked) cls += " wrong";
-                          else cls += " muted";
-                        }
-                        return (
-                          <button key={oi} type="button" className={cls}
-                            disabled={answered}
-                            onClick={(e) => {
-                              if (answered) return;
-                              setQuizPicks((p) => ({ ...p, [qi]: oi }));
-                              if (oi === q.a) { burstConfetti(e.clientX, e.clientY); playCorrect(); }
-                              else { playWrong(); }
-                            }}>
-                            {opt}
-                          </button>
-                        );
-                      })}
+            <>
+              <div className="an-quiz">
+                {quizQuestions.map((q, qi) => {
+                  const picked = picks[qi];
+                  const answered = picked != null;
+                  return (
+                    <div className="an-q" key={qi}>
+                      <b>{num(qi + 1)}. {q.q}</b>
+                      <div className="an-q-opts">
+                        {q.o.map((opt, oi) => {
+                          let cls = "an-opt";
+                          if (answered) {
+                            if (oi === q.a) cls += " correct";
+                            else if (oi === picked) cls += " wrong";
+                            else cls += " muted";
+                          }
+                          return (
+                            <button key={oi} type="button" className={cls}
+                              disabled={answered}
+                              onClick={(e) => {
+                                if (answered) return;
+                                setQuizPicks((p) => ({ ...p, [activeKey]: { ...p[activeKey], [qi]: oi } }));
+                                if (oi === q.a) { burstConfetti(e.clientX, e.clientY); playCorrect(); }
+                                else { playWrong(); }
+                              }}>
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {answered && (
+                        <p className="an-q-fb">
+                          {picked === q.a ? t.correct : `${t.wrong} ${q.o[q.a]}`}
+                          {q.e && <span className="an-q-why"> — {t.explain_label} {q.e}</span>}
+                        </p>
+                      )}
                     </div>
-                    {answered && (
-                      <p className="an-q-fb">
-                        {picked === q.a ? t.correct : `${t.wrong} ${q.o[q.a]}`}
-                        {q.e && <span className="an-q-why"> — {t.explain_label} {q.e}</span>}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              <div className="an-regen-row">
+                <button type="button" className="btn ghost an-regen" onClick={() => fetchQuiz(selectedTopicId, true)}>
+                  <Icon name="sparkles" /> {t.regen_quiz}
+                </button>
+              </div>
+            </>
           ));
       default:
         return null;
@@ -529,8 +644,8 @@ export default function Results() {
           {/* المراحل تُعرض من مصفوفة الترتيب (order) لدعم إعادة الترتيب من التخصيص */}
           {order.map(renderStage)}
 
-          {/* دعوة لاختيار موضوع عندما لا يوجد موضوع مختار بعد */}
-          {!selectedTopic && <p className="an-hint">{t.pick_topic}</p>}
+          {/* دعوة لاختيار موضوع عندما لا يكون مسار التعلّم مفتوحاً بعد */}
+          {!flowOpen && <p className="an-hint">{t.pick_topic}</p>}
         </main>
       </div>
 
@@ -538,10 +653,10 @@ export default function Results() {
       <div className="an-bottom">
         <span className="an-bottom-count">{t.slide_word} {num(currentSlide + 1)} {t.slide_of} {num(slides.length)}</span>
         <div className="an-bottom-btns">
-          <button className="btn ghost" onClick={() => !isFirst && setCurrentSlide((s) => s - 1)} disabled={isFirst}>
+          <button className="btn ghost" onClick={() => goToSlide(currentSlide - 1)} disabled={isFirst}>
             <Icon name="chev" className={startChev} /> {t.prev}
           </button>
-          <button className="btn" onClick={() => !isLast && setCurrentSlide((s) => s + 1)} disabled={isLast}>
+          <button className="btn" onClick={() => goToSlide(currentSlide + 1)} disabled={isLast}>
             {t.next} <Icon name="chev" className={endChev} />
           </button>
         </div>
